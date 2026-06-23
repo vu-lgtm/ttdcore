@@ -78,6 +78,7 @@ header{background:var(--dark2);border-bottom:2px solid var(--teal2);padding:14px
 /* EMPLOYEE LIST */
 .emp-card{background:var(--dark2);border:1px solid var(--border2);border-radius:8px;overflow:hidden;transition:border-color 0.2s,background 0.2s;}
 .emp-card.present{border-color:rgba(0,191,165,0.35);}
+.emp-card.on-leave{border-color:rgba(171,71,188,0.35);}
 .emp-card:hover{border-color:rgba(0,191,165,0.25);background:rgba(255,255,255,0.01);}
 .emp-card-header{padding:14px 20px;display:flex;align-items:center;gap:14px;}
 .emp-card-body{display:none;}
@@ -156,6 +157,19 @@ select option{background:#071828;color:#ffffff;}
 .admin-row select:focus,.admin-row input:focus{outline:none;border-color:var(--teal);}
 .device-info{font-size:11px;color:var(--muted);margin-top:8px;}
 @media(max-width:600px){.checkin-wrap{grid-template-columns:1fr;}}
+
+
+/* LEAVE CALENDAR */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.cal-header{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;}
+.cal-dow{text-align:center;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;padding:6px 0;}
+.cal-day{min-height:72px;background:var(--dark2);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;transition:border-color 0.2s;}
+.cal-day.today{border-color:rgba(0,191,165,0.5);background:rgba(0,191,165,0.04);}
+.cal-day.weekend{background:rgba(255,255,255,0.01);}
+.cal-day.empty{background:transparent;border-color:transparent;}
+.cal-day-num{font-family:'Montserrat',sans-serif;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;}
+.cal-day.today .cal-day-num{color:var(--teal);}
+.cal-leave-pill{font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default;}
 
 @media(max-width:768px){
   .stats-row{grid-template-columns:repeat(2,1fr);}
@@ -277,12 +291,20 @@ select option{background:#071828;color:#ffffff;}
 
   <!-- TAB: NGHỈ PHÉP -->
   <div class="tab-content" id="tab-nghiphep">
-    <div class="toolbar">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+      <div class="month-nav">
+        <button onclick="changeLeaveMonth(-1)">←</button>
+        <div class="month-label" id="leaveMonthLabel">Tháng 6/2026</div>
+        <button onclick="changeLeaveMonth(1)">→</button>
+      </div>
       <button class="add-btn" onclick="openLeaveModal()">＋ Đăng ký nghỉ phép</button>
     </div>
-    <div class="leave-list" id="leaveList">
-      <div style="text-align:center;color:var(--muted);padding:40px;">Chưa có đơn nghỉ phép nào</div>
-    </div>
+
+    <!-- CALENDAR -->
+    <div id="leaveCalendar" style="margin-bottom:32px;"></div>
+
+    <!-- PENDING APPROVALS - admin only -->
+    <div id="leavePending"></div>
   </div>
 
 </div>
@@ -511,7 +533,15 @@ function renderEmployees(){
     const todayRec = att.find(a=>a.date===today && a.ma===e.ma);
     const isPresent = todayRec?.checkin && !todayRec?.checkout;
     const isDone = todayRec?.checkin && todayRec?.checkout;
-    const presentBadge = isPresent
+    // Check if on approved leave today
+    const todayStr = getTodayKey();
+    const onLeaveToday = getLeaves().some(l =>
+      l.ma === e.ma && l.status === 'approved' &&
+      l.from <= todayStr && l.to >= todayStr
+    );
+    const presentBadge = onLeaveToday
+      ? `<span class="presence-badge" style="background:rgba(171,71,188,0.12);color:#ab47bc;">🏖️ Đang nghỉ phép</span>`
+      : isPresent
       ? `<span class="presence-badge"><span class="presence-dot"></span>Đang có mặt</span>`
       : isDone
       ? `<span class="presence-badge" style="background:rgba(79,195,247,0.1);color:#4fc3f7;">✓ Đã check-out</span>`
@@ -519,7 +549,7 @@ function renderEmployees(){
     const b = getLeaveBalance(e.ma);
     const leaveColor = b.remaining<=2?'#ef5350':b.remaining<=5?'#f0a500':'var(--teal)';
     const leavePct = Math.round((b.remaining/b.total)*100);
-    return `<div class="emp-card${isPresent?' present':''}">
+    return `<div class="emp-card${onLeaveToday?' on-leave':isPresent?' present':''}">
       <div class="emp-card-header">
         <div class="emp-avatar" style="background:linear-gradient(135deg,${colors[0]},${colors[1]});width:38px;height:38px;font-size:14px;flex-shrink:0;">${getInitials(e.ten)}</div>
         <div style="min-width:180px;">
@@ -672,7 +702,7 @@ function switchTab(name){
   document.getElementById('tab-'+name).classList.add('active');
   event.target.classList.add('active');
   if(name==='chamcong') renderAttendance();
-  if(name==='nghiphep') renderLeaves();
+  if(name==='nghiphep'){ leaveMonth=new Date().getMonth()+1; leaveYear=new Date().getFullYear(); renderLeaves(); }
 }
 
 // ============ ATTENDANCE ============
@@ -720,77 +750,138 @@ function renderAttendance(){
 }
 
 // ============ LEAVES ============
-function renderLeaves(){
+let leaveMonth = new Date().getMonth() + 1;
+let leaveYear = new Date().getFullYear();
+
+function changeLeaveMonth(d) {
+  leaveMonth += d;
+  if (leaveMonth > 12) { leaveMonth = 1; leaveYear++; }
+  if (leaveMonth < 1)  { leaveMonth = 12; leaveYear--; }
+  renderLeaves();
+}
+
+const LEAVE_COLORS = [
+  ['rgba(0,191,165,0.15)','#00BFA5'],['rgba(21,101,192,0.18)','#4fc3f7'],
+  ['rgba(171,71,188,0.15)','#ab47bc'],['rgba(255,112,67,0.18)','#ff7043'],
+  ['rgba(200,151,58,0.18)','#c8973a'],['rgba(239,83,80,0.15)','#ef5350'],
+];
+
+function renderLeaves() {
   const leaves = getLeaves();
-  const list = document.getElementById('leaveList');
-  const pending = leaves.filter(l=>l.status==='pending').length;
+  const pending = leaves.filter(l => l.status === 'pending').length;
   document.getElementById('leaveCount').textContent = pending;
+  document.getElementById('leaveMonthLabel').textContent = `Tháng ${leaveMonth}/${leaveYear}`;
 
-  // Render balance summary
-  const emps = getEmployees();
-  const balanceHtml = `
-    <div style="margin-bottom:20px;">
-      <div style="font-family:Montserrat,sans-serif;font-size:11px;font-weight:700;color:var(--teal);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">Số dư phép năm ${new Date().getFullYear()}</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;">
-        ${emps.map(e=>{
-          const b = getLeaveBalance(e.ma);
-          const pct = Math.round((b.remaining/b.total)*100);
-          const color = b.remaining<=2?'#ef5350':b.remaining<=5?'#f0a500':'var(--teal)';
-          return `<div style="background:var(--dark2);border:1px solid var(--border2);border-radius:8px;padding:12px 14px;">
-            <div style="font-size:13px;font-weight:600;color:var(--white);margin-bottom:6px;">${e.ten.split(' ').slice(-1)[0]}</div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">${e.ma}</div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
-              <span style="font-size:12px;color:${color};font-weight:700;">Còn ${b.remaining} ngày</span>
-              <span style="font-size:11px;color:var(--muted);">Đã dùng ${b.used}/${b.total}</span>
-            </div>
-            <div style="height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;">
-              <div style="width:${pct}%;height:100%;background:${color};border-radius:3px;transition:width 0.3s;"></div>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>
-    <div style="height:1px;background:var(--border);margin-bottom:16px;"></div>
-    <div style="font-family:Montserrat,sans-serif;font-size:11px;font-weight:700;color:var(--teal);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">Đơn nghỉ phép</div>
-  `;
+  // Build calendar
+  const daysInMonth = new Date(leaveYear, leaveMonth, 0).getDate();
+  const firstDow = new Date(leaveYear, leaveMonth - 1, 1).getDay(); // 0=Sun
+  const startOffset = firstDow === 0 ? 6 : firstDow - 1; // Mon=0
+  const today = new Date();
 
-  if(!leaves.length){
-    list.innerHTML = balanceHtml + '<div style="text-align:center;color:var(--muted);padding:24px;">Chưa có đơn nghỉ phép nào</div>';
-    return;
+  // Map approved leaves to dates
+  const approved = leaves.filter(l => l.status === 'approved');
+  const dayMap = {}; // date string -> [{empName, color}]
+  const empColors = {};
+  let colorIdx = 0;
+  approved.forEach(l => {
+    const from = new Date(l.from);
+    const to = new Date(l.to);
+    if (!empColors[l.ma]) {
+      empColors[l.ma] = LEAVE_COLORS[colorIdx % LEAVE_COLORS.length];
+      colorIdx++;
+    }
+    for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
+      const y = d.getFullYear(), m = d.getMonth() + 1, day = d.getDate();
+      if (y === leaveYear && m === leaveMonth) {
+        const key = `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        if (!dayMap[key]) dayMap[key] = [];
+        const shortName = l.empName.split(' ').slice(-1)[0];
+        dayMap[key].push({ name: shortName, color: empColors[l.ma] });
+      }
+    }
+  });
+
+  // Also show pending as lighter
+  const pending_list = leaves.filter(l => l.status === 'pending');
+  pending_list.forEach(l => {
+    const from = new Date(l.from);
+    const to = new Date(l.to);
+    for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
+      const y = d.getFullYear(), m = d.getMonth() + 1, day = d.getDate();
+      if (y === leaveYear && m === leaveMonth) {
+        const key = `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        if (!dayMap[key]) dayMap[key] = [];
+        const shortName = l.empName.split(' ').slice(-1)[0];
+        dayMap[key].push({ name: shortName + '?', color: ['rgba(240,165,0,0.12)','#f0a500'] });
+      }
+    }
+  });
+
+  const dows = ['T2','T3','T4','T5','T6','T7','CN'];
+  let calHtml = `<div class="cal-header">${dows.map(d=>`<div class="cal-dow">${d}</div>`).join('')}</div><div class="cal-grid">`;
+
+  // Empty cells before first day
+  for (let i = 0; i < startOffset; i++) calHtml += `<div class="cal-day empty"></div>`;
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dow = (startOffset + day - 1) % 7; // 0=Mon, 6=Sun
+    const isWeekend = dow >= 5;
+    const isToday = day === today.getDate() && leaveMonth === today.getMonth()+1 && leaveYear === today.getFullYear();
+    const dateKey = `${leaveYear}-${String(leaveMonth).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const offs = dayMap[dateKey] || [];
+    const pillsHtml = offs.map(o =>
+      `<div class="cal-leave-pill" style="background:${o.color[0]};color:${o.color[1]};" title="${o.name}">${o.name}</div>`
+    ).join('');
+    calHtml += `<div class="cal-day${isToday?' today':''}${isWeekend?' weekend':''}">
+      <div class="cal-day-num">${day}</div>
+      ${pillsHtml}
+    </div>`;
   }
+  calHtml += '</div>';
+  document.getElementById('leaveCalendar').innerHTML = calHtml;
 
+  // All leave requests
+  const pendingEl = document.getElementById('leavePending');
   const TYPE_LABEL={'annual':'Phép năm','sick':'Nghỉ bệnh','personal':'Việc riêng','unpaid':'Không lương'};
   const STATUS_COLOR={'pending':'color:#f0a500;background:rgba(240,165,0,0.1)','approved':'color:#00BFA5;background:rgba(0,191,165,0.1)','rejected':'color:#ef5350;background:rgba(239,83,80,0.1)'};
   const STATUS_LABEL={'pending':'⏳ Chờ duyệt','approved':'✓ Đã duyệt','rejected':'✗ Từ chối'};
 
-  const leavesHtml = leaves.slice().reverse().map((l,i)=>{
-    const realIdx = leaves.length-1-i;
-    const actions = l.status==='pending'
-      ? isAdmin()
-        ? `<button class="btn-approve" onclick="updateLeave(${realIdx},'approved')">✓ Duyệt</button>
-           <button class="btn-reject" onclick="updateLeave(${realIdx},'rejected')">✗ Từ chối</button>`
-        : `<span class="leave-status" style="color:#f0a500;background:rgba(240,165,0,0.1);padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700;">⏳ Chờ duyệt</span>`
-      : `<span class="leave-status" style="${STATUS_COLOR[l.status]||''};padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700;">${STATUS_LABEL[l.status]}</span>`;
-    // Calculate days
-    const days = Math.round((new Date(l.to)-new Date(l.from))/86400000)+1;
-    return `<div class="leave-item">
-      <div style="font-size:24px;">${l.type==='sick'?'🤒':l.type==='personal'?'🏠':l.type==='unpaid'?'💸':'🏖️'}</div>
-      <div class="leave-info">
-        <div class="leave-name">${l.empName}</div>
-        <div class="leave-meta">${TYPE_LABEL[l.type]||l.type} · ${l.from} → ${l.to} · <strong style="color:var(--white);">${days} ngày</strong> · ${l.reason}</div>
-        <div class="leave-meta" style="margin-top:3px;">
-          Gửi lúc: ${l.sentAt}
-          ${l.actionBy ? `· <span style="color:${l.status==='approved'?'var(--teal)':'#ef5350'};">${l.status==='approved'?'✓ Duyệt':'✗ Từ chối'} bởi ${l.actionBy} lúc ${l.actionAt}</span>` : ''}
-        </div>
-      </div>
-      <div class="leave-actions">${actions}</div>
-    </div>`;
-  }).join('');
+  if(!leaves.length){ pendingEl.innerHTML='<div style="text-align:center;color:var(--muted);padding:32px;">Chưa có đơn nghỉ phép nào</div>'; return; }
 
-  list.innerHTML = balanceHtml + leavesHtml;
+  pendingEl.innerHTML = `
+    <div style="font-family:Montserrat,sans-serif;font-size:11px;font-weight:700;color:var(--teal);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">Tất cả đơn nghỉ phép</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      ${leaves.slice().reverse().map((l,i)=>{
+        const realIdx = leaves.length-1-i;
+        const days = Math.round((new Date(l.to)-new Date(l.from))/86400000)+1;
+        const icon = l.type==='sick'?'🤒':l.type==='personal'?'🏠':l.type==='unpaid'?'💸':'🏖️';
+        const statusStyle = STATUS_COLOR[l.status]||'';
+        const statusLabel = STATUS_LABEL[l.status]||l.status;
+        const approveBtn = (getCurrentEmail()==='vu@ttdglobal.vn' && l.status==='pending')
+          ? `<button class="btn-approve" onclick="updateLeave(${realIdx},'approved')">✓ Duyệt</button>
+             <button class="btn-reject" onclick="updateLeave(${realIdx},'rejected')">✗ Từ chối</button>`
+          : `<span class="leave-status" style="${statusStyle};padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700;">${statusLabel}</span>`;
+        return `<div class="leave-item">
+          <div style="font-size:22px;">${icon}</div>
+          <div class="leave-info">
+            <div class="leave-name">${l.empName}</div>
+            <div class="leave-meta">${TYPE_LABEL[l.type]||l.type} · ${l.from} → ${l.to} · <strong style="color:var(--white);">${days} ngày</strong>${l.reason?' · '+l.reason:''}</div>
+            <div class="leave-meta" style="margin-top:2px;">
+              Gửi: ${l.sentAt}
+              ${l.actionBy?`· <span style="color:${l.status==='approved'?'var(--teal)':'#ef5350'};">${l.status==='approved'?'✓ Duyệt':'✗ Từ chối'} bởi ${l.actionBy} lúc ${l.actionAt}</span>`:''}
+            </div>
+          </div>
+          <div class="leave-actions">${approveBtn}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
 }
 
 function updateLeave(idx,status){
+  if(getCurrentEmail() !== 'vu@ttdglobal.vn'){
+    alert('Chỉ vu@ttdglobal.vn mới có quyền duyệt nghỉ phép!');
+    return;
+  }
   const leaves=getLeaves();
   leaves[idx].status=status;
   if(status==='approved'||status==='rejected'){
@@ -800,7 +891,7 @@ function updateLeave(idx,status){
   }
   saveLeaves(leaves);
   renderLeaves();
-  renderEmployees(); // refresh balance
+  renderEmployees();
 }
 
 // ============ MODALS ============
