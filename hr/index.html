@@ -470,31 +470,133 @@ select option{background:#071828;color:#ffffff;}
 </div>
 
 <script>
-// ============ DATA ============
-const STORAGE_KEY = 'ttdcore_employees';
-const ATT_KEY = 'ttdcore_attendance';
-const LEAVE_KEY = 'ttdcore_leaves';
+// ============ SUPABASE DATA LAYER ============
+const SB_URL = 'https://fyjinbtabsentsvnkqzg.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5amluYnRhYnNlbnRzdm5rcXpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MTAxNTUsImV4cCI6MjA5NDI4NjE1NX0.m1H8bOT7gUXJxPoQT6bDqtRUjo4nCSxb4A1rth7Eols';
 
-const DEFAULT_EMPLOYEES = [
-  {ma:"TTD0001",cty:"TTD",ten:"Dương Thị Yến Phượng",sdt:"0778667879",email:"chichi@ttdglobal.vn",ngay:"25/02/2026",vitri:"Sale"},
-  {ma:"TTD0002",cty:"TTD",ten:"Nguyễn Thị Thúy Quyên",sdt:"0918358241",email:"grace@ttdglobal.vn",ngay:"26/06/2025",vitri:"Sale"},
-  {ma:"TTD0003",cty:"TTD",ten:"Trần Thị Tuyết Loan",sdt:"0379992898",email:"lona@ttdglobal.vn",ngay:"05/01/2026",vitri:"Sale Admin"},
-  {ma:"TTD0004",cty:"TTD",ten:"Mai Đức Nguyễn Linh",sdt:"0938221939",email:"lucky@ttdglobal.vn",ngay:"20/12/2025",vitri:"Sale"},
-  {ma:"TTD0005",cty:"TTD",ten:"Nguyễn Hữu Chí Vũ",sdt:"0917739588",email:"vu@ttdglobal.vn",ngay:"02/03/2026",vitri:"Manager"},
-  {ma:"TTD0006",cty:"TTD",ten:"Huỳnh Dương Phi Yến",sdt:"0704717496",email:"yen@ttdglobal.vn",ngay:"23/04/2025",vitri:"Kế Toán"},
-  {ma:"TTD0009",cty:"TTD",ten:"Vũ Thị Đượm",sdt:"0355023839",email:"duom@ttdglobal.vn",ngay:"06/04/2026",vitri:"Kế Toán"},
-  {ma:"VCC0001",cty:"VCC",ten:"Lê Thị Bích Vy",sdt:"0906465785",email:"vy@ttdglobal.vn",ngay:"01/04/2026",vitri:"Kế Toán"},
-  {ma:"VCC0002",cty:"VCC",ten:"Dương Hoàng Đăng Huy",sdt:"0937760061",email:"jacob@ttdglobal.vn",ngay:"30/01/2026",vitri:"Logistic"},
-  {ma:"VCC0003",cty:"VCC",ten:"Nguyễn Minh Thúy",sdt:"0339669026",email:"jasmine@ttdglobal.vn",ngay:"15/02/2026",vitri:"Logistic"},
-  {ma:"VCC0004",cty:"VCC",ten:"Nguyễn Đình Trung",sdt:"0816637750",email:"trung@ttdglobal.vn",ngay:"01/03/2026",vitri:"Logistic"},
-];
+const SB_HEADERS = {
+  'apikey': SB_KEY,
+  'Authorization': 'Bearer ' + SB_KEY,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation'
+};
 
-function getEmployees(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||DEFAULT_EMPLOYEES;}catch{return DEFAULT_EMPLOYEES;}}
-function saveEmployees(arr){localStorage.setItem(STORAGE_KEY,JSON.stringify(arr));}
-function getAttendance(){try{return JSON.parse(localStorage.getItem(ATT_KEY))||[];}catch{return [];}}
-function saveAttendance(arr){localStorage.setItem(ATT_KEY,JSON.stringify(arr));}
-function getLeaves(){try{return JSON.parse(localStorage.getItem(LEAVE_KEY))||[];}catch{return [];}}
-function saveLeaves(arr){localStorage.setItem(LEAVE_KEY,JSON.stringify(arr));}
+// In-memory cache
+let _employees = [];
+let _attendance = [];
+let _leaves = [];
+let _leaveAdj = {};
+
+async function sbFetch(table, params='') {
+  const res = await fetch(`${SB_URL}/rest/v1/${table}?${params}`, { headers: SB_HEADERS });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function sbInsert(table, data) {
+  const res = await fetch(`${SB_URL}/rest/v1/${table}`, {
+    method: 'POST', headers: SB_HEADERS, body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function sbUpdate(table, data, match) {
+  const params = Object.entries(match).map(([k,v])=>`${k}=eq.${encodeURIComponent(v)}`).join('&');
+  const res = await fetch(`${SB_URL}/rest/v1/${table}?${params}`, {
+    method: 'PATCH', headers: SB_HEADERS, body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function sbUpsert(table, data, onConflict) {
+  const res = await fetch(`${SB_URL}/rest/v1/${table}?on_conflict=${onConflict}`, {
+    method: 'POST',
+    headers: { ...SB_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=representation' },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function sbDelete(table, match) {
+  const params = Object.entries(match).map(([k,v])=>`${k}=eq.${encodeURIComponent(v)}`).join('&');
+  const res = await fetch(`${SB_URL}/rest/v1/${table}?${params}`, {
+    method: 'DELETE', headers: SB_HEADERS
+  });
+  if (!res.ok) throw new Error(await res.text());
+}
+
+// Load all data from Supabase
+async function loadAllData() {
+  try {
+    const [emps, att, lv, adj] = await Promise.all([
+      sbFetch('employees', 'order=ma'),
+      sbFetch('attendance', 'order=date.desc,ma'),
+      sbFetch('leaves', 'order=sent_at.desc'),
+      sbFetch('leave_adjustments', 'select=*')
+    ]);
+    _employees = emps.map(e => ({ ma:e.ma, cty:e.cty, ten:e.ten, vitri:e.vitri||'', sdt:e.sdt||'', email:e.email||'', ngay:e.ngay||'' }));
+    _attendance = att.map(a => ({ ma:a.ma, name:a.name, date:a.date, checkin:a.checkin||'', checkout:a.checkout||'', status:a.status, device:a.device||'', source:a.source||'self' }));
+    _leaves = lv.map(l => ({ ma:l.ma, empName:l.emp_name, from:l.from_date, to:l.to_date, type:l.type, reason:l.reason||'', status:l.status, actionBy:l.action_by||'', actionAt:l.action_at||'', sentAt:l.sent_at, _id:l.id }));
+    _leaveAdj = {};
+    adj.forEach(a => _leaveAdj[a.ma] = { bonus:a.bonus||0, note:a.note||'' });
+  } catch(e) {
+    console.error('Load data error:', e);
+  }
+}
+
+// Sync functions (read from cache)
+function getEmployees() { return _employees; }
+function getAttendance() { return _attendance; }
+function getLeaves() { return _leaves; }
+
+// Write functions (update Supabase + cache)
+async function saveEmployee(emp) {
+  await sbUpsert('employees', { ma:emp.ma, cty:emp.cty, ten:emp.ten, vitri:emp.vitri, sdt:emp.sdt, email:emp.email, ngay:emp.ngay }, 'ma');
+  const idx = _employees.findIndex(e=>e.ma===emp.ma);
+  if(idx>=0) _employees[idx]=emp; else _employees.push(emp);
+}
+
+async function deleteEmployeeDB(ma) {
+  await sbDelete('employees', {ma});
+  _employees = _employees.filter(e=>e.ma!==ma);
+}
+
+async function saveAttRecord(rec) {
+  await sbUpsert('attendance', { ma:rec.ma, name:rec.name, date:rec.date, checkin:rec.checkin||null, checkout:rec.checkout||null, status:rec.status, device:rec.device||null, source:rec.source||'self' }, 'ma,date');
+  const idx = _attendance.findIndex(a=>a.ma===rec.ma&&a.date===rec.date);
+  if(idx>=0) _attendance[idx]=rec; else _attendance.push(rec);
+}
+
+async function deleteAttRecord(ma, date) {
+  await sbDelete('attendance', {ma, date});
+  _attendance = _attendance.filter(a=>!(a.ma===ma&&a.date===date));
+}
+
+async function saveLeaveDB(leave) {
+  const data = { ma:leave.ma, emp_name:leave.empName, from_date:leave.from, to_date:leave.to, type:leave.type, reason:leave.reason, status:leave.status };
+  const res = await sbInsert('leaves', data);
+  leave._id = res[0]?.id;
+  _leaves.push(leave);
+}
+
+async function updateLeaveDB(id, status, actionBy) {
+  const data = { status, action_by:actionBy, action_at: new Date().toISOString() };
+  await sbUpdate('leaves', data, {id});
+  const l = _leaves.find(l=>l._id===id);
+  if(l){ l.status=status; l.actionBy=actionBy; l.actionAt=new Date().toLocaleString('vi-VN'); }
+}
+
+async function saveLeaveAdjDB(ma, bonus, note) {
+  await sbUpsert('leave_adjustments', {ma, bonus:parseInt(bonus)||0, note, updated_at:new Date().toISOString()}, 'ma');
+  _leaveAdj[ma] = {bonus:parseInt(bonus)||0, note};
+}
+
+// Leave adjustment (from cache)
+function getLeaveAdjust(ma) { return _leaveAdj[ma] || {bonus:0, note:''}; }
+function setLeaveAdjust(ma, bonus, note) { _leaveAdj[ma]={bonus:parseInt(bonus)||0,note}; }
 
 const BADGE = {
   'Sale':'badge-sale','Manager':'badge-manager','Kế Toán':'badge-ketoan',
@@ -517,7 +619,7 @@ let currentSearch = '';
 
 // ============ LEAVE BALANCE ============
 const TOTAL_LEAVE_DAYS = 12;
-const LEAVE_ADJUST_KEY = 'ttdcore_leave_adjust';
+
 
 function getLeaveAdjust(ma) {
   try {
@@ -713,14 +815,16 @@ function updateAdjustPreview() {
 
 document.getElementById('adjustBonus')?.addEventListener('input', updateAdjustPreview);
 
-function saveAdjust() {
+async function saveAdjust() {
   if (!adjustingMa) return;
   const bonus = parseInt(document.getElementById('adjustBonus').value) || 0;
   const note = document.getElementById('adjustNote').value.trim();
-  setLeaveAdjust(adjustingMa, bonus, note);
-  closeModal('adjustModal');
-  renderEmployees();
-  renderLeaves();
+  try {
+    await saveLeaveAdjDB(adjustingMa, bonus, note);
+    closeModal('adjustModal');
+    renderEmployees();
+    renderLeaves();
+  } catch(e) { alert('Lỗi: ' + e.message); }
 }
 
 // ============ ATTENDANCE ADD/EDIT/DELETE (Admin only) ============
@@ -732,7 +836,7 @@ function openAddAttModal(){
   document.getElementById('addAttModal').classList.remove('hidden');
 }
 
-function saveAddAtt(){
+async function saveAddAtt(){
   if(!isAdmin()) return;
   const ma = document.getElementById('addAttEmp').value;
   const date = document.getElementById('addAttDate').value;
@@ -740,58 +844,54 @@ function saveAddAtt(){
   const checkout = document.getElementById('addAttOut').value;
   const status = document.getElementById('addAttStatus').value;
   if(!ma||!date){ alert('Vui lòng chọn nhân viên và ngày!'); return; }
-  const emps = getEmployees();
-  const emp = emps.find(e=>e.ma===ma);
-  const att = getAttendance();
-  const idx = att.findIndex(a=>a.date===date && a.ma===ma);
+  const emp = getEmployees().find(e=>e.ma===ma);
   const rec = {ma, name:emp?.ten||'', date, checkin, checkout, status, device:'Admin', source:'admin'};
-  if(idx>=0) att[idx]=rec; else att.push(rec);
-  saveAttendance(att);
-  closeModal('addAttModal');
-  renderAttendance();
+  try {
+    await saveAttRecord(rec);
+    closeModal('addAttModal');
+    renderAttendance();
+  } catch(e) { alert('Lỗi: ' + e.message); }
 }
 
 // ============ ATTENDANCE EDIT/DELETE (Admin only) ============
-function editAtt(ma, date) {
+async function editAtt(ma, date) {
   if (!isAdmin()) return;
-  const att = getAttendance();
-  const rec = att.find(a => a.ma === ma && a.date === date);
+  const rec = getAttendance().find(a => a.ma === ma && a.date === date);
   if (!rec) return;
-
   const newCheckin = prompt('Giờ check-in (HH:MM):', rec.checkin || '');
   if (newCheckin === null) return;
   const newCheckout = prompt('Giờ check-out (HH:MM):', rec.checkout || '');
   if (newCheckout === null) return;
   const newStatus = prompt('Trạng thái (present/late/absent/leave):', rec.status || 'present');
   if (newStatus === null) return;
-
-  const idx = att.findIndex(a => a.ma === ma && a.date === date);
-  att[idx] = { ...att[idx], checkin: newCheckin, checkout: newCheckout, status: newStatus };
-  saveAttendance(att);
-  renderAttendance();
+  try {
+    await saveAttRecord({ ...rec, checkin: newCheckin, checkout: newCheckout, status: newStatus });
+    renderAttendance();
+  } catch(e) { alert('Lỗi: ' + e.message); }
 }
 
-function deleteAtt(ma, date) {
+async function deleteAtt(ma, date) {
   if (!isAdmin()) return;
   const emp = getEmployees().find(e => e.ma === ma);
   if (!confirm(`Xóa bản ghi chấm công ngày ${date} của ${emp?.ten || ma}?`)) return;
-  const att = getAttendance().filter(a => !(a.ma === ma && a.date === date));
-  saveAttendance(att);
-  renderAttendance();
+  try {
+    await deleteAttRecord(ma, date);
+    renderAttendance();
+  } catch(e) { alert('Lỗi: ' + e.message); }
 }
 
-function deleteEmployee(ma, ten){
+async function deleteEmployee(ma, ten){
   if(!confirm(`Xóa nhân viên "${ten}" (${ma})?
 Hành động này không thể hoàn tác.`)) return;
-  const emps = getEmployees().filter(e=>e.ma!==ma);
-  saveEmployees(emps);
-  renderEmployees();
-  // Update stats
-  const ttd = emps.filter(e=>e.cty==='TTD').length;
-  const vcc = emps.filter(e=>e.cty==='VCC').length;
-  document.querySelectorAll('.stat-val')[0].textContent = emps.length;
-  document.querySelectorAll('.stat-val')[1].textContent = ttd;
-  document.querySelectorAll('.stat-val')[2].textContent = vcc;
+  try {
+    await deleteEmployeeDB(ma);
+    renderEmployees();
+    const emps = getEmployees();
+    document.querySelectorAll('.stat-val')[0].textContent = emps.length;
+    document.querySelectorAll('.stat-val')[1].textContent = emps.filter(e=>e.cty==='TTD').length;
+    document.querySelectorAll('.stat-val')[2].textContent = emps.filter(e=>e.cty==='VCC').length;
+    initEmpSelect();
+  } catch(e) { alert('Lỗi: ' + e.message); }
 }
 function filterByCompany(cty,btn){
   currentFilter=cty;
@@ -982,21 +1082,19 @@ function renderLeaves() {
     </div>`;
 }
 
-function updateLeave(idx,status){
+async function updateLeave(idx,status){
   if(getCurrentEmail() !== 'vu@ttdglobal.vn'){
     alert('Chỉ vu@ttdglobal.vn mới có quyền duyệt nghỉ phép!');
     return;
   }
-  const leaves=getLeaves();
-  leaves[idx].status=status;
-  if(status==='approved'||status==='rejected'){
-    const userLabel = document.getElementById('userLabel')?.textContent||'Admin';
-    leaves[idx].actionBy = userLabel;
-    leaves[idx].actionAt = new Date().toLocaleString('vi-VN');
-  }
-  saveLeaves(leaves);
-  renderLeaves();
-  renderEmployees();
+  const leave = getLeaves()[idx];
+  if(!leave) return;
+  const actionBy = document.getElementById('userLabel')?.textContent||'Admin';
+  try {
+    await updateLeaveDB(leave._id, status, actionBy);
+    renderLeaves();
+    renderEmployees();
+  } catch(e) { alert('Lỗi: ' + e.message); }
 }
 
 // ============ MODALS ============
@@ -1013,43 +1111,45 @@ document.querySelectorAll('.modal-backdrop').forEach(m=>{
   m.addEventListener('click',e=>{if(e.target===m)m.classList.add('hidden');});
 });
 
-function addEmployee(){
+async function addEmployee(){
   const ma=document.getElementById('newMa').value.trim();
   const ten=document.getElementById('newTen').value.trim();
   if(!ma||!ten){alert('Vui lòng nhập đủ thông tin!');return;}
-  const emps=getEmployees();
-  emps.push({
+  const emp = {
     ma, cty:document.getElementById('newCty').value,
     ten, vitri:document.getElementById('newVitri').value,
     ngay:document.getElementById('newNgay').value,
     sdt:document.getElementById('newSdt').value,
     email:document.getElementById('newEmail').value
-  });
-  saveEmployees(emps);
-  closeModal('addModal');
-  renderEmployees();
-  // Update stat
-  document.querySelector('.stat-val').textContent=emps.length;
+  };
+  try {
+    await saveEmployee(emp);
+    closeModal('addModal');
+    renderEmployees();
+    document.querySelectorAll('.stat-val')[0].textContent = getEmployees().length;
+    initEmpSelect();
+  } catch(e) { alert('Lỗi: ' + e.message); }
 }
 
-function submitLeave(){
+async function submitLeave(){
   const from=document.getElementById('leaveFrom').value;
   const to=document.getElementById('leaveTo').value;
   const reason=document.getElementById('leaveReason').value.trim();
   if(!from||!to){alert('Vui lòng chọn ngày nghỉ!');return;}
   const sel=document.getElementById('leaveEmp');
   const empName=sel.options[sel.selectedIndex].text.split(' (')[0];
-  const leaves=getLeaves();
-  leaves.push({
+  const leave = {
     ma:sel.value, empName, from, to,
     type:document.getElementById('leaveType').value,
     reason:reason||'Không có lý do',
     status:'pending',
     sentAt:new Date().toLocaleString('vi-VN')
-  });
-  saveLeaves(leaves);
-  closeModal('leaveModal');
-  renderLeaves();
+  };
+  try {
+    await saveLeaveDB(leave);
+    closeModal('leaveModal');
+    renderLeaves();
+  } catch(e) { alert('Lỗi: ' + e.message); }
 }
 
 // ============ DEVICE DETECT ============
@@ -1142,33 +1242,37 @@ function loadTodayStatus(){
     </div>`;
 }
 
-function doCheckin(){
+async function doCheckin(){
   if(!selectedEmp) return;
   const now = new Date();
   const timeStr = now.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',hour12:false});
   const today = getTodayKey();
-  const att = getAttendance();
   const [h,m] = timeStr.split(':').map(Number);
   const status = (h*60+m) > (8*60+15) ? 'late' : 'present';
   const device = getDeviceType();
-  const idx = att.findIndex(a=>a.date===today && a.ma===selectedEmp.ma);
-  const rec = {ma:selectedEmp.ma, name:selectedEmp.ten, date:today, checkin:timeStr, checkout:'', status, device};
-  if(idx>=0) att[idx]={...att[idx],...rec}; else att.push(rec);
-  saveAttendance(att);
-  loadTodayStatus();
-  renderAttendance();
+  const existing = getAttendance().find(a=>a.date===today && a.ma===selectedEmp.ma);
+  const rec = {ma:selectedEmp.ma, name:selectedEmp.ten, date:today, checkin:timeStr, checkout:existing?.checkout||'', status, device};
+  try {
+    await saveAttRecord(rec);
+    loadTodayStatus();
+    renderAttendance();
+    renderEmployees();
+  } catch(e) { alert('Lỗi lưu chấm công: ' + e.message); }
 }
 
-function doCheckout(){
+async function doCheckout(){
   if(!selectedEmp) return;
   const now = new Date();
   const timeStr = now.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',hour12:false});
   const today = getTodayKey();
-  const att = getAttendance();
-  const idx = att.findIndex(a=>a.date===today && a.ma===selectedEmp.ma);
-  if(idx>=0){ att[idx].checkout=timeStr; saveAttendance(att); }
-  loadTodayStatus();
-  renderAttendance();
+  const existing = getAttendance().find(a=>a.date===today && a.ma===selectedEmp.ma);
+  if(!existing) return;
+  const rec = {...existing, checkout:timeStr};
+  try {
+    await saveAttRecord(rec);
+    loadTodayStatus();
+    renderAttendance();
+  } catch(e) { alert('Lỗi: ' + e.message); }
 }
 
 // ============ INIT ============
@@ -1213,12 +1317,22 @@ function populateCheckinDropdown(){
   }
 }
 
-// Init
-if(!localStorage.getItem(STORAGE_KEY)) saveEmployees(DEFAULT_EMPLOYEES);
-renderEmployees();
-initEmpSelect();
-renderLeaves();
-initAuth();
+// Init - load all data from Supabase first
+async function init() {
+  // Show loading
+  document.getElementById('empGrid').innerHTML = '<div style="color:var(--muted);padding:32px;grid-column:1/-1;">⏳ Đang tải dữ liệu...</div>';
+  await loadAllData();
+  await initAuth();
+  renderEmployees();
+  initEmpSelect();
+  renderLeaves();
+  // Update stats
+  const emps = getEmployees();
+  document.querySelectorAll('.stat-val')[0].textContent = emps.length;
+  document.querySelectorAll('.stat-val')[1].textContent = emps.filter(e=>e.cty==='TTD').length;
+  document.querySelectorAll('.stat-val')[2].textContent = emps.filter(e=>e.cty==='VCC').length;
+}
+init();
 </script>
 </body>
 </html>
