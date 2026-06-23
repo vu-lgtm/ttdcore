@@ -644,16 +644,23 @@ async function initAuth() {
   if (session?.user?.email) {
     _currentEmail = session.user.email;
   } else {
-    // Fallback to localStorage
     try {
       const stored = localStorage.getItem('sb-fyjinbtabsentsvnkqzg-auth-token');
       if (stored) _currentEmail = JSON.parse(stored)?.user?.email || '';
     } catch {}
   }
-  // Re-render after auth loaded
+  const adminVis = isAdmin() ? '' : 'none';
+  // Re-render with correct permissions
   renderEmployees();
   renderAttendance();
-  document.getElementById('btnAddAtt').style.display = isAdmin() ? '' : 'none';
+  renderLeaves();
+  // Force show/hide admin UI
+  document.getElementById('btnAddAtt').style.display = adminVis;
+  document.getElementById('thDevice').style.display = adminVis;
+  document.getElementById('thEdit').style.display = adminVis;
+  document.querySelectorAll('.admin-col').forEach(el => el.style.display = adminVis);
+  // Re-populate checkin dropdown with correct permissions
+  populateCheckinDropdown();
 }
 
 function getCurrentEmail() {
@@ -1168,19 +1175,42 @@ function doCheckout(){
 function initEmpSelect(){
   const sel = document.getElementById('empSelect');
   const checkinSel = document.getElementById('checkinEmpSel');
-  // Always use getEmployees() which falls back to DEFAULT_EMPLOYEES
   const emps = getEmployees();
-  // Clear existing options except first
+
+  // History table: always show all
   while(sel.options.length > 1) sel.remove(1);
-  while(checkinSel.options.length > 1) checkinSel.remove(1);
-  emps.forEach(e=>{
-    const o1 = new Option(`${e.ten} (${e.ma})`, e.ma);
-    const o2 = new Option(`${e.ten} (${e.ma})`, e.ma);
-    sel.appendChild(o1);
-    checkinSel.appendChild(o2);
-  });
+  emps.forEach(e => sel.appendChild(new Option(`${e.ten} (${e.ma})`, e.ma)));
   sel.addEventListener('change', renderAttendance);
+
+  // Checkin dropdown: filtered by current user (admin sees all)
+  populateCheckinDropdown();
   checkinSel.addEventListener('change', onEmpSelect);
+}
+
+function populateCheckinDropdown(){
+  const checkinSel = document.getElementById('checkinEmpSel');
+  const emps = getEmployees();
+  while(checkinSel.options.length > 1) checkinSel.remove(1);
+
+  if(isAdmin()){
+    // Admin sees all
+    emps.forEach(e => checkinSel.appendChild(new Option(`${e.ten} (${e.ma})`, e.ma)));
+  } else {
+    // Normal user: only show their own account based on email
+    const email = getCurrentEmail();
+    const mine = emps.filter(e => e.email === email);
+    if(mine.length){
+      mine.forEach(e => checkinSel.appendChild(new Option(`${e.ten} (${e.ma})`, e.ma)));
+      // Auto-select if only one
+      if(mine.length === 1){
+        checkinSel.value = mine[0].ma;
+        checkinSel.dispatchEvent(new Event('change'));
+      }
+    } else {
+      // Email not found → show all (fallback)
+      emps.forEach(e => checkinSel.appendChild(new Option(`${e.ten} (${e.ma})`, e.ma)));
+    }
+  }
 }
 
 // Init
