@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quản lý Nhân sự — TTDCore</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap');
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
@@ -632,12 +633,39 @@ function filterEmployees(val){currentSearch=val;renderEmployees();}
 const ADMIN_EMAILS = ['vu@ttdglobal.vn', 'trade@ttdglobal.vn'];
 const SUPER_ADMIN = 'vu@ttdglobal.vn'; // chỉnh phép, xóa NV
 
+const SUPABASE_URL = 'https://fyjinbtabsentsvnkqzg.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5amluYnRhYnNlbnRzdm5rcXpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MTAxNTUsImV4cCI6MjA5NDI4NjE1NX0.m1H8bOT7gUXJxPoQT6bDqtRUjo4nCSxb4A1rth7Eols';
+const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let _currentEmail = '';
+
+async function initAuth() {
+  const { data: { session } } = await _sb.auth.getSession();
+  if (session?.user?.email) {
+    _currentEmail = session.user.email;
+  } else {
+    // Fallback to localStorage
+    try {
+      const stored = localStorage.getItem('sb-fyjinbtabsentsvnkqzg-auth-token');
+      if (stored) _currentEmail = JSON.parse(stored)?.user?.email || '';
+    } catch {}
+  }
+  // Re-render after auth loaded
+  renderEmployees();
+  renderAttendance();
+  document.getElementById('btnAddAtt').style.display = isAdmin() ? '' : 'none';
+}
+
 function getCurrentEmail() {
+  // Try live session first
   try {
     const stored = localStorage.getItem('sb-fyjinbtabsentsvnkqzg-auth-token');
-    if (stored) return JSON.parse(stored)?.user?.email || '';
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return parsed?.user?.email || _currentEmail;
+    }
   } catch {}
-  return '';
+  return _currentEmail;
 }
 
 function isAdmin() {
@@ -1160,6 +1188,7 @@ if(!localStorage.getItem(STORAGE_KEY)) saveEmployees(DEFAULT_EMPLOYEES);
 renderEmployees();
 initEmpSelect();
 renderLeaves();
+initAuth();
 </script>
 </body>
 </html>
