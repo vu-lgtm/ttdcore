@@ -52,7 +52,7 @@ header{background:var(--dark2);border-bottom:2px solid var(--teal2);padding:14px
 .add-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,191,165,0.3);}
 
 /* EMPLOYEE GRID */
-.emp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+.emp-grid{display:flex;flex-direction:column;gap:8px;}
 .emp-card{background:var(--dark2);border:1px solid var(--border2);border-radius:10px;overflow:hidden;transition:border-color 0.2s,transform 0.2s,box-shadow 0.2s;cursor:pointer;}
 .emp-card:hover{border-color:var(--teal);transform:translateY(-3px);box-shadow:0 12px 30px rgba(0,0,0,0.4);}
 .emp-card-header{padding:20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border2);}
@@ -75,18 +75,20 @@ header{background:var(--dark2);border-bottom:2px solid var(--teal2);padding:14px
 .tab-content{display:none;}
 .tab-content.active{display:block;}
 
-/* EMPLOYEE CARD ACCORDION */
-.emp-card{background:var(--dark2);border:1px solid var(--border2);border-radius:10px;overflow:hidden;transition:border-color 0.2s;}
-.emp-card.present{border-color:rgba(0,191,165,0.4);}
-.emp-card-header{padding:16px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;user-select:none;}
-.emp-card-header:hover{background:rgba(255,255,255,0.02);}
-.emp-card-body{padding:0 20px;max-height:0;overflow:hidden;transition:max-height 0.3s ease, padding 0.3s ease;}
-.emp-card-body.open{max-height:300px;padding:0 20px 16px;}
-.emp-toggle{margin-left:auto;font-size:12px;color:var(--muted);transition:transform 0.3s;}
-.emp-card-header.open .emp-toggle{transform:rotate(180deg);}
+/* EMPLOYEE LIST */
+.emp-card{background:var(--dark2);border:1px solid var(--border2);border-radius:8px;overflow:hidden;transition:border-color 0.2s,background 0.2s;}
+.emp-card.present{border-color:rgba(0,191,165,0.35);}
+.emp-card:hover{border-color:rgba(0,191,165,0.25);background:rgba(255,255,255,0.01);}
+.emp-card-header{padding:14px 20px;display:flex;align-items:center;gap:14px;}
+.emp-card-body{display:none;}
+.emp-toggle{display:none;}
 .presence-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:12px;background:rgba(0,191,165,0.12);color:var(--teal);letter-spacing:0.5px;}
 .presence-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);box-shadow:0 0 5px var(--teal);animation:pulse 1.5s infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.emp-info-row{display:flex;align-items:center;gap:20px;flex:1;flex-wrap:wrap;}
+.emp-info-col{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
+.emp-info-col span:last-child{color:var(--white);}
+.emp-actions{display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0;}
 /* ATTENDANCE */
 .att-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
 .month-nav{display:flex;align-items:center;gap:10px;}
@@ -514,52 +516,43 @@ function renderEmployees(){
       : isDone
       ? `<span class="presence-badge" style="background:rgba(79,195,247,0.1);color:#4fc3f7;">✓ Đã check-out</span>`
       : '';
+    const b = getLeaveBalance(e.ma);
+    const leaveColor = b.remaining<=2?'#ef5350':b.remaining<=5?'#f0a500':'var(--teal)';
+    const leavePct = Math.round((b.remaining/b.total)*100);
     return `<div class="emp-card${isPresent?' present':''}">
-      <div class="emp-card-header" onclick="toggleCard(this)">
-        <div class="emp-avatar" style="background:linear-gradient(135deg,${colors[0]},${colors[1]})">${getInitials(e.ten)}</div>
-        <div style="flex:1;min-width:0;">
-          <div class="emp-name">${e.ten}</div>
-          <div class="emp-ma" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-            ${e.ma} · <span class="emp-badge ${ctyBadge}">${e.cty}</span>
+      <div class="emp-card-header">
+        <div class="emp-avatar" style="background:linear-gradient(135deg,${colors[0]},${colors[1]});width:38px;height:38px;font-size:14px;flex-shrink:0;">${getInitials(e.ten)}</div>
+        <div style="min-width:180px;">
+          <div class="emp-name" style="font-size:13px;">${e.ten}</div>
+          <div style="display:flex;align-items:center;gap:5px;margin-top:3px;">
+            <span class="emp-badge ${ctyBadge}" style="font-size:9px;">${e.cty}</span>
+            <span class="emp-badge ${badge}" style="font-size:9px;">${e.vitri}</span>
             ${presentBadge}
           </div>
         </div>
-        <span class="emp-toggle">▼</span>
-      </div>
-      <div class="emp-card-body">
-        <div class="emp-row"><span>💼</span><span class="emp-badge ${badge}">${e.vitri}</span></div>
-        <div class="emp-row"><span>📱</span><span>${e.sdt}</span></div>
-        <div class="emp-row"><span>✉️</span><span>${e.email}</span></div>
-        <div class="emp-row"><span>📅</span><span>Từ ${e.ngay}</span></div>
-        ${todayRec ? `<div class="emp-row"><span>⏱</span><span style="color:var(--teal);">In: ${todayRec.checkin||'—'} | Out: ${todayRec.checkout||'—'} (${todayRec.device||''})</span></div>` : ''}
-        <div class="emp-row">
-          <span>🏖️</span>
-          <span style="display:flex;align-items:center;gap:8px;">
-            ${(()=>{
-              const b = getLeaveBalance(e.ma);
-              const pct = Math.round((b.remaining/b.total)*100);
-              const color = b.remaining<=2?'#ef5350':b.remaining<=5?'#f0a500':'var(--teal)';
-              return `<span style="color:${color};font-weight:600;">Còn ${b.remaining}/${b.total} ngày phép</span>
-                      <span style="display:inline-block;width:80px;height:5px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;">
-                        <span style="display:block;width:${pct}%;height:100%;background:${color};border-radius:3px;"></span>
-                      </span>`;
-            })()}
-          </span>
+        <div class="emp-info-row">
+          <div class="emp-info-col"><span>📱</span><span>${e.sdt}</span></div>
+          <div class="emp-info-col"><span>✉️</span><span>${e.email}</span></div>
+          <div class="emp-info-col"><span>📅</span><span>Từ ${e.ngay}</span></div>
+          <div class="emp-info-col">
+            <span>🏖️</span>
+            <span style="color:${leaveColor};font-weight:600;">Còn ${b.remaining}/${b.total}</span>
+            <span style="display:inline-block;width:50px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
+              <span style="display:block;width:${leavePct}%;height:100%;background:${leaveColor};border-radius:2px;"></span>
+            </span>
+          </div>
+          ${todayRec ? `<div class="emp-info-col"><span>⏱</span><span style="color:var(--teal);">${todayRec.checkin||'—'} → ${todayRec.checkout||'—'}</span></div>` : ''}
         </div>
-        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border2);display:flex;gap:8px;">
-          ${isSuperAdmin() ? `<button onclick="openAdjustModal('${e.ma}','${e.ten}')" style="background:rgba(0,191,165,0.08);border:1px solid rgba(0,191,165,0.2);color:var(--teal);border-radius:5px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;flex:1;transition:all 0.2s;" onmouseover="this.style.background='rgba(0,191,165,0.18)'" onmouseout="this.style.background='rgba(0,191,165,0.08)'">✏️ Điều chỉnh phép</button>` : ''}
-          ${isSuperAdmin() ? `<button onclick="deleteEmployee('${e.ma}','${e.ten}')" style="background:rgba(239,83,80,0.08);border:1px solid rgba(239,83,80,0.2);color:#ef5350;border-radius:5px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;flex:1;transition:all 0.2s;" onmouseover="this.style.background='rgba(239,83,80,0.2)'" onmouseout="this.style.background='rgba(239,83,80,0.08)'">🗑 Xóa</button>` : ''}
+        <div class="emp-actions">
+          ${isSuperAdmin() ? `<button onclick="openAdjustModal('${e.ma}','${e.ten}')" title="Điều chỉnh phép" style="background:rgba(0,191,165,0.08);border:1px solid rgba(0,191,165,0.2);color:var(--teal);border-radius:5px;padding:5px 10px;font-size:12px;cursor:pointer;">✏️</button>` : ''}
+          ${isSuperAdmin() ? `<button onclick="deleteEmployee('${e.ma}','${e.ten}')" title="Xóa nhân viên" style="background:rgba(239,83,80,0.08);border:1px solid rgba(239,83,80,0.2);color:#ef5350;border-radius:5px;padding:5px 10px;font-size:12px;cursor:pointer;">🗑</button>` : ''}
         </div>
       </div>
     </div>`;
   }).join('');
 }
 
-function toggleCard(header){
-  header.classList.toggle('open');
-  const body = header.nextElementSibling;
-  body.classList.toggle('open');
-}
+
 
 function filterEmployees(val){currentSearch=val;renderEmployees();}
 
