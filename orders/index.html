@@ -73,6 +73,20 @@ body {
 }
 .search-box input:focus { outline: none; border-color: #667eea; }
 .search-box::before { content: "🔍"; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; }
+
+/* STATUS TABS */
+.status-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid #e9ecef; }
+.status-tab { padding: 10px 20px; font-size: 13px; font-weight: 600; color: #6c757d; cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+.status-tab:hover { color: #495057; }
+.status-tab.active { color: #667eea; border-bottom-color: #667eea; }
+.status-tab.active.tab-progress { color: #667eea; border-bottom-color: #667eea; }
+.status-tab.active.tab-done { color: #28a745; border-bottom-color: #28a745; }
+.status-tab.active.tab-cancelled { color: #dc3545; border-bottom-color: #dc3545; }
+.tab-count { font-size: 11px; background: #e9ecef; color: #6c757d; padding: 1px 7px; border-radius: 10px; font-weight: 700; }
+.status-tab.active.tab-progress .tab-count { background: #eef0ff; color: #667eea; }
+.status-tab.active.tab-done .tab-count { background: #d4edda; color: #28a745; }
+.status-tab.active.tab-cancelled .tab-count { background: #f8d7da; color: #dc3545; }
+
 .status-filter { padding: 10px 14px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; background: white; cursor: pointer; }
 .order-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
 /* List view */
@@ -757,15 +771,50 @@ function updateCancelBtn() {
   }
 }
 
+function setStatusTab(tab, btn) {
+  window._statusTab = tab;
+  document.querySelectorAll('.status-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderOrderList();
+}
+
+function updateTabCounts() {
+  const counts = { progress: 0, done: 0, new: 0, cancelled: 0 };
+  (allOrders || []).forEach(o => {
+    const st = getStatus(o);
+    if (counts[st] !== undefined) counts[st]++;
+    if (st === 'new') counts.progress++; // new counts as progress
+  });
+  const pEl = document.getElementById('cnt-progress');
+  const dEl = document.getElementById('cnt-done');
+  const cEl = document.getElementById('cnt-cancelled');
+  if (pEl) pEl.textContent = counts.progress + counts.new - counts.progress; // recalc below
+  // Recalc properly
+  let p=0, d=0, c=0;
+  (allOrders || []).forEach(o => {
+    const st = getStatus(o);
+    if (st === 'progress' || st === 'new') p++;
+    else if (st === 'done') d++;
+    else if (st === 'cancelled') c++;
+  });
+  if (pEl) pEl.textContent = p;
+  if (dEl) dEl.textContent = d;
+  if (cEl) cEl.textContent = c;
+}
+
+window._statusTab = window._statusTab || 'progress';
 function renderOrderList() {
   const container = document.getElementById('orderListContainer');
   const search = document.getElementById('searchInput').value.toLowerCase();
-  const sf = document.getElementById('statusFilter').value;
+  const sf = window._statusTab || 'progress';
   const sort = document.getElementById('sortOrder')?.value || 'desc';
 
   let filtered = allOrders.filter(o => {
     const ms = !search || (o.code||'').toLowerCase().includes(search) || (o.customer||'').toLowerCase().includes(search);
-    const mst = sf === 'all' || sf === getStatus(o);
+    const st = getStatus(o);
+    const mst = sf === 'all' || 
+      sf === st || 
+      (sf === 'progress' && (st === 'new' || st === 'progress'));
     return ms && mst;
   });
 
