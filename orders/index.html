@@ -658,6 +658,7 @@ async function loadOrderList() {
     if (error) throw error;
     allOrders = data || [];
     renderOrderList();
+    updateTabCounts();
   } catch(e) {
     document.getElementById('orderListContainer').innerHTML = `<div class="empty-state"><p>Lỗi tải dữ liệu: ${e.message}</p></div>`;
   } finally { hideLoading(); }
