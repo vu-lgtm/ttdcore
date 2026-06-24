@@ -1046,6 +1046,16 @@ function renderDetail() {
   }
   const deleteBtn = document.getElementById('deleteBtn');
   if (currentUser.role === 'admin') deleteBtn.classList.remove('hidden'); else deleteBtn.classList.add('hidden');
+  // Cancel button visible to admin and sale_admin
+  const cancelBtn = document.getElementById('cancelBtn');
+  if (cancelBtn) {
+    if (currentUser.role === 'admin' || currentUser.role === 'sale_admin' || currentUser.role === 'sale') {
+      cancelBtn.classList.remove('hidden');
+      updateCancelBtn();
+    } else {
+      cancelBtn.classList.add('hidden');
+    }
+  }
 
   const dfs = [
     { k:'all', label:'Tất cả' }, { k:'sale', label:'Sale' }, { k:'sale_admin', label:'Sale Admin' },
