@@ -418,13 +418,11 @@ body {
       <div class="search-box">
         <input type="text" id="searchInput" placeholder="Tìm mã đơn hoặc khách hàng..." oninput="renderOrderList()">
       </div>
-      <select class="status-filter" id="statusFilter" onchange="renderOrderList()">
-        <option value="all">Tất cả trạng thái</option>
-        <option value="new">Mới tạo</option>
-        <option value="progress">Đang xử lý</option>
-        <option value="done">Đã hoàn thành</option>
-        <option value="cancelled">Đã hủy</option>
-      </select>
+      <div style="display:flex;gap:0;border:2px solid #e0e0e0;border-radius:8px;overflow:hidden;background:white;">
+        <button id="tab-progress" onclick="setStatusTab('progress')" style="padding:9px 18px;font-size:13px;font-weight:600;border:none;cursor:pointer;background:#667eea;color:white;display:flex;align-items:center;gap:6px;">⚙️ Đang xử lý <span id="cnt-progress" style="background:rgba(255,255,255,0.3);border-radius:10px;padding:1px 7px;font-size:11px;">0</span></button>
+        <button id="tab-done" onclick="setStatusTab('done')" style="padding:9px 18px;font-size:13px;font-weight:600;border:none;border-left:2px solid #e0e0e0;cursor:pointer;background:white;color:#6c757d;display:flex;align-items:center;gap:6px;">✅ Hoàn thành <span id="cnt-done" style="background:#e9ecef;border-radius:10px;padding:1px 7px;font-size:11px;">0</span></button>
+        <button id="tab-cancelled" onclick="setStatusTab('cancelled')" style="padding:9px 18px;font-size:13px;font-weight:600;border:none;border-left:2px solid #e0e0e0;cursor:pointer;background:white;color:#6c757d;display:flex;align-items:center;gap:6px;">🚫 Đã hủy <span id="cnt-cancelled" style="background:#e9ecef;border-radius:10px;padding:1px 7px;font-size:11px;">0</span></button>
+      </div>
       <select class="status-filter" id="sortOrder" onchange="renderOrderList()">
         <option value="desc">Mới nhất trước</option>
         <option value="asc">Cũ nhất trước</option>
@@ -803,6 +801,47 @@ function updateTabCounts() {
 }
 
 window._statusTab = window._statusTab || 'progress';
+
+function setStatusTab(tab) {
+  window._statusTab = tab;
+  // Update button styles
+  const tabs = {
+    'progress': {bg:'#667eea',color:'white',cntBg:'rgba(255,255,255,0.3)'},
+    'done':     {bg:'#28a745',color:'white',cntBg:'rgba(255,255,255,0.3)'},
+    'cancelled':{bg:'#dc3545',color:'white',cntBg:'rgba(255,255,255,0.3)'}
+  };
+  ['progress','done','cancelled'].forEach(t => {
+    const btn = document.getElementById('tab-'+t);
+    if (!btn) return;
+    if (t === tab) {
+      btn.style.background = tabs[t].bg;
+      btn.style.color = tabs[t].color;
+      document.getElementById('cnt-'+t).style.background = tabs[t].cntBg;
+    } else {
+      btn.style.background = 'white';
+      btn.style.color = '#6c757d';
+      document.getElementById('cnt-'+t).style.background = '#e9ecef';
+    }
+  });
+  renderOrderList();
+}
+
+function updateTabCounts() {
+  let p=0, d=0, c=0;
+  (allOrders||[]).forEach(o => {
+    const st = getStatus(o);
+    if (st==='progress'||st==='new') p++;
+    else if (st==='done') d++;
+    else if (st==='cancelled') c++;
+  });
+  const pe=document.getElementById('cnt-progress');
+  const de=document.getElementById('cnt-done');
+  const ce=document.getElementById('cnt-cancelled');
+  if(pe) pe.textContent=p;
+  if(de) de.textContent=d;
+  if(ce) ce.textContent=c;
+}
+
 function renderOrderList() {
   const container = document.getElementById('orderListContainer');
   const search = document.getElementById('searchInput').value.toLowerCase();
@@ -812,9 +851,7 @@ function renderOrderList() {
   let filtered = allOrders.filter(o => {
     const ms = !search || (o.code||'').toLowerCase().includes(search) || (o.customer||'').toLowerCase().includes(search);
     const st = getStatus(o);
-    const mst = sf === 'all' || 
-      sf === st || 
-      (sf === 'progress' && (st === 'new' || st === 'progress'));
+    const mst = sf === 'all' || sf === st || (sf === 'progress' && (st === 'new' || st === 'progress'));
     return ms && mst;
   });
 
