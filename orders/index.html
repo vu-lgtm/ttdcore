@@ -94,6 +94,7 @@ body {
 .status-pill { font-size: 11px; padding: 4px 10px; border-radius: 12px; font-weight: 600; white-space: nowrap; }
 .status-progress { background: #fff3cd; color: #856404; }
 .status-done { background: #d4edda; color: #155724; }
+.status-cancelled { background: #f8d7da; color: #721c24; }
 .status-new { background: #d1ecf1; color: #0c5460; }
 .order-meta { display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f0f0; }
 .mini-progress { width: 100%; height: 5px; background: #f0f0f0; border-radius: 3px; margin-top: 8px; overflow: hidden; }
@@ -408,6 +409,7 @@ body {
         <option value="new">Mới tạo</option>
         <option value="progress">Đang xử lý</option>
         <option value="done">Đã hoàn thành</option>
+        <option value="cancelled">Đã hủy</option>
       </select>
       <select class="status-filter" id="sortOrder" onchange="renderOrderList()">
         <option value="desc">Mới nhất trước</option>
@@ -448,6 +450,7 @@ body {
       <button class="btn" onclick="exportToExcel()">📥 Xuất Excel</button>
       <button class="btn" onclick="window.print()">🖨️ In</button>
       <button class="btn btn-danger hidden" onclick="deleteCurrentOrder()" id="deleteBtn">🗑️ Xóa đơn</button>
+      <button class="btn hidden" onclick="toggleCancelOrder()" id="cancelBtn" style="background:#dc3545;color:white;border:none;">🚫 Hủy đơn</button>
     </div>
   </div>
 
@@ -661,10 +664,97 @@ function countCompleted(o) {
 }
 
 function getStatus(o) {
+  if (o.cancelled) return 'cancelled';
   const c = countCompleted(o);
   if (c === 0) return 'new';
   if (c >= TOTAL) return 'done';
   return 'progress';
+}
+
+async function cancelOrder(id) {
+  if (!confirm('Hủy đơn hàng này? Hành động này có thể hoàn tác bằng cách mở đơn và bỏ tick Hủy.')) return;
+  const idx = allOrders.findIndex(o => o.id === id);
+  if (idx < 0) return;
+  allOrders[idx].cancelled = true;
+  allOrders[idx].cancelledAt = new Date().toISOString();
+  allOrders[idx].cancelledBy = currentUser?.email || 'unknown';
+  try {
+    await sb.from('orders').update({
+      cancelled: true,
+      cancelled_at: allOrders[idx].cancelledAt,
+      cancelled_by: allOrders[idx].cancelledBy
+    }).eq('id', id);
+    showToast('✅ Đã hủy đơn hàng');
+    renderOrderList();
+    if (currentOrder?.id === id) { currentOrder = allOrders[idx]; renderDetail(); }
+  } catch(e) { showToast('❌ Lỗi: ' + e.message); }
+}
+
+async function restoreOrder(id) {
+  const idx = allOrders.findIndex(o => o.id === id);
+  if (idx < 0) return;
+  allOrders[idx].cancelled = false;
+  try {
+    await sb.from('orders').update({ cancelled: false }).eq('id', id);
+    showToast('✅ Đã khôi phục đơn hàng');
+    renderOrderList();
+    if (currentOrder?.id === id) { currentOrder = allOrders[idx]; renderDetail(); }
+  } catch(e) { showToast('❌ Lỗi: ' + e.message); }
+}
+
+async function toggleCancelOrder() {
+  if (!currentOrder) return;
+  const isCancelled = !!currentOrder.cancelled;
+  const msg = isCancelled 
+    ? 'Khôi phục đơn hàng này?' 
+    : 'Hủy đơn hàng này? Có thể khôi phục lại sau.';
+  if (!confirm(msg)) return;
+  
+  const newVal = !isCancelled;
+  showLoading(newVal ? 'Đang hủy đơn...' : 'Đang khôi phục...');
+  try {
+    const updateData = { cancelled: newVal };
+    if (newVal) {
+      updateData.cancelled_at = new Date().toISOString();
+      updateData.cancelled_by = currentUser?.email || currentUser?.name || 'unknown';
+    } else {
+      updateData.cancelled_at = null;
+      updateData.cancelled_by = null;
+    }
+    const { error } = await sb.from('orders').update(updateData).eq('id', currentOrder.id);
+    if (error) throw error;
+    
+    // Update local
+    currentOrder.cancelled = newVal;
+    const idx = allOrders.findIndex(o => o.id === currentOrder.id);
+    if (idx >= 0) allOrders[idx].cancelled = newVal;
+    
+    // Log to history
+    currentOrder.history = currentOrder.history || [];
+    currentOrder.history.push({
+      action: newVal ? 'cancel' : 'restore',
+      user: currentUser.name,
+      role: currentUser.role,
+      time: Date.now()
+    });
+    await sb.from('orders').update({ history: currentOrder.history }).eq('id', currentOrder.id);
+    
+    showToast(newVal ? '🚫 Đã hủy đơn hàng' : '✅ Đã khôi phục đơn hàng');
+    updateCancelBtn();
+    renderOrderList();
+  } catch(e) { showToast('❌ Lỗi: ' + e.message); } finally { hideLoading(); }
+}
+
+function updateCancelBtn() {
+  const btn = document.getElementById('cancelBtn');
+  if (!btn || !currentOrder) return;
+  if (currentOrder.cancelled) {
+    btn.textContent = '↩ Khôi phục đơn';
+    btn.style.background = '#28a745';
+  } else {
+    btn.textContent = '🚫 Hủy đơn';
+    btn.style.background = '#dc3545';
+  }
 }
 
 function renderOrderList() {
@@ -704,8 +794,8 @@ function renderGridView(container, filtered) {
     const done = countCompleted(o);
     const pct = Math.round((done/TOTAL)*100);
     const st = getStatus(o);
-    const stLabel = { new:'Mới', progress:'Đang xử lý', done:'Hoàn thành' }[st];
-    const stClass = { new:'status-new', progress:'status-progress', done:'status-done' }[st];
+    const stLabel = { new:'Mới', progress:'Đang xử lý', done:'Hoàn thành', cancelled:'Đã hủy' }[st];
+    const stClass = { new:'status-new', progress:'status-progress', done:'status-done', cancelled:'status-cancelled' }[st];
     const date = o.created_at ? new Date(o.created_at).toLocaleDateString('vi-VN') : '';
     const totalAttach = Object.values(o.attachments||{}).reduce((s,a)=>s+(a||[]).length,0);
     const p = o.payment || {};
@@ -744,8 +834,8 @@ function renderGridView(container, filtered) {
 }
 
 function renderListTable(container, filtered) {
-  const stLabel = { new:'Mới', progress:'Đang xử lý', done:'Hoàn thành' };
-  const stClass = { new:'status-new', progress:'status-progress', done:'status-done' };
+  const stLabel = { new:'Mới', progress:'Đang xử lý', done:'Hoàn thành', cancelled:'Đã hủy' };
+  const stClass = { new:'status-new', progress:'status-progress', done:'status-done', cancelled:'status-cancelled' };
   const rows = filtered.map(o => {
     const done = countCompleted(o);
     const pct = Math.round((done/TOTAL)*100);
@@ -1353,6 +1443,8 @@ function renderHistory() {
     else if (h.action==='attach') { icon='📎'; cls='attach'; line=`<strong>${esc(h.user)}</strong> (${roleLabel}) đính kèm "<em>${esc(h.attachTitle)}</em>" vào bước <strong>#${h.stepNum}</strong>`; }
     else if (h.action==='detach') { icon='✕'; cls='detach'; line=`<strong>${esc(h.user)}</strong> (${roleLabel}) xóa link "<em>${esc(h.attachTitle)}</em>" khỏi bước <strong>#${h.stepNum}</strong>`; }
     else if (h.action==='payment') { icon='💰'; cls='attach'; line=`<strong>${esc(h.user)}</strong> (${roleLabel}) cập nhật thanh toán: ${esc(h.detail||'')}`; }
+    else if (h.action==='cancel') { icon='🚫'; cls='detach'; line=`<strong>${esc(h.user)}</strong> đã <strong>hủy</strong> đơn hàng`; }
+    else if (h.action==='restore') { icon='↩'; cls='attach'; line=`<strong>${esc(h.user)}</strong> đã <strong>khôi phục</strong> đơn hàng`; }
     return `<div class="history-item">
       <div class="history-icon ${cls}">${icon}</div>
       <div class="history-content">
