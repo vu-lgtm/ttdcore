@@ -73,27 +73,10 @@ body {
 }
 .search-box input:focus { outline: none; border-color: #667eea; }
 .search-box::before { content: "🔍"; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; }
-
-/* STATUS TABS */
-.status-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid #e9ecef; }
-.status-tab { padding: 10px 20px; font-size: 13px; font-weight: 600; color: #6c757d; cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
-.status-tab:hover { color: #495057; }
-.status-tab.active { color: #667eea; border-bottom-color: #667eea; }
-.status-tab.active.tab-progress { color: #667eea; border-bottom-color: #667eea; }
-.status-tab.active.tab-done { color: #28a745; border-bottom-color: #28a745; }
-.status-tab.active.tab-cancelled { color: #dc3545; border-bottom-color: #dc3545; }
-.tab-count { font-size: 11px; background: #e9ecef; color: #6c757d; padding: 1px 7px; border-radius: 10px; font-weight: 700; }
-.status-tab.active.tab-progress .tab-count { background: #eef0ff; color: #667eea; }
-.status-tab.active.tab-done .tab-count { background: #d4edda; color: #28a745; }
-.status-tab.active.tab-cancelled .tab-count { background: #f8d7da; color: #dc3545; }
-
 .status-filter { padding: 10px 14px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; background: white; cursor: pointer; }
 .order-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
-/* List view */
 .order-list-table { width: 100%; border-collapse: collapse; background: white; border: 2px solid #eee; border-radius: 10px; overflow: hidden; }
 .order-list-table th { background: #f8f9fc; padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 600; color: #888; border-bottom: 2px solid #eee; white-space: nowrap; }
-.order-list-table th.sortable { cursor: pointer; user-select: none; }
-.order-list-table th.sortable:hover { color: #667eea; }
 .order-list-table td { padding: 11px 14px; border-bottom: 1px solid #f0f0f0; font-size: 13px; vertical-align: middle; }
 .order-list-table tr:last-child td { border-bottom: none; }
 .order-list-table tr:hover td { background: #fafafa; cursor: pointer; }
@@ -163,51 +146,26 @@ body {
 .upload-progress { margin-top: 6px; height: 4px; background: #e0e0e0; border-radius: 2px; overflow: hidden; display: none; }
 .upload-progress-fill { height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); transition: width 0.3s; }
 .file-size { font-size: 10px; color: #aaa; margin-left: 4px; }
-/* Step note */
 .step-note-section { margin-top: 8px; }
-.step-note-toggle {
-  font-size: 11px; color: #667eea; cursor: pointer; background: none;
-  border: none; padding: 0; font-weight: 500;
-}
+.step-note-toggle { font-size: 11px; color: #667eea; cursor: pointer; background: none; border: none; padding: 0; font-weight: 500; }
 .step-note-toggle:hover { text-decoration: underline; }
 .step-note-form { display: flex; gap: 6px; margin-top: 5px; align-items: flex-start; }
-.step-note-form textarea {
-  flex: 1; padding: 7px 10px; border: 1.5px solid #e0e0e0; border-radius: 6px;
-  font-size: 12px; resize: vertical; min-height: 48px; font-family: inherit;
-}
+.step-note-form textarea { flex: 1; padding: 7px 10px; border: 1.5px solid #e0e0e0; border-radius: 6px; font-size: 12px; resize: vertical; min-height: 48px; font-family: inherit; }
 .step-note-form textarea:focus { outline: none; border-color: #667eea; }
-.step-note-display {
-  margin-top: 6px; padding: 7px 10px; background: #fffde7;
-  border-left: 3px solid #ffc107; border-radius: 4px;
-  font-size: 12px; color: #555; white-space: pre-wrap; line-height: 1.5;
-}
-/* Google Drive Tree */
-.drive-section {
-  margin-top: 12px; border: 2px solid #e8f0fe; border-radius: 10px; overflow: hidden;
-}
-.drive-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 16px; background: #e8f0fe; cursor: pointer;
-}
+.step-note-display { margin-top: 6px; padding: 7px 10px; background: #fffde7; border-left: 3px solid #ffc107; border-radius: 4px; font-size: 12px; color: #555; white-space: pre-wrap; line-height: 1.5; }
+.drive-section { margin-top: 12px; border: 2px solid #e8f0fe; border-radius: 10px; overflow: hidden; }
+.drive-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #e8f0fe; cursor: pointer; }
 .drive-header-left { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: #1a73e8; }
 .drive-body { padding: 12px; max-height: 400px; overflow-y: auto; }
 .drive-loading { text-align: center; padding: 20px; color: #888; font-size: 13px; }
 .drive-folder { margin-bottom: 6px; }
-.drive-folder-name {
-  display: flex; align-items: center; gap: 6px; padding: 6px 8px;
-  background: #f8f9fc; border-radius: 6px; cursor: pointer; font-size: 13px;
-  font-weight: 600; color: #333; transition: background 0.15s;
-}
+.drive-folder-name { display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: #f8f9fc; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; color: #333; transition: background 0.15s; }
 .drive-folder-name:hover { background: #e8f0fe; }
 .drive-folder-toggle { font-size: 10px; color: #888; transition: transform 0.2s; }
 .drive-folder-toggle.open { transform: rotate(90deg); }
 .drive-files { padding-left: 20px; margin-top: 4px; display: none; }
 .drive-files.open { display: block; }
-.drive-file {
-  display: flex; align-items: center; gap: 8px; padding: 6px 8px;
-  border-radius: 6px; cursor: pointer; font-size: 12px; color: #333;
-  transition: background 0.15s; text-decoration: none;
-}
+.drive-file { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 12px; color: #333; transition: background 0.15s; text-decoration: none; }
 .drive-file:hover { background: #f0f4ff; }
 .drive-file-icon { font-size: 14px; flex-shrink: 0; }
 .drive-file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #1a73e8; }
@@ -217,103 +175,10 @@ body {
 .drive-set-link { display: flex; gap: 8px; padding: 12px; background: #fafafa; border-top: 1px solid #eee; }
 .drive-set-link input { flex: 1; padding: 7px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 12px; }
 .drive-set-link input:focus { outline: none; border-color: #1a73e8; }
-/* Payment section */
-.payment-section {
-  border: 2px solid #e0e0e0; border-radius: 10px; overflow: hidden; margin-top: 12px;
-}
-.payment-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 16px; background: #f8f9fc;
-  font-size: 14px; font-weight: 600; color: #333;
-}
+.payment-section { border: 2px solid #e0e0e0; border-radius: 10px; overflow: hidden; margin-top: 12px; }
+.payment-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #f8f9fc; font-size: 14px; font-weight: 600; color: #333; }
 .payment-body { padding: 16px; }
-.payment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-.payment-card {
-  background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 14px;
-}
-.payment-card-label {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 12px; color: #888; margin-bottom: 10px; font-weight: 500;
-}
-.payment-input-row { display: flex; gap: 6px; align-items: center; }
-.payment-input-row input {
-  flex: 1; min-width: 0; padding: 7px 10px; border: 1.5px solid #e0e0e0;
-  border-radius: 6px; font-size: 13px; background: white;
-}
-.payment-input-row input:focus { outline: none; border-color: #667eea; }
-.payment-input-row input:disabled { background: #f5f5f5; color: #999; cursor: not-allowed; }
-.payment-input-row select {
-  padding: 7px 6px; border: 1.5px solid #e0e0e0; border-radius: 6px;
-  font-size: 12px; background: white; cursor: pointer; width: 80px;
-}
-.payment-input-row select:disabled { background: #f5f5f5; color: #999; cursor: not-allowed; }
-.payment-date-row {
-  display: flex; align-items: center; gap: 6px; margin-top: 8px;
-}
-.payment-date-row input[type=date] {
-  flex: 1; padding: 5px 8px; border: 1.5px solid #e0e0e0;
-  border-radius: 6px; font-size: 12px; background: white;
-}
-.payment-date-row input[type=date]:disabled { background: #f5f5f5; color: #999; cursor: not-allowed; }
-.payment-date-row label { font-size: 11px; color: #aaa; white-space: nowrap; }
-.payment-total {
-  background: linear-gradient(135deg, #667eea10, #764ba210);
-  border: 1.5px solid #667eea33; border-radius: 8px; padding: 14px;
-}
-.payment-total-row {
-  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
-}
-.payment-total-label { font-size: 13px; font-weight: 600; color: #333; }
-.payment-total-value { font-size: 22px; font-weight: 700; color: #667eea; }
-.payment-progress-bar {
-  width: 100%; height: 6px; background: #e0e0e0; border-radius: 3px;
-  margin-top: 10px; overflow: hidden;
-}
-.payment-progress-fill {
-  height: 100%; background: linear-gradient(90deg, #667eea, #764ba2);
-  border-radius: 3px; transition: width 0.3s;
-}
-.payment-progress-labels {
-  display: flex; justify-content: space-between;
-  font-size: 11px; color: #999; margin-top: 5px;
-}
-.payment-status-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-.payment-status-btn {
-  padding: 5px 14px; font-size: 12px; border-radius: 6px;
-  border: 1.5px solid #e0e0e0; background: white; cursor: pointer;
-  font-weight: 500; color: #666; transition: all 0.15s;
-}
-.payment-status-btn:hover { border-color: #667eea; color: #667eea; }
-.payment-status-btn.active-deposit { background: #e3f2fd; color: #1565c0; border-color: #1565c0; }
-.payment-status-btn.active-partial { background: #fff8e1; color: #e65100; border-color: #e65100; }
-.payment-status-btn.active-paid { background: #e8f5e9; color: #2e7d32; border-color: #2e7d32; }
-.payment-save-row { display: flex; justify-content: flex-end; margin-top: 12px; }
-/* Checklist */
 .checklist-section { border: 2px solid #e0e0e0; border-radius: 10px; overflow: hidden; margin-top: 12px; }
-.checklist-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #f8f9fc; cursor: pointer; }
-.checklist-header-left { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: #333; }
-.checklist-body { padding: 8px 4px; }
-.checklist-dept { background: white; border: 1px solid #eee; border-radius: 8px; overflow: hidden; margin: 6px 8px; }
-.checklist-dept-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #fafafa; }
-.checklist-dept-title { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; }
-.checklist-dept-progress { display: flex; align-items: center; gap: 8px; }
-.checklist-prog-bar { width: 70px; height: 4px; background: #e0e0e0; border-radius: 2px; overflow: hidden; }
-.checklist-item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 14px; cursor: pointer; transition: background 0.1s; border-radius: 6px; margin: 2px 4px; }
-.checklist-item:hover { background: #f5f5f5; }
-.checklist-item.locked { cursor: not-allowed; opacity: 0.6; }
-.checklist-item.checked { opacity: 0.65; }
-.checklist-checkbox { width: 19px; height: 19px; border-radius: 4px; border: 1.5px solid #ccc; background: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; transition: all 0.15s; }
-.checklist-checkbox.on { background: #e8f5e9; border-color: transparent; }
-.checklist-checkbox.counter { font-size: 9px; font-weight: 600; color: #667eea; border-color: #667eea; }
-.checklist-item-label { flex: 1; font-size: 13px; color: #333; }
-.checklist-item-label.done { text-decoration: line-through; color: #aaa; }
-.checklist-item-step { font-size: 11px; color: #bbb; margin-top: 2px; }
-.checklist-item-opt { font-size: 11px; color: #bbb; }
-.checklist-expand-hint { font-size: 11px; color: #999; margin-left: 4px; }
-.checklist-subs { padding: 2px 0 6px 43px; display: grid; gap: 1px; }
-.checklist-sub-item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 5px; cursor: pointer; transition: background 0.1s; }
-.checklist-sub-item:hover { background: #f5f5f5; }
-.checklist-sub-item.locked { cursor: not-allowed; opacity: 0.6; }
 .history-list { border: 2px solid #e0e0e0; border-radius: 10px; max-height: 600px; overflow-y: auto; }
 .history-item { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; display: flex; gap: 12px; align-items: flex-start; }
 .history-item:last-child { border-bottom: none; }
@@ -331,15 +196,13 @@ body {
 .modal { background: white; border-radius: 12px; padding: 28px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; }
 .modal h2 { font-size: 20px; margin-bottom: 18px; color: #333; }
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-.controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
 .notice { background: #fff8e1; border-left: 3px solid #ffc107; padding: 10px 14px; border-radius: 6px; font-size: 13px; color: #856404; margin-bottom: 16px; }
 .notice.info { background: #eef0fc; border-color: #667eea; color: #3f3f8c; }
-.notice.success { background: #d4edda; border-color: #28a745; color: #155724; }
+.controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
 .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.85); z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
 .spinner { width: 40px; height: 40px; border: 4px solid #e0e0e0; border-top-color: #667eea; border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .loading-text { font-size: 14px; color: #666; }
-/* Admin panel */
 .user-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
 .user-table th { background: #f0f0f0; padding: 10px 12px; text-align: left; font-size: 13px; }
 .user-table td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
@@ -365,26 +228,18 @@ body {
 </head>
 <body>
 
-<!-- LOADING -->
 <div class="loading-overlay hidden" id="loadingOverlay">
   <div class="spinner"></div>
   <div class="loading-text" id="loadingText">Đang tải...</div>
 </div>
 
-<!-- LOGIN -->
 <div class="container" id="loginScreen">
   <div class="login-box">
     <h1>📦 Quản lý đơn hàng</h1>
     <p>Đăng nhập bằng tài khoản được công ty cấp</p>
     <div class="login-form">
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="loginEmail" placeholder="email@congty.vn" autocomplete="email">
-      </div>
-      <div class="form-group">
-        <label>Mật khẩu</label>
-        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
-      </div>
+      <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="email@congty.vn" autocomplete="email"></div>
+      <div class="form-group"><label>Mật khẩu</label><input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password"></div>
       <div id="loginError" style="color:#c0392b;font-size:13px;margin-bottom:12px;display:none;"></div>
       <button class="btn btn-primary" style="width:100%;padding:12px;" onclick="login()" id="loginBtn">Đăng nhập →</button>
     </div>
@@ -392,7 +247,6 @@ body {
   </div>
 </div>
 
-<!-- MAIN APP -->
 <div class="container hidden" id="mainApp">
   <div class="top-bar">
     <div class="top-bar-title">
@@ -412,7 +266,6 @@ body {
     <button class="tab hidden" data-tab="admin" onclick="switchTab('admin')" id="tabAdmin">👑 Quản lý user</button>
   </div>
 
-  <!-- LIST -->
   <div id="viewList">
     <div class="list-toolbar">
       <div class="search-box">
@@ -437,11 +290,8 @@ body {
     <div id="orderListContainer"></div>
   </div>
 
-  <!-- DETAIL -->
   <div id="viewDetail" class="hidden">
-    <div style="margin-bottom:16px;">
-      <button class="btn" onclick="switchTab('list')">← Danh sách</button>
-    </div>
+    <div style="margin-bottom:16px;"><button class="btn" onclick="switchTab('list')">← Danh sách</button></div>
     <div id="orderHeader" style="margin-bottom:18px;"></div>
     <div id="roleNotice"></div>
     <div class="stats">
@@ -466,16 +316,12 @@ body {
     </div>
   </div>
 
-  <!-- HISTORY -->
   <div id="viewHistory" class="hidden">
-    <div style="margin-bottom:16px;">
-      <button class="btn" onclick="switchTab('detail')">← Đơn hàng</button>
-    </div>
+    <div style="margin-bottom:16px;"><button class="btn" onclick="switchTab('detail')">← Đơn hàng</button></div>
     <h3 style="margin-bottom:14px;color:#333;" id="historyTitle">Lịch sử</h3>
     <div class="history-list" id="historyList"></div>
   </div>
 
-  <!-- ADMIN -->
   <div id="viewAdmin" class="hidden">
     <div class="notice info">👑 Trang quản lý user — chỉ Admin mới thấy mục này.</div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
@@ -486,7 +332,6 @@ body {
   </div>
 </div>
 
-<!-- MODAL: NEW ORDER -->
 <div class="modal-backdrop hidden" id="newOrderModal">
   <div class="modal">
     <h2>Tạo đơn hàng mới</h2>
@@ -501,11 +346,10 @@ body {
   </div>
 </div>
 
-<!-- MODAL: ADD USER -->
 <div class="modal-backdrop hidden" id="addUserModal">
   <div class="modal">
     <h2>Thêm thành viên mới</h2>
-    <div class="notice">Hệ thống sẽ tạo tài khoản và gửi email cho thành viên. Họ dùng email + mật khẩu này để đăng nhập.</div>
+    <div class="notice">Hệ thống sẽ tạo tài khoản và gửi email cho thành viên.</div>
     <div class="form-group"><label>Tên hiển thị *</label><input type="text" id="newUserName" placeholder="VD: Nguyễn Văn A"></div>
     <div class="form-group"><label>Email *</label><input type="email" id="newUserEmail" placeholder="email@congty.vn"></div>
     <div class="form-group"><label>Mật khẩu tạm *</label><input type="text" id="newUserPassword" placeholder="Tối thiểu 6 ký tự"></div>
@@ -529,12 +373,10 @@ body {
 </div>
 
 <script>
-// ============== SUPABASE CONFIG ==============
 const SUPABASE_URL = 'https://fyjinbtabsentsvnkqzg.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5amluYnRhYnNlbnRzdm5rcXpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MTAxNTUsImV4cCI6MjA5NDI4NjE1NX0.m1H8bOT7gUXJxPoQT6bDqtRUjo4nCSxb4A1rth7Eols';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ============== WORKFLOW ==============
 const workflows = [
   { stt: 1,  job: "Tiếp nhận đơn hàng",              content: "Nhận PO / hợp đồng từ khách hàng",                               pic: "Sale",              dept: "sale" },
   { stt: 2,  job: "Xác nhận thông tin đơn hàng",      content: "Kiểm tra số lượng, quy cách, thời gian giao hàng",               pic: "Sale",              dept: "sale" },
@@ -570,12 +412,9 @@ const workflows = [
 
 const TOTAL = 30;
 const DEPTS = { sale:"Sale", ketoan:"Kế toán", thumua:"Thu mua", logistics:"Logistics", admin:"Ban Giám Đốc", sale_admin:"Sale Admin" };
-
-// Các bước Sale Admin được tick
 const SALE_ADMIN_STEPS = [3, 4, 6, 8, 13, 20, 30];
 
-// ============== STATE ==============
-let currentUser = null;   // { id, email, name, role }
+let currentUser = null;
 let currentOrderId = null;
 let currentOrder = null;
 let allOrders = [];
@@ -583,6 +422,7 @@ let deptFilter = 'all';
 let expandedAttach = {};
 let expandedNotes = {};
 let currentListView = 'list';
+let allUsers = [];
 
 function setListView(v) {
   currentListView = v;
@@ -590,16 +430,13 @@ function setListView(v) {
   document.getElementById('btnList').classList.toggle('active', v === 'list');
   renderOrderList();
 }
-let allUsers = [];
 
-// ============== LOADING ==============
 function showLoading(text = 'Đang tải...') {
   document.getElementById('loadingText').textContent = text;
   document.getElementById('loadingOverlay').classList.remove('hidden');
 }
 function hideLoading() { document.getElementById('loadingOverlay').classList.add('hidden'); }
 
-// ============== AUTH ==============
 async function login() {
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
@@ -614,7 +451,7 @@ async function login() {
     if (error) throw error;
     await loadCurrentUser(data.user);
   } catch(e) {
-    errEl.textContent = 'Email hoặc mật khẩu không đúng. Liên hệ Admin nếu cần hỗ trợ.';
+    errEl.textContent = 'Email hoặc mật khẩu không đúng.';
     errEl.style.display = 'block';
   } finally {
     btn.disabled = false; btn.textContent = 'Đăng nhập →';
@@ -624,11 +461,7 @@ async function login() {
 
 async function loadCurrentUser(authUser) {
   const { data: profile } = await sb.from('profiles').select('*').eq('id', authUser.id).single();
-  if (!profile) {
-    await sb.auth.signOut();
-    alert('Tài khoản chưa được cấu hình. Liên hệ Admin.');
-    return;
-  }
+  if (!profile) { await sb.auth.signOut(); alert('Tài khoản chưa được cấu hình.'); return; }
   currentUser = { id: authUser.id, email: authUser.email, name: profile.name, role: profile.role };
   showMainApp();
 }
@@ -650,7 +483,6 @@ function showMainApp() {
   loadOrderList();
 }
 
-// ============== ORDERS ==============
 async function loadOrderList() {
   showLoading('Đang tải đơn hàng...');
   try {
@@ -660,18 +492,15 @@ async function loadOrderList() {
     renderOrderList();
     updateTabCounts();
   } catch(e) {
-    document.getElementById('orderListContainer').innerHTML = `<div class="empty-state"><p>Lỗi tải dữ liệu: ${e.message}</p></div>`;
+    document.getElementById('orderListContainer').innerHTML = `<div class="empty-state"><p>Lỗi: ${e.message}</p></div>`;
   } finally { hideLoading(); }
 }
 
 function countCompleted(o) {
   let c = 0;
   for (const s of workflows) {
-    if (s.hasMultiCheck) {
-      if (s.teams.every(t => o.completed && o.completed[`${s.stt}_${t}`])) c++;
-    } else {
-      if (o.completed && o.completed[s.stt]) c++;
-    }
+    if (s.hasMultiCheck) { if (s.teams.every(t => o.completed && o.completed[`${s.stt}_${t}`])) c++; }
+    else { if (o.completed && o.completed[s.stt]) c++; }
   }
   return c;
 }
@@ -684,163 +513,25 @@ function getStatus(o) {
   return 'progress';
 }
 
-async function cancelOrder(id) {
-  if (!confirm('Hủy đơn hàng này? Hành động này có thể hoàn tác bằng cách mở đơn và bỏ tick Hủy.')) return;
-  const idx = allOrders.findIndex(o => o.id === id);
-  if (idx < 0) return;
-  allOrders[idx].cancelled = true;
-  allOrders[idx].cancelledAt = new Date().toISOString();
-  allOrders[idx].cancelledBy = currentUser?.email || 'unknown';
-  try {
-    await sb.from('orders').update({
-      cancelled: true,
-      cancelled_at: allOrders[idx].cancelledAt,
-      cancelled_by: allOrders[idx].cancelledBy
-    }).eq('id', id);
-    showToast('✅ Đã hủy đơn hàng');
-    renderOrderList();
-    if (currentOrder?.id === id) { currentOrder = allOrders[idx]; renderDetail(); }
-  } catch(e) { showToast('❌ Lỗi: ' + e.message); }
-}
-
-async function restoreOrder(id) {
-  const idx = allOrders.findIndex(o => o.id === id);
-  if (idx < 0) return;
-  allOrders[idx].cancelled = false;
-  try {
-    await sb.from('orders').update({ cancelled: false }).eq('id', id);
-    showToast('✅ Đã khôi phục đơn hàng');
-    renderOrderList();
-    if (currentOrder?.id === id) { currentOrder = allOrders[idx]; renderDetail(); }
-  } catch(e) { showToast('❌ Lỗi: ' + e.message); }
-}
-
-async function toggleCancelOrder() {
-  if (!currentOrder) return;
-  const isCancelled = !!currentOrder.cancelled;
-  const msg = isCancelled 
-    ? 'Khôi phục đơn hàng này?' 
-    : 'Hủy đơn hàng này? Có thể khôi phục lại sau.';
-  if (!confirm(msg)) return;
-  
-  const newVal = !isCancelled;
-  showLoading(newVal ? 'Đang hủy đơn...' : 'Đang khôi phục...');
-  try {
-    const updateData = { cancelled: newVal };
-    if (newVal) {
-      updateData.cancelled_at = new Date().toISOString();
-      updateData.cancelled_by = currentUser?.email || currentUser?.name || 'unknown';
-    } else {
-      updateData.cancelled_at = null;
-      updateData.cancelled_by = null;
-    }
-    const { error } = await sb.from('orders').update(updateData).eq('id', currentOrder.id);
-    if (error) throw error;
-    
-    // Update local
-    currentOrder.cancelled = newVal;
-    const idx = allOrders.findIndex(o => o.id === currentOrder.id);
-    if (idx >= 0) allOrders[idx].cancelled = newVal;
-    
-    // Log to history
-    currentOrder.history = currentOrder.history || [];
-    currentOrder.history.push({
-      action: newVal ? 'cancel' : 'restore',
-      user: currentUser.name,
-      role: currentUser.role,
-      time: Date.now()
-    });
-    await sb.from('orders').update({ history: currentOrder.history }).eq('id', currentOrder.id);
-    
-    showToast(newVal ? '🚫 Đã hủy đơn hàng' : '✅ Đã khôi phục đơn hàng');
-    updateCancelBtn();
-    renderOrderList();
-  } catch(e) { showToast('❌ Lỗi: ' + e.message); } finally { hideLoading(); }
-}
-
-function updateCancelBtn() {
-  const btn = document.getElementById('cancelBtn');
-  if (!btn || !currentOrder) return;
-  if (currentOrder.cancelled) {
-    btn.textContent = '↩ Khôi phục đơn';
-    btn.style.background = '#28a745';
-  } else {
-    btn.textContent = '🚫 Hủy đơn';
-    btn.style.background = '#dc3545';
-  }
-}
-
-function setStatusTab(tab, btn) {
-  window._statusTab = tab;
-  document.querySelectorAll('.status-tab').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  renderOrderList();
-}
-
-function updateTabCounts() {
-  const counts = { progress: 0, done: 0, new: 0, cancelled: 0 };
-  (allOrders || []).forEach(o => {
-    const st = getStatus(o);
-    if (counts[st] !== undefined) counts[st]++;
-    if (st === 'new') counts.progress++; // new counts as progress
-  });
-  const pEl = document.getElementById('cnt-progress');
-  const dEl = document.getElementById('cnt-done');
-  const cEl = document.getElementById('cnt-cancelled');
-  if (pEl) pEl.textContent = counts.progress + counts.new - counts.progress; // recalc below
-  // Recalc properly
-  let p=0, d=0, c=0;
-  (allOrders || []).forEach(o => {
-    const st = getStatus(o);
-    if (st === 'progress' || st === 'new') p++;
-    else if (st === 'done') d++;
-    else if (st === 'cancelled') c++;
-  });
-  if (pEl) pEl.textContent = p;
-  if (dEl) dEl.textContent = d;
-  if (cEl) cEl.textContent = c;
-}
-
-window._statusTab = window._statusTab || 'progress';
+window._statusTab = 'progress';
 
 function setStatusTab(tab) {
   window._statusTab = tab;
-  // Update button styles
-  const tabs = {
-    'progress': {bg:'#667eea',color:'white',cntBg:'rgba(255,255,255,0.3)'},
-    'done':     {bg:'#28a745',color:'white',cntBg:'rgba(255,255,255,0.3)'},
-    'cancelled':{bg:'#dc3545',color:'white',cntBg:'rgba(255,255,255,0.3)'}
-  };
+  const tabs = { 'progress':{bg:'#667eea',color:'white'}, 'done':{bg:'#28a745',color:'white'}, 'cancelled':{bg:'#dc3545',color:'white'} };
   ['progress','done','cancelled'].forEach(t => {
     const btn = document.getElementById('tab-'+t);
     if (!btn) return;
-    if (t === tab) {
-      btn.style.background = tabs[t].bg;
-      btn.style.color = tabs[t].color;
-      document.getElementById('cnt-'+t).style.background = tabs[t].cntBg;
-    } else {
-      btn.style.background = 'white';
-      btn.style.color = '#6c757d';
-      document.getElementById('cnt-'+t).style.background = '#e9ecef';
-    }
+    if (t === tab) { btn.style.background = tabs[t].bg; btn.style.color = tabs[t].color; document.getElementById('cnt-'+t).style.background = 'rgba(255,255,255,0.3)'; }
+    else { btn.style.background = 'white'; btn.style.color = '#6c757d'; document.getElementById('cnt-'+t).style.background = '#e9ecef'; }
   });
   renderOrderList();
 }
 
 function updateTabCounts() {
   let p=0, d=0, c=0;
-  (allOrders||[]).forEach(o => {
-    const st = getStatus(o);
-    if (st==='progress'||st==='new') p++;
-    else if (st==='done') d++;
-    else if (st==='cancelled') c++;
-  });
-  const pe=document.getElementById('cnt-progress');
-  const de=document.getElementById('cnt-done');
-  const ce=document.getElementById('cnt-cancelled');
-  if(pe) pe.textContent=p;
-  if(de) de.textContent=d;
-  if(ce) ce.textContent=c;
+  (allOrders||[]).forEach(o => { const st=getStatus(o); if(st==='progress'||st==='new')p++; else if(st==='done')d++; else if(st==='cancelled')c++; });
+  const pe=document.getElementById('cnt-progress'), de=document.getElementById('cnt-done'), ce=document.getElementById('cnt-cancelled');
+  if(pe)pe.textContent=p; if(de)de.textContent=d; if(ce)ce.textContent=c;
 }
 
 function renderOrderList() {
@@ -848,270 +539,152 @@ function renderOrderList() {
   const search = document.getElementById('searchInput').value.toLowerCase();
   const sf = window._statusTab || 'progress';
   const sort = document.getElementById('sortOrder')?.value || 'desc';
-
   let filtered = allOrders.filter(o => {
     const ms = !search || (o.code||'').toLowerCase().includes(search) || (o.customer||'').toLowerCase().includes(search);
     const st = getStatus(o);
     const mst = sf === 'all' || sf === st || (sf === 'progress' && (st === 'new' || st === 'progress'));
     return ms && mst;
   });
-
-  // Sort by date
-  filtered.sort((a,b) => sort === 'desc'
-    ? (b.created_at||0) - (a.created_at||0)
-    : (a.created_at||0) - (b.created_at||0)
-  );
-
-  if (!filtered.length) {
-    container.innerHTML = '<div class="empty-state"><div class="ico">📭</div><p>Chưa có đơn hàng nào</p></div>';
-    return;
-  }
-
-  if (currentListView === 'list') {
-    renderListTable(container, filtered);
-  } else {
-    renderGridView(container, filtered);
-  }
+  filtered.sort((a,b) => sort==='desc' ? (b.created_at||0)-(a.created_at||0) : (a.created_at||0)-(b.created_at||0));
+  if (!filtered.length) { container.innerHTML='<div class="empty-state"><div class="ico">📭</div><p>Chưa có đơn hàng nào</p></div>'; return; }
+  if (currentListView==='list') renderListTable(container, filtered); else renderGridView(container, filtered);
 }
 
 function renderGridView(container, filtered) {
-  const grid = document.createElement('div');
-  grid.className = 'order-grid';
+  const grid = document.createElement('div'); grid.className='order-grid';
   filtered.forEach(o => {
-    const done = countCompleted(o);
-    const pct = Math.round((done/TOTAL)*100);
-    const st = getStatus(o);
-    const stLabel = { new:'Mới', progress:'Đang xử lý', done:'Hoàn thành', cancelled:'Đã hủy' }[st];
-    const stClass = { new:'status-new', progress:'status-progress', done:'status-done', cancelled:'status-cancelled' }[st];
-    const date = o.created_at ? new Date(o.created_at).toLocaleDateString('vi-VN') : '';
-    const totalAttach = Object.values(o.attachments||{}).reduce((s,a)=>s+(a||[]).length,0);
-    const p = o.payment || {};
-    let payBadge = '';
-    if (p.receivedFull) {
-      payBadge = `<span style="font-size:11px;padding:3px 8px;border-radius:5px;font-weight:600;background:#e8f5e9;color:#2e7d32;white-space:nowrap;">💰 Đã TT đủ</span>`;
-    } else if (p.receivedDeposit) {
-      payBadge = `<span style="font-size:11px;padding:3px 8px;border-radius:5px;font-weight:600;background:#e3f2fd;color:#1565c0;white-space:nowrap;">💵 Đã deposit</span>`;
-    } else {
-      payBadge = `<span style="font-size:11px;padding:3px 8px;border-radius:5px;font-weight:600;background:#f5f5f5;color:#888;white-space:nowrap;">⏳ Chưa TT</span>`;
-    }
-    const supplierBadge = o.supplier
-      ? `<span style="font-size:11px;padding:3px 8px;border-radius:5px;font-weight:600;background:#f3e5f5;color:#6a1b9a;white-space:nowrap;">🏭 Đã mua hàng</span>`
-      : '';
-    const card = document.createElement('div');
-    card.className = 'order-card';
-    card.onclick = () => openOrder(o.id);
-    card.innerHTML = `
-      <div class="order-card-header">
-        <div class="order-code">${esc(o.code)}</div>
-        <span class="status-pill ${stClass}">${stLabel}</span>
-      </div>
-      <div class="order-customer">👤 ${esc(o.customer)}</div>
-      ${o.supplier ? `<div style="font-size:12px;color:#555;margin-bottom:4px;">🏭 Mua từ: ${esc(o.supplier)}</div>` : ''}
-      ${o.note ? `<div style="font-size:12px;color:#888;margin-bottom:8px;">${esc(o.note)}</div>` : ''}
-      <div style="margin-bottom:8px;display:flex;gap:6px;flex-wrap:wrap;">${payBadge}${supplierBadge}</div>
-      <div class="mini-progress"><div class="mini-progress-fill" style="width:${pct}%"></div></div>
-      <div class="order-meta">
-        <span>${done}/${TOTAL} bước (${pct}%) · 📎 ${totalAttach}</span>
-        <span>${date}</span>
-      </div>`;
+    const done=countCompleted(o), pct=Math.round((done/TOTAL)*100), st=getStatus(o);
+    const stLabel={new:'Mới',progress:'Đang xử lý',done:'Hoàn thành',cancelled:'Đã hủy'}[st];
+    const stClass={new:'status-new',progress:'status-progress',done:'status-done',cancelled:'status-cancelled'}[st];
+    const date=o.created_at?new Date(o.created_at).toLocaleDateString('vi-VN'):'';
+    const totalAttach=Object.values(o.attachments||{}).reduce((s,a)=>s+(a||[]).length,0);
+    const p=o.payment||{};
+    const payBadge=p.receivedFull?`<span style="font-size:11px;padding:3px 8px;border-radius:5px;font-weight:600;background:#e8f5e9;color:#2e7d32;white-space:nowrap;">💰 Đã TT đủ</span>`:p.receivedDeposit?`<span style="font-size:11px;padding:3px 8px;border-radius:5px;font-weight:600;background:#e3f2fd;color:#1565c0;white-space:nowrap;">💵 Đã deposit</span>`:`<span style="font-size:11px;padding:3px 8px;border-radius:5px;font-weight:600;background:#f5f5f5;color:#888;white-space:nowrap;">⏳ Chưa TT</span>`;
+    const card=document.createElement('div'); card.className='order-card'; card.onclick=()=>openOrder(o.id);
+    card.innerHTML=`<div class="order-card-header"><div class="order-code">${esc(o.code)}</div><span class="status-pill ${stClass}">${stLabel}</span></div><div class="order-customer">👤 ${esc(o.customer)}</div>${o.supplier?`<div style="font-size:12px;color:#555;margin-bottom:4px;">🏭 Mua từ: ${esc(o.supplier)}</div>`:''}<div style="margin-bottom:8px;">${payBadge}</div><div class="mini-progress"><div class="mini-progress-fill" style="width:${pct}%"></div></div><div class="order-meta"><span>${done}/${TOTAL} (${pct}%) · 📎 ${totalAttach}</span><span>${date}</span></div>`;
     grid.appendChild(card);
   });
-  container.innerHTML = '';
-  container.appendChild(grid);
+  container.innerHTML=''; container.appendChild(grid);
 }
 
 function renderListTable(container, filtered) {
-  const stLabel = { new:'Mới', progress:'Đang xử lý', done:'Hoàn thành', cancelled:'Đã hủy' };
-  const stClass = { new:'status-new', progress:'status-progress', done:'status-done', cancelled:'status-cancelled' };
-  const rows = filtered.map(o => {
-    const done = countCompleted(o);
-    const pct = Math.round((done/TOTAL)*100);
-    const st = getStatus(o);
-    const date = o.created_at ? new Date(o.created_at).toLocaleDateString('vi-VN') : '';
-    const totalAttach = Object.values(o.attachments||{}).reduce((s,a)=>s+(a||[]).length,0);
-    const p = o.payment || {};
-    const payText = p.receivedFull
-      ? `<span style="font-size:11px;padding:2px 7px;border-radius:4px;background:#e8f5e9;color:#2e7d32;">💰 Đã TT đủ</span>`
-      : p.receivedDeposit
-        ? `<span style="font-size:11px;padding:2px 7px;border-radius:4px;background:#e3f2fd;color:#1565c0;">💵 Đã deposit</span>`
-        : `<span style="font-size:11px;padding:2px 7px;border-radius:4px;background:#f5f5f5;color:#888;">⏳ Chưa TT</span>`;
-    const barColor = pct >= 80 ? '#2e7d32' : pct >= 40 ? '#667eea' : '#1976d2';
-    return `<tr onclick="openOrder('${o.id}')">
-      <td style="padding:11px 14px;font-weight:600;font-size:13px;">${esc(o.code)}</td>
-      <td style="padding:11px 14px;font-size:13px;color:#555;">${esc(o.customer)}</td>
-      <td style="padding:11px 14px;font-size:12px;color:#777;">${o.supplier ? esc(o.supplier) : '—'}</td>
-      <td style="padding:11px 14px;">
-        <div style="display:flex;align-items:center;gap:6px;">
-          <div style="flex:1;height:4px;background:#f0f0f0;border-radius:2px;overflow:hidden;min-width:60px;">
-            <div style="height:100%;width:${pct}%;background:${barColor};border-radius:2px;"></div>
-          </div>
-          <span style="font-size:11px;color:#888;white-space:nowrap;">${pct}%</span>
-        </div>
-        <div style="font-size:11px;color:#aaa;margin-top:2px;">${done}/${TOTAL} · 📎 ${totalAttach}</div>
-      </td>
-      <td style="padding:11px 14px;">${payText}</td>
-      <td style="padding:11px 14px;"><span class="status-pill ${stClass[st]}">${stLabel[st]}</span></td>
-      <td style="padding:11px 14px;text-align:right;font-size:12px;color:#888;white-space:nowrap;">${date}</td>
-    </tr>`;
+  const stLabel={new:'Mới',progress:'Đang xử lý',done:'Hoàn thành',cancelled:'Đã hủy'};
+  const stClass={new:'status-new',progress:'status-progress',done:'status-done',cancelled:'status-cancelled'};
+  const rows=filtered.map(o=>{
+    const done=countCompleted(o),pct=Math.round((done/TOTAL)*100),st=getStatus(o);
+    const date=o.created_at?new Date(o.created_at).toLocaleDateString('vi-VN'):'';
+    const totalAttach=Object.values(o.attachments||{}).reduce((s,a)=>s+(a||[]).length,0);
+    const p=o.payment||{};
+    const payText=p.receivedFull?`<span style="font-size:11px;padding:2px 7px;border-radius:4px;background:#e8f5e9;color:#2e7d32;">💰 Đã TT đủ</span>`:p.receivedDeposit?`<span style="font-size:11px;padding:2px 7px;border-radius:4px;background:#e3f2fd;color:#1565c0;">💵 Đã deposit</span>`:`<span style="font-size:11px;padding:2px 7px;border-radius:4px;background:#f5f5f5;color:#888;">⏳ Chưa TT</span>`;
+    const barColor=pct>=80?'#2e7d32':pct>=40?'#667eea':'#1976d2';
+    return `<tr onclick="openOrder('${o.id}')"><td style="padding:11px 14px;font-weight:600;font-size:13px;">${esc(o.code)}</td><td style="padding:11px 14px;font-size:13px;color:#555;">${esc(o.customer)}</td><td style="padding:11px 14px;font-size:12px;color:#777;">${o.supplier?esc(o.supplier):'—'}</td><td style="padding:11px 14px;"><div style="display:flex;align-items:center;gap:6px;"><div style="flex:1;height:4px;background:#f0f0f0;border-radius:2px;overflow:hidden;min-width:60px;"><div style="height:100%;width:${pct}%;background:${barColor};border-radius:2px;"></div></div><span style="font-size:11px;color:#888;white-space:nowrap;">${pct}%</span></div><div style="font-size:11px;color:#aaa;margin-top:2px;">${done}/${TOTAL} · 📎 ${totalAttach}</div></td><td style="padding:11px 14px;">${payText}</td><td style="padding:11px 14px;"><span class="status-pill ${stClass[st]}">${stLabel[st]}</span></td><td style="padding:11px 14px;text-align:right;font-size:12px;color:#888;white-space:nowrap;">${date}</td></tr>`;
   }).join('');
-
-  container.innerHTML = `
-    <table class="order-list-table">
-      <thead>
-        <tr>
-          <th>Mã đơn</th>
-          <th>Khách hàng</th>
-          <th>Mua từ</th>
-          <th>Tiến độ</th>
-          <th>Thanh toán</th>
-          <th>Trạng thái</th>
-          <th style="text-align:right;">Ngày tạo</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>`;
+  container.innerHTML=`<table class="order-list-table"><thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Mua từ</th><th>Tiến độ</th><th>Thanh toán</th><th>Trạng thái</th><th style="text-align:right;">Ngày tạo</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function openNewOrderModal() {
-  document.getElementById('newOrderCode').value = '';
-  document.getElementById('newOrderCustomer').value = '';
-  document.getElementById('newOrderSupplier').value = '';
-  document.getElementById('newOrderNote').value = '';
+  ['newOrderCode','newOrderCustomer','newOrderSupplier','newOrderNote'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('newOrderModal').classList.remove('hidden');
-  setTimeout(() => document.getElementById('newOrderCode').focus(), 50);
+  setTimeout(()=>document.getElementById('newOrderCode').focus(),50);
 }
 
 async function createOrder() {
-  const code = document.getElementById('newOrderCode').value.trim();
-  const customer = document.getElementById('newOrderCustomer').value.trim();
-  const supplier = document.getElementById('newOrderSupplier').value.trim();
-  const note = document.getElementById('newOrderNote').value.trim();
-  if (!code || !customer) { alert('Vui lòng nhập mã đơn và tên khách hàng'); return; }
-  const btn = document.getElementById('createOrderBtn');
-  btn.disabled = true; btn.textContent = 'Đang tạo...';
+  const code=document.getElementById('newOrderCode').value.trim();
+  const customer=document.getElementById('newOrderCustomer').value.trim();
+  if(!code||!customer){alert('Vui lòng nhập mã đơn và tên khách hàng');return;}
+  const btn=document.getElementById('createOrderBtn'); btn.disabled=true; btn.textContent='Đang tạo...';
   showLoading('Đang tạo đơn...');
   try {
-    const id = 'ord_' + Date.now() + '_' + Math.floor(Math.random()*1000);
-    const order = {
-      id, code, customer, supplier, note, created_at: Date.now(),
-      created_by: currentUser.name,
-      completed: {}, tick_info: {}, attachments: {},
-      history: [{ action:'create', user: currentUser.name, role: currentUser.role, time: Date.now() }]
-    };
-    const { error } = await sb.from('orders').insert(order);
-    if (error) throw error;
-    closeModal('newOrderModal');
-    await loadOrderList();
-    openOrder(id);
-  } catch(e) {
-    alert('Lỗi tạo đơn: ' + e.message);
-  } finally {
-    btn.disabled = false; btn.textContent = 'Tạo đơn';
-    hideLoading();
-  }
+    const id='ord_'+Date.now()+'_'+Math.floor(Math.random()*1000);
+    const order={id,code,customer,supplier:document.getElementById('newOrderSupplier').value.trim(),note:document.getElementById('newOrderNote').value.trim(),created_at:Date.now(),created_by:currentUser.name,completed:{},tick_info:{},attachments:{},history:[{action:'create',user:currentUser.name,role:currentUser.role,time:Date.now()}]};
+    const{error}=await sb.from('orders').insert(order);
+    if(error)throw error;
+    closeModal('newOrderModal'); await loadOrderList(); openOrder(id);
+  } catch(e){alert('Lỗi tạo đơn: '+e.message);}
+  finally{btn.disabled=false;btn.textContent='Tạo đơn';hideLoading();}
 }
 
 async function openOrder(id) {
-  showLoading('Đang tải đơn hàng...');
+  showLoading('Đang tải...');
   try {
-    const { data, error } = await sb.from('orders').select('*').eq('id', id).single();
-    if (error) throw error;
-    currentOrderId = id;
-    currentOrder = data;
-    if (!currentOrder.completed) currentOrder.completed = {};
-    if (!currentOrder.tick_info) currentOrder.tick_info = {};
-    if (!currentOrder.attachments) currentOrder.attachments = {};
-    if (!currentOrder.history) currentOrder.history = [];
-    if (!currentOrder.step_notes) currentOrder.step_notes = {};
-    if (!currentOrder.checklist) currentOrder.checklist = {};
-    if (currentOrder.folder_url === undefined) currentOrder.folder_url = null;
-    driveTreeOpen = false;
-    checklistExpanded = {};
-    expandedAttach = {};
-    expandedNotes = {};
+    const{data,error}=await sb.from('orders').select('*').eq('id',id).single();
+    if(error)throw error;
+    currentOrderId=id; currentOrder=data;
+    if(!currentOrder.completed)currentOrder.completed={};
+    if(!currentOrder.tick_info)currentOrder.tick_info={};
+    if(!currentOrder.attachments)currentOrder.attachments={};
+    if(!currentOrder.history)currentOrder.history=[];
+    if(!currentOrder.step_notes)currentOrder.step_notes={};
+    if(!currentOrder.checklist)currentOrder.checklist={};
+    driveTreeOpen=false; checklistExpanded={}; expandedAttach={}; expandedNotes={};
     document.getElementById('tabDetail').classList.remove('hidden');
     document.getElementById('tabHistory').classList.remove('hidden');
-    switchTab('detail');
-    renderDetail();
-  } catch(e) {
-    alert('Lỗi: ' + e.message);
-  } finally { hideLoading(); }
+    switchTab('detail'); renderDetail();
+  } catch(e){alert('Lỗi: '+e.message);} finally{hideLoading();}
 }
 
 async function saveOrder() {
-  const { error } = await sb.from('orders').update({
-    completed: currentOrder.completed,
-    tick_info: currentOrder.tick_info,
-    attachments: currentOrder.attachments,
-    history: currentOrder.history,
-    updated_at: new Date().toISOString()
-  }).eq('id', currentOrderId);
-  if (error) { alert('Lỗi lưu: ' + error.message); return false; }
-  // update local list
-  const idx = allOrders.findIndex(o => o.id === currentOrderId);
-  if (idx >= 0) allOrders[idx] = { ...allOrders[idx], ...currentOrder };
+  const{error}=await sb.from('orders').update({completed:currentOrder.completed,tick_info:currentOrder.tick_info,attachments:currentOrder.attachments,history:currentOrder.history,updated_at:new Date().toISOString()}).eq('id',currentOrderId);
+  if(error){alert('Lỗi lưu: '+error.message);return false;}
+  const idx=allOrders.findIndex(o=>o.id===currentOrderId);
+  if(idx>=0)allOrders[idx]={...allOrders[idx],...currentOrder};
   return true;
 }
 
 function canTick(step) {
-  if (currentUser.role === 'admin') return true;
-  if (currentUser.role === 'sale_admin') return SALE_ADMIN_STEPS.includes(step.stt);
-  if (step.hasMultiCheck) return step.teams.includes(currentUser.role);
-  return step.dept === currentUser.role;
+  if(currentUser.role==='admin')return true;
+  if(currentUser.role==='sale_admin')return SALE_ADMIN_STEPS.includes(step.stt);
+  if(step.hasMultiCheck)return step.teams.includes(currentUser.role);
+  return step.dept===currentUser.role;
+}
+
+async function toggleCancelOrder() {
+  if(!currentOrder)return;
+  const isCancelled=!!currentOrder.cancelled;
+  if(!confirm(isCancelled?'Khôi phục đơn hàng này?':'Hủy đơn hàng này?'))return;
+  const newVal=!isCancelled;
+  showLoading(newVal?'Đang hủy...':'Đang khôi phục...');
+  try {
+    const updateData={cancelled:newVal};
+    if(newVal){updateData.cancelled_at=new Date().toISOString();updateData.cancelled_by=currentUser?.email||currentUser?.name||'unknown';}
+    else{updateData.cancelled_at=null;updateData.cancelled_by=null;}
+    const{error}=await sb.from('orders').update(updateData).eq('id',currentOrder.id);
+    if(error)throw error;
+    currentOrder.cancelled=newVal;
+    const idx=allOrders.findIndex(o=>o.id===currentOrder.id);
+    if(idx>=0)allOrders[idx].cancelled=newVal;
+    currentOrder.history=currentOrder.history||[];
+    currentOrder.history.push({action:newVal?'cancel':'restore',user:currentUser.name,role:currentUser.role,time:Date.now()});
+    await sb.from('orders').update({history:currentOrder.history}).eq('id',currentOrder.id);
+    updateCancelBtn(); renderOrderList();
+  } catch(e){alert('Lỗi: '+e.message);} finally{hideLoading();}
+}
+
+function updateCancelBtn() {
+  const btn=document.getElementById('cancelBtn');
+  if(!btn||!currentOrder)return;
+  if(currentOrder.cancelled){btn.textContent='↩ Khôi phục đơn';btn.style.background='#28a745';}
+  else{btn.textContent='🚫 Hủy đơn';btn.style.background='#dc3545';}
 }
 
 function renderDetail() {
-  const o = currentOrder;
-  const canEditFolder = currentUser.role === 'admin' || currentUser.role === 'sale_admin' || currentUser.role === 'sale';
-  const folderSection = o.folder_url
-    ? `<div class="drive-section" id="driveSection">
-        <div class="drive-header" onclick="toggleDriveTree()">
-          <div class="drive-header-left">
-            <span>📁</span>
-            <span>Thư mục chứng từ Google Drive</span>
-            <span id="driveTotalBadge" style="font-size:11px;background:#e3f2fd;color:#1565c0;padding:2px 8px;border-radius:4px;font-weight:600;margin-left:4px;"></span>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <button onclick="event.stopPropagation();loadDriveFileCounts()" style="font-size:11px;padding:3px 8px;border:1px solid #1a73e8;background:white;color:#1a73e8;border-radius:4px;cursor:pointer;">🔢 Đếm file</button>
-            <a href="${esc(o.folder_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:12px;color:#1a73e8;">Mở Drive ↗</a>
-            <span style="font-size:12px;color:#888;" id="driveToggleIcon">▼</span>
-          </div>
-        </div>
-        <div id="driveFileCountSection" class="hidden" style="padding:12px 16px;background:#f8f9fc;border-bottom:1px solid #eee;">
-          <div id="driveFileCountBody" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;"></div>
-        </div>
-        <div class="drive-body hidden" id="driveBody">
-          <div class="drive-loading" id="driveLoading">Đang tải thư mục...</div>
-          <div id="driveTree"></div>
-        </div>
-        ${canEditFolder ? `<div class="drive-set-link">
-          <input type="url" id="newFolderUrl" placeholder="Đổi link folder Drive..." value="${esc(o.folder_url||'')}">
-          <button class="btn-mini" onclick="saveFolderUrl()">Lưu</button>
-        </div>` : ''}
-      </div>`
-    : canEditFolder
-      ? `<div class="drive-section">
-          <div style="padding:14px 16px;background:#f8f9fc;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <span style="font-size:13px;color:#888;">📁 Chưa có thư mục chứng từ</span>
-            <div class="drive-set-link" style="padding:0;background:none;border:none;flex:1;min-width:200px;">
-              <input type="url" id="newFolderUrl" placeholder="Dán link folder Google Drive..." style="flex:1;">
-              <button class="btn-mini" onclick="saveFolderUrl()">+ Thêm</button>
-            </div>
-          </div>
-        </div>`
-      : '';
+  const o=currentOrder;
+  const canEditFolder=currentUser.role==='admin'||currentUser.role==='sale_admin'||currentUser.role==='sale';
+  const folderSection=o.folder_url
+    ?`<div class="drive-section" id="driveSection"><div class="drive-header" onclick="toggleDriveTree()"><div class="drive-header-left"><span>📁</span><span>Thư mục chứng từ Google Drive</span><span id="driveTotalBadge" style="font-size:11px;background:#e3f2fd;color:#1565c0;padding:2px 8px;border-radius:4px;font-weight:600;margin-left:4px;"></span></div><div style="display:flex;align-items:center;gap:10px;"><a href="${esc(o.folder_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:12px;color:#1a73e8;">Mở Drive ↗</a><span style="font-size:12px;color:#888;" id="driveToggleIcon">▼</span></div></div><div class="drive-body hidden" id="driveBody"><div class="drive-loading" id="driveLoading">Đang tải thư mục...</div><div id="driveTree"></div></div>${canEditFolder?`<div class="drive-set-link"><input type="url" id="newFolderUrl" placeholder="Đổi link folder Drive..." value="${esc(o.folder_url||'')}"><button class="btn-mini" onclick="saveFolderUrl()">Lưu</button></div>`:''}</div>`
+    :canEditFolder?`<div class="drive-section"><div style="padding:14px 16px;background:#f8f9fc;display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><span style="font-size:13px;color:#888;">📁 Chưa có thư mục chứng từ</span><div class="drive-set-link" style="padding:0;background:none;border:none;flex:1;min-width:200px;"><input type="url" id="newFolderUrl" placeholder="Dán link folder Google Drive..."><button class="btn-mini" onclick="saveFolderUrl()">+ Thêm</button></div></div></div>`:''  ;
 
-  document.getElementById('orderHeader').innerHTML = `
+  document.getElementById('orderHeader').innerHTML=`
     <div style="background:#f8f9fc;padding:16px 18px;border-radius:10px;margin-bottom:12px;">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
         <div>
           <div style="font-size:20px;font-weight:700;">${esc(o.code)}</div>
           <div style="font-size:13px;color:#666;margin-top:4px;">👤 ${esc(o.customer)}${o.note?' · '+esc(o.note):''}</div>
-          ${o.supplier ? `<div style="font-size:13px;color:#555;margin-top:3px;">🏭 Mua hàng từ: <strong>${esc(o.supplier)}</strong></div>` : ''}
+          ${o.supplier?`<div style="font-size:13px;color:#555;margin-top:3px;">🏭 Mua hàng từ: <strong>${esc(o.supplier)}</strong></div>`:''}
         </div>
         <div style="text-align:right;">
           <div style="font-size:12px;color:#888;">Tạo bởi ${esc(o.created_by||'?')} · ${o.created_at?new Date(o.created_at).toLocaleDateString('vi-VN'):''}</div>
-          ${canEditPayment() ? `<button class="btn-mini" style="margin-top:6px;" onclick="editSupplier()">✏️ Sửa công ty mua hàng</button>` : ''}
+          ${canEditPayment()?`<button class="btn-mini" style="margin-top:6px;" onclick="editSupplier()">✏️ Sửa công ty mua hàng</button>`:''}
         </div>
       </div>
       <div id="supplierEditRow" class="hidden" style="margin-top:10px;display:flex;gap:8px;">
@@ -1123,883 +696,495 @@ function renderDetail() {
     ${folderSection}
     ${renderChecklistSection()}
     ${renderPaymentSection()}`;
-  const noticeEl = document.getElementById('roleNotice');
-  if (currentUser.role === 'admin') {
-    noticeEl.innerHTML = `<div class="notice info">👑 <strong>Admin</strong> — tick mọi bước và xóa đơn.</div>`;
-  } else if (currentUser.role === 'sale_admin') {
-    noticeEl.innerHTML = `<div class="notice">ℹ️ Bạn là <strong>Sale Admin</strong> — tick được bước 3, 5, 7, 12, 16.</div>`;
-  } else {
-    noticeEl.innerHTML = `<div class="notice">ℹ️ Bạn là <strong>${DEPTS[currentUser.role]}</strong> — chỉ tick được bước của bộ phận mình.</div>`;
-  }
-  const deleteBtn = document.getElementById('deleteBtn');
-  if (currentUser.role === 'admin') deleteBtn.classList.remove('hidden'); else deleteBtn.classList.add('hidden');
-  // Cancel button visible to admin and sale_admin
-  const cancelBtn = document.getElementById('cancelBtn');
-  if (cancelBtn) {
-    if (currentUser.role === 'admin' || currentUser.role === 'sale_admin' || currentUser.role === 'sale') {
-      cancelBtn.classList.remove('hidden');
-      updateCancelBtn();
-    } else {
-      cancelBtn.classList.add('hidden');
-    }
+
+  const noticeEl=document.getElementById('roleNotice');
+  if(currentUser.role==='admin')noticeEl.innerHTML=`<div class="notice info">👑 <strong>Admin</strong> — tick mọi bước và xóa đơn.</div>`;
+  else noticeEl.innerHTML=`<div class="notice">ℹ️ Bạn là <strong>${DEPTS[currentUser.role]}</strong> — chỉ tick được bước của bộ phận mình.</div>`;
+
+  const deleteBtn=document.getElementById('deleteBtn');
+  if(currentUser.role==='admin')deleteBtn.classList.remove('hidden'); else deleteBtn.classList.add('hidden');
+  const cancelBtn=document.getElementById('cancelBtn');
+  if(cancelBtn){
+    if(currentUser.role==='admin'||currentUser.role==='sale_admin'||currentUser.role==='sale'){cancelBtn.classList.remove('hidden');updateCancelBtn();}
+    else cancelBtn.classList.add('hidden');
   }
 
-  const dfs = [
-    { k:'all', label:'Tất cả' }, { k:'sale', label:'Sale' }, { k:'sale_admin', label:'Sale Admin' },
-    { k:'ketoan', label:'Kế toán' }, { k:'thumua', label:'Thu mua' },
-    { k:'logistics', label:'Logistics' }, { k:'admin', label:'Ban GĐ' },
-    { k:'mine', label:'👤 Của tôi' }
-  ];
-  document.getElementById('deptFilters').innerHTML = dfs.map(d =>
-    `<button class="filter-btn ${deptFilter===d.k?'active':''}" onclick="setDeptFilter('${d.k}')">${d.label}</button>`
-  ).join('');
+  const dfs=[{k:'all',label:'Tất cả'},{k:'sale',label:'Sale'},{k:'sale_admin',label:'Sale Admin'},{k:'ketoan',label:'Kế toán'},{k:'thumua',label:'Thu mua'},{k:'logistics',label:'Logistics'},{k:'admin',label:'Ban GĐ'},{k:'mine',label:'👤 Của tôi'}];
+  document.getElementById('deptFilters').innerHTML=dfs.map(d=>`<button class="filter-btn ${deptFilter===d.k?'active':''}" onclick="setDeptFilter('${d.k}')">${d.label}</button>`).join('');
   renderWorkflow();
-  setTimeout(() => {
-    const cs = document.getElementById('checklistSection');
-    if (!cs) return;
-    cs.addEventListener('click', function(e) {
-      const tick = e.target.closest('[data-cl-tick]');
-      const expand = e.target.closest('[data-cl-expand]') || e.target.closest('[data-cl-row][data-has-subs="1"]');
-      const sub = e.target.closest('[data-cl-sub]');
-      if (tick) { tickChecklist(tick.dataset.clTick); return; }
-      if (sub) { tickChecklistSub(sub.dataset.clSub, parseInt(sub.dataset.clSubj)); return; }
-      if (expand) {
-        const id = expand.dataset.clExpand || expand.dataset.clRow;
-        if (id) toggleChecklistExpand(id);
-      }
+
+  setTimeout(()=>{
+    const cs=document.getElementById('checklistSection');
+    if(!cs)return;
+    cs.addEventListener('click',function(e){
+      const tick=e.target.closest('[data-cl-tick]');
+      const expand=e.target.closest('[data-cl-expand]')||e.target.closest('[data-cl-row][data-has-subs="1"]');
+      const sub=e.target.closest('[data-cl-sub]');
+      if(tick){tickChecklist(tick.dataset.clTick);return;}
+      if(sub){tickChecklistSub(sub.dataset.clSub,parseInt(sub.dataset.clSubj));return;}
+      if(expand){const id=expand.dataset.clExpand||expand.dataset.clRow;if(id)toggleChecklistExpand(id);}
     });
-  }, 0);
+  },0);
 }
 
-function setDeptFilter(k) { deptFilter = k; renderDetail(); }
+function setDeptFilter(k){deptFilter=k;renderDetail();}
 
 function renderWorkflow() {
-  const container = document.getElementById('workflow');
-  container.innerHTML = '';
-  const o = currentOrder;
-
-  let filtered = workflows.filter(s => {
-    if (deptFilter === 'all') return true;
-    if (deptFilter === 'mine') {
-      if (currentUser.role === 'admin') return true;
-      if (currentUser.role === 'sale_admin') return SALE_ADMIN_STEPS.includes(s.stt);
-      return s.dept === currentUser.role || (s.hasMultiCheck && s.teams.includes(currentUser.role));
-    }
-    if (deptFilter === 'sale_admin') return SALE_ADMIN_STEPS.includes(s.stt);
-    return s.dept === deptFilter || (s.hasMultiCheck && s.teams.includes(deptFilter));
+  const container=document.getElementById('workflow');
+  container.innerHTML='';
+  const o=currentOrder;
+  let filtered=workflows.filter(s=>{
+    if(deptFilter==='all')return true;
+    if(deptFilter==='mine'){if(currentUser.role==='admin')return true;if(currentUser.role==='sale_admin')return SALE_ADMIN_STEPS.includes(s.stt);return s.dept===currentUser.role||(s.hasMultiCheck&&s.teams.includes(currentUser.role));}
+    if(deptFilter==='sale_admin')return SALE_ADMIN_STEPS.includes(s.stt);
+    return s.dept===deptFilter||(s.hasMultiCheck&&s.teams.includes(deptFilter));
   });
-
-  if (!filtered.length) { container.innerHTML = '<div class="empty-state"><p>Không có bước nào</p></div>'; updateStats(); return; }
-
-  filtered.forEach(step => {
-    const el = document.createElement('div');
-
-    if (step.hasMultiCheck) {
-      const teamsHtml = step.teams.map(t => {
-        const key = `${step.stt}_${t}`;
-        const checked = !!o.completed[key];
-        const canT = currentUser.role === 'admin' || currentUser.role === t;
-        const ti = o.tick_info[key] ? `<div class="step-tick-info">✓ ${esc(o.tick_info[key].user)} · ${new Date(o.tick_info[key].time).toLocaleString('vi-VN')}</div>` : '';
-        return `<div style="display:flex;flex-direction:column;margin-right:18px;margin-bottom:6px;">
-          <label style="display:flex;align-items:center;gap:7px;cursor:${canT?'pointer':'not-allowed'};">
-            <input type="checkbox" ${checked?'checked':''} ${canT?'':'disabled'} onchange="toggleMulti(${step.stt},'${t}')" style="accent-color:#667eea;cursor:${canT?'pointer':'not-allowed'};">
-            <span style="font-size:12px;color:#667eea;font-weight:500;">${DEPTS[t]}</span>
-            ${!canT?'<span class="lock-badge">🔒</span>':''}
-          </label>${ti}</div>`;
+  if(!filtered.length){container.innerHTML='<div class="empty-state"><p>Không có bước nào</p></div>';updateStats();return;}
+  filtered.forEach(step=>{
+    const el=document.createElement('div');
+    if(step.hasMultiCheck){
+      const teamsHtml=step.teams.map(t=>{
+        const key=`${step.stt}_${t}`,checked=!!o.completed[key],canT=currentUser.role==='admin'||currentUser.role===t;
+        const ti=o.tick_info[key]?`<div class="step-tick-info">✓ ${esc(o.tick_info[key].user)} · ${new Date(o.tick_info[key].time).toLocaleString('vi-VN')}</div>`:'';
+        return `<div style="display:flex;flex-direction:column;margin-right:18px;margin-bottom:6px;"><label style="display:flex;align-items:center;gap:7px;cursor:${canT?'pointer':'not-allowed'};"><input type="checkbox" ${checked?'checked':''} ${canT?'':'disabled'} onchange="toggleMulti(${step.stt},'${t}')" style="accent-color:#667eea;"><span style="font-size:12px;color:#667eea;font-weight:500;">${DEPTS[t]}</span>${!canT?'<span class="lock-badge">🔒</span>':''}</label>${ti}</div>`;
       }).join('');
-      el.className = 'workflow-step';
-      el.innerHTML = `
-        <div class="step-number">${step.stt}</div>
-        <div class="step-content">
-          <div class="step-title-row"><span class="step-title">${step.job}</span></div>
-          <div class="step-desc">${step.content}</div>
-          <div style="margin-top:8px;display:flex;flex-wrap:wrap;">${teamsHtml}</div>
-          ${renderStepNote(step.stt)}
-        </div>`;
+      el.className='workflow-step';
+      el.innerHTML=`<div class="step-number">${step.stt}</div><div class="step-content"><div class="step-title-row"><span class="step-title">${step.job}</span></div><div class="step-desc">${step.content}</div><div style="margin-top:8px;display:flex;flex-wrap:wrap;">${teamsHtml}</div>${renderStepNote(step.stt)}</div>`;
     } else {
-      const done = !!o.completed[step.stt];
-      const canT = canTick(step);
-      const ti = o.tick_info[step.stt] ? `<div class="step-tick-info">✓ ${esc(o.tick_info[step.stt].user)} · ${new Date(o.tick_info[step.stt].time).toLocaleString('vi-VN')}</div>` : '';
-      el.className = `workflow-step ${done?'step-completed':''}`;
-      el.innerHTML = `
-        <input type="checkbox" class="step-checkbox" ${done?'checked':''} ${canT?'':'disabled'} onchange="toggleStep(${step.stt})">
-        <div class="step-number">${step.stt}</div>
-        <div class="step-content">
-          <div class="step-title-row">
-            <span class="step-title">${step.job}</span>
-            ${!canT?'<span class="lock-badge">🔒</span>':''}
-          </div>
-          <div class="step-desc">${step.content}</div>
-          <span class="step-pic">${step.pic}</span>${ti}
-          ${renderStepNote(step.stt)}
-        </div>`;
+      const done=!!o.completed[step.stt],canT=canTick(step);
+      const ti=o.tick_info[step.stt]?`<div class="step-tick-info">✓ ${esc(o.tick_info[step.stt].user)} · ${new Date(o.tick_info[step.stt].time).toLocaleString('vi-VN')}</div>`:'';
+      el.className=`workflow-step ${done?'step-completed':''}`;
+      el.innerHTML=`<input type="checkbox" class="step-checkbox" ${done?'checked':''} ${canT?'':'disabled'} onchange="toggleStep(${step.stt})"><div class="step-number">${step.stt}</div><div class="step-content"><div class="step-title-row"><span class="step-title">${step.job}</span>${!canT?'<span class="lock-badge">🔒</span>':''}</div><div class="step-desc">${step.content}</div><span class="step-pic">${step.pic}</span>${ti}${renderStepNote(step.stt)}</div>`;
     }
     container.appendChild(el);
   });
   updateStats();
 }
 
-function formatSize(bytes) {
-  if (!bytes) return '';
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
-  return (bytes/1024/1024).toFixed(1) + ' MB';
+function formatSize(bytes){if(!bytes)return'';if(bytes<1024)return bytes+' B';if(bytes<1048576)return(bytes/1024).toFixed(1)+' KB';return(bytes/1048576).toFixed(1)+' MB';}
+
+const attachTabState={};
+const MAX_FILE_SIZE=10*1024*1024;
+
+function setAttachTab(stt,tab){attachTabState[stt]=tab;renderWorkflow();}
+
+function guessIcon(url,title){
+  const s=((url||'')+' '+(title||'')).toLowerCase();
+  if(s.includes('drive.google'))return'📁';if(s.includes('docs.google'))return'📄';if(s.includes('sheets.google'))return'📊';
+  if(s.includes('dropbox'))return'📦';if(s.match(/\.pdf(\s|$)/))return'📕';if(s.match(/\.(jpg|jpeg|png|gif|webp)(\s|$)/))return'🖼️';
+  if(s.match(/\.(xlsx|xls|csv)(\s|$)/))return'📊';if(s.match(/\.(docx|doc)(\s|$)/))return'📄';if(s.match(/\.(zip|rar|7z)(\s|$)/))return'🗜️';
+  return'📎';
 }
 
-function renderAttachSection(stt) {
-  const attachs = currentOrder.attachments[String(stt)] || [];
-  const listHtml = !attachs.length
-    ? '<div style="font-size:12px;color:#999;font-style:italic;padding:4px 0;">Chưa có tài liệu đính kèm</div>'
-    : `<div class="attach-list">${attachs.map((a,i) => {
-        const canDel = currentUser.role==='admin' || a.user===currentUser.name;
-        const sizeStr = a.size ? `<span class="file-size">(${formatSize(a.size)})</span>` : '';
-        const isStorage = a.type === 'storage';
-        return `<div class="attach-item">
-          <span class="attach-icon">${guessIcon(a.url, a.title)}</span>
-          ${isStorage
-            ? `<span class="attach-link" style="cursor:pointer;" onclick="downloadFile('${esc(a.path)}','${esc(a.title)}')">${esc(a.title)}${sizeStr}</span>`
-            : `<a href="${esc(a.url)}" target="_blank" rel="noopener" class="attach-link">${esc(a.title||a.url)}${sizeStr}</a>`
-          }
-          <span class="attach-meta">${esc(a.user)} · ${new Date(a.time).toLocaleDateString('vi-VN')}</span>
-          ${canDel?`<button class="attach-delete" onclick="removeAttach(${stt},${i})">✕</button>`:''}
-        </div>`;
-      }).join('')}</div>`;
-
-  const activeTab = attachTabState[stt] || 'drive';
-  const step = workflows.find(w => w.stt === stt);
-  const driveFolderUrl = getDriveFolderForStep(step);
-
-  return `<div class="attachments-section">
-    ${listHtml}
-    <div class="attach-tabs">
-      <button class="attach-tab-btn ${activeTab==='drive'?'active':''}" onclick="setAttachTab(${stt},'drive')">📁 Upload vào Drive</button>
-      <button class="attach-tab-btn ${activeTab==='link'?'active':''}" onclick="setAttachTab(${stt},'link')">🔗 Dán link</button>
-    </div>
-    <div class="attach-tab-content">
-      ${activeTab === 'drive' ? `
-        <div style="padding:12px;background:#f8f9fc;border-radius:8px;border:1.5px dashed #c5c5e6;">
-          ${driveFolderUrl ? `
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-              <div style="font-size:32px;">📁</div>
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:13px;font-weight:600;color:#333;margin-bottom:3px;">Folder Drive của bước này</div>
-                <div style="font-size:11px;color:#888;">Bấm mở → kéo thả file vào đúng thư mục</div>
-              </div>
-              <a href="${esc(driveFolderUrl)}" target="_blank" rel="noopener"
-                style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;text-decoration:none;border-radius:6px;font-size:13px;font-weight:600;white-space:nowrap;">
-                📂 Mở folder Drive
-              </a>
-            </div>
-          ` : `
-            <div style="text-align:center;padding:12px;color:#888;font-size:13px;">
-              ⏳ Folder Drive chưa được tạo. Vui lòng đợi 1 phút hoặc liên hệ Admin.
-            </div>
-          `}
-        </div>
-      ` : `
-        <div class="attach-add-form">
-          <input type="text" id="atTitle_${stt}" placeholder="Tên tài liệu (VD: Hợp đồng MB)">
-          <input type="url" id="atUrl_${stt}" placeholder="Link Google Drive / Dropbox...">
-          <button class="btn-mini" onclick="addAttach(${stt})">+ Thêm</button>
-        </div>
-      `}
-    </div>
-  </div>`;
+function getDriveFolderForStep(step){
+  if(!currentOrder?.step_folder_ids||!step)return null;
+  const ids=currentOrder.step_folder_ids;
+  const deptMap={'sale':'Sale','sale_admin':'Sale Admin','ketoan':'Ke toan','logistics':'Logistics','admin':'Sale Admin','thumua':'Sale Admin','multi':'Logistics'};
+  const key=deptMap[step.dept]||'Sale';
+  const deptData=ids[key];
+  if(!deptData)return null;
+  const folderId=typeof deptData==='object'?deptData.id:deptData;
+  return folderId?`https://drive.google.com/drive/folders/${folderId}`:null;
 }
 
-// ============== FILE UPLOAD ==============
-const attachTabState = {};
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+function renderAttachSection(stt){
+  const attachs=currentOrder.attachments[String(stt)]||[];
+  const listHtml=!attachs.length?'<div style="font-size:12px;color:#999;font-style:italic;padding:4px 0;">Chưa có tài liệu đính kèm</div>'
+    :`<div class="attach-list">${attachs.map((a,i)=>{const canDel=currentUser.role==='admin'||a.user===currentUser.name;const sizeStr=a.size?`<span class="file-size">(${formatSize(a.size)})</span>`:'';const isStorage=a.type==='storage';return`<div class="attach-item"><span class="attach-icon">${guessIcon(a.url,a.title)}</span>${isStorage?`<span class="attach-link" style="cursor:pointer;" onclick="downloadFile('${esc(a.path)}','${esc(a.title)}')">${esc(a.title)}${sizeStr}</span>`:`<a href="${esc(a.url)}" target="_blank" rel="noopener" class="attach-link">${esc(a.title||a.url)}${sizeStr}</a>`}<span class="attach-meta">${esc(a.user)} · ${new Date(a.time).toLocaleDateString('vi-VN')}</span>${canDel?`<button class="attach-delete" onclick="removeAttach(${stt},${i})">✕</button>`:''}</div>`;}).join('')}</div>`;
+  const activeTab=attachTabState[stt]||'drive';
+  const step=workflows.find(w=>w.stt===stt);
+  const driveFolderUrl=getDriveFolderForStep(step);
+  return`<div class="attachments-section">${listHtml}<div class="attach-tabs"><button class="attach-tab-btn ${activeTab==='drive'?'active':''}" onclick="setAttachTab(${stt},'drive')">📁 Upload vào Drive</button><button class="attach-tab-btn ${activeTab==='link'?'active':''}" onclick="setAttachTab(${stt},'link')">🔗 Dán link</button></div><div class="attach-tab-content">${activeTab==='drive'?`<div style="padding:12px;background:#f8f9fc;border-radius:8px;border:1.5px dashed #c5c5e6;">${driveFolderUrl?`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><div style="font-size:32px;">📁</div><div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:#333;margin-bottom:3px;">Folder Drive của bước này</div><div style="font-size:11px;color:#888;">Bấm mở → kéo thả file vào đúng thư mục</div></div><a href="${esc(driveFolderUrl)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;text-decoration:none;border-radius:6px;font-size:13px;font-weight:600;white-space:nowrap;">📂 Mở folder Drive</a></div>`:`<div style="text-align:center;padding:12px;color:#888;font-size:13px;">⏳ Folder Drive chưa được tạo.</div>`}</div>`:`<div class="attach-add-form"><input type="text" id="atTitle_${stt}" placeholder="Tên tài liệu"><input type="url" id="atUrl_${stt}" placeholder="Link Google Drive..."><button class="btn-mini" onclick="addAttach(${stt})">+ Thêm</button></div>`}</div></div>`;
+}
 
-function setAttachTab(stt, tab) {
-  attachTabState[stt] = tab;
+async function uploadFiles(files,stt){
+  const oversize=files.filter(f=>f.size>MAX_FILE_SIZE);
+  if(oversize.length){alert(`File quá 10MB: ${oversize.map(f=>f.name).join(', ')}`);return;}
+  for(let i=0;i<files.length;i++){
+    const file=files[i];
+    try{
+      const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+      const path=`${currentUser.id}/${currentOrderId}/${stt}/${Date.now()}_${safeName}`;
+      const{error:upErr}=await sb.storage.from('order-files').upload(path,file,{upsert:false});
+      if(upErr)throw upErr;
+      const key=String(stt);
+      if(!currentOrder.attachments[key])currentOrder.attachments[key]=[];
+      currentOrder.attachments[key].push({type:'storage',title:file.name,path,size:file.size,mime:file.type,user:currentUser.name,role:currentUser.role,time:Date.now()});
+      const step=workflows.find(w=>w.stt===stt);
+      currentOrder.history.push({action:'attach',stepNum:stt,stepName:step.job,attachTitle:file.name,user:currentUser.name,role:currentUser.role,time:Date.now()});
+    }catch(e){alert(`Lỗi upload "${file.name}": ${e.message}`);}
+  }
+  await saveOrder();
   renderWorkflow();
 }
 
-function dzDragOver(e, stt) {
-  e.preventDefault();
-  document.getElementById('dz_'+stt)?.classList.add('dragover');
-}
-function dzDragLeave(stt) {
-  document.getElementById('dz_'+stt)?.classList.remove('dragover');
-}
-function dzDrop(e, stt) {
-  e.preventDefault();
-  dzDragLeave(stt);
-  const files = Array.from(e.dataTransfer.files);
-  if (files.length) uploadFiles(files, stt);
-}
-function handleFileInput(e, stt) {
-  const files = Array.from(e.target.files);
-  if (files.length) uploadFiles(files, stt);
-}
-
-async function uploadFiles(files, stt) {
-  const oversize = files.filter(f => f.size > MAX_FILE_SIZE);
-  if (oversize.length) {
-    alert(`File quá 10MB: ${oversize.map(f=>f.name).join(', ')}\nVui lòng nén hoặc chia nhỏ file.`);
-    return;
-  }
-  const progBar = document.getElementById('up_'+stt);
-  const progFill = document.getElementById('upf_'+stt);
-  const status = document.getElementById('upStatus_'+stt);
-  if (progBar) progBar.style.display = 'block';
-
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    if (status) status.textContent = `Đang upload (${i+1}/${files.length}): ${file.name}...`;
-    if (progFill) progFill.style.width = Math.round(((i)/files.length)*100) + '%';
-    try {
-      // Path: userId/orderId/stepNum/timestamp_filename
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const path = `${currentUser.id}/${currentOrderId}/${stt}/${Date.now()}_${safeName}`;
-      const { error: upErr } = await sb.storage.from('order-files').upload(path, file, { upsert: false });
-      if (upErr) throw upErr;
-
-      const key = String(stt);
-      if (!currentOrder.attachments[key]) currentOrder.attachments[key] = [];
-      currentOrder.attachments[key].push({
-        type: 'storage',
-        title: file.name,
-        path,
-        size: file.size,
-        mime: file.type,
-        user: currentUser.name,
-        role: currentUser.role,
-        time: Date.now()
-      });
-      const step = workflows.find(w => w.stt === stt);
-      currentOrder.history.push({
-        action: 'attach', stepNum: stt, stepName: step.job,
-        attachTitle: file.name, user: currentUser.name, role: currentUser.role, time: Date.now()
-      });
-    } catch(e) {
-      alert(`Lỗi upload "${file.name}": ${e.message}`);
-    }
-  }
-  if (progFill) progFill.style.width = '100%';
-  if (status) status.textContent = `✅ Upload xong ${files.length} file!`;
-  await saveOrder();
-  setTimeout(() => renderWorkflow(), 800);
-}
-
-async function downloadFile(path, title) {
+async function downloadFile(path,title){
   showLoading('Đang tải file...');
-  try {
-    const { data, error } = await sb.storage.from('order-files').download(path);
-    if (error) throw error;
-    const url = URL.createObjectURL(data);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = title;
-    a.click();
-    URL.revokeObjectURL(url);
-  } catch(e) {
-    alert('Lỗi tải file: ' + e.message);
-  } finally { hideLoading(); }
+  try{
+    const{data,error}=await sb.storage.from('order-files').download(path);
+    if(error)throw error;
+    const url=URL.createObjectURL(data);
+    const a=document.createElement('a');a.href=url;a.download=title;a.click();URL.revokeObjectURL(url);
+  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
 }
 
-// Map dept → tên folder Drive
-function getDriveFolderForStep(step) {
-  if (!currentOrder?.step_folder_ids || !step) return null;
-  const ids = currentOrder.step_folder_ids;
-
-  // Map dept → tên key trong step_folder_ids
-  const deptMap = {
-    'sale':      'Sale',
-    'sale_admin':'Sale Admin',
-    'ketoan':    'Ke toan',
-    'logistics': 'Logistics',
-    'admin':     'Sale Admin',  // BGĐ dùng chung folder Sale Admin
-    'thumua':    'Sale Admin',  // Thu mua dùng chung Sale Admin
-    'multi':     'Logistics'    // Bước 23 multi → Logistics
-  };
-
-  const key = deptMap[step.dept] || 'Sale';
-  const deptData = ids[key];
-  if (!deptData) return null;
-
-  // Trả về link folder bộ phận
-  const folderId = typeof deptData === 'object' ? deptData.id : deptData;
-  return folderId ? `https://drive.google.com/drive/folders/${folderId}` : null;
-}
-
-function guessIcon(url, title) {
-  const s = ((url||'')+' '+(title||'')).toLowerCase();
-  if (s.includes('drive.google')) return '📁';
-  if (s.includes('docs.google')) return '📄';
-  if (s.includes('sheets.google')) return '📊';
-  if (s.includes('dropbox')) return '📦';
-  if (s.match(/\.pdf(\s|$)/)) return '📕';
-  if (s.match(/\.(jpg|jpeg|png|gif|webp)(\s|$)/)) return '🖼️';
-  if (s.match(/\.(xlsx|xls|csv)(\s|$)/)) return '📊';
-  if (s.match(/\.(docx|doc)(\s|$)/)) return '📄';
-  if (s.match(/\.(zip|rar|7z)(\s|$)/)) return '🗜️';
-  return '📎';
-}
-
-function toggleAttach(stt) { expandedAttach[stt] = !expandedAttach[stt]; renderWorkflow(); }
-
-async function toggleStep(stt) {
-  const step = workflows.find(w => w.stt === stt);
-  if (!canTick(step)) { alert('Bạn không có quyền tick bước này'); return; }
-  const o = currentOrder;
-  const newVal = !o.completed[stt];
-  o.completed[stt] = newVal;
-  if (newVal) o.tick_info[stt] = { user: currentUser.name, role: currentUser.role, time: Date.now() };
+async function toggleStep(stt){
+  const step=workflows.find(w=>w.stt===stt);
+  if(!canTick(step)){alert('Bạn không có quyền tick bước này');return;}
+  const o=currentOrder,newVal=!o.completed[stt];
+  o.completed[stt]=newVal;
+  if(newVal)o.tick_info[stt]={user:currentUser.name,role:currentUser.role,time:Date.now()};
   else delete o.tick_info[stt];
-  o.history.push({ action: newVal?'check':'uncheck', stepNum: stt, stepName: step.job, user: currentUser.name, role: currentUser.role, time: Date.now() });
-  await saveOrder();
-  renderWorkflow();
+  o.history.push({action:newVal?'check':'uncheck',stepNum:stt,stepName:step.job,user:currentUser.name,role:currentUser.role,time:Date.now()});
+  await saveOrder();renderWorkflow();
 }
 
-async function toggleMulti(stt, team) {
-  if (currentUser.role !== 'admin' && currentUser.role !== team) { alert('Bạn không có quyền'); return; }
-  const step = workflows.find(w => w.stt === stt);
-  const key = `${stt}_${team}`;
-  const newVal = !currentOrder.completed[key];
-  currentOrder.completed[key] = newVal;
-  if (newVal) currentOrder.tick_info[key] = { user: currentUser.name, role: currentUser.role, time: Date.now() };
+async function toggleMulti(stt,team){
+  if(currentUser.role!=='admin'&&currentUser.role!==team){alert('Bạn không có quyền');return;}
+  const step=workflows.find(w=>w.stt===stt),key=`${stt}_${team}`,newVal=!currentOrder.completed[key];
+  currentOrder.completed[key]=newVal;
+  if(newVal)currentOrder.tick_info[key]={user:currentUser.name,role:currentUser.role,time:Date.now()};
   else delete currentOrder.tick_info[key];
-  currentOrder.history.push({ action: newVal?'check':'uncheck', stepNum: stt, stepName: `${step.job} (${DEPTS[team]})`, user: currentUser.name, role: currentUser.role, time: Date.now() });
-  await saveOrder();
-  renderWorkflow();
+  currentOrder.history.push({action:newVal?'check':'uncheck',stepNum:stt,stepName:`${step.job} (${DEPTS[team]})`,user:currentUser.name,role:currentUser.role,time:Date.now()});
+  await saveOrder();renderWorkflow();
 }
 
-async function addAttach(stt) {
-  const title = (document.getElementById('atTitle_'+stt)||{}).value?.trim();
-  const url = (document.getElementById('atUrl_'+stt)||{}).value?.trim();
-  if (!url) { alert('Vui lòng nhập URL'); return; }
-  if (!/^https?:\/\//i.test(url)) { alert('URL phải bắt đầu bằng http:// hoặc https://'); return; }
-  const key = String(stt);
-  if (!currentOrder.attachments[key]) currentOrder.attachments[key] = [];
-  currentOrder.attachments[key].push({ title: title||url, url, user: currentUser.name, role: currentUser.role, time: Date.now() });
-  const step = workflows.find(w => w.stt === stt);
-  currentOrder.history.push({ action:'attach', stepNum: stt, stepName: step.job, attachTitle: title||url, user: currentUser.name, role: currentUser.role, time: Date.now() });
-  await saveOrder();
-  renderWorkflow();
+async function addAttach(stt){
+  const title=(document.getElementById('atTitle_'+stt)||{}).value?.trim();
+  const url=(document.getElementById('atUrl_'+stt)||{}).value?.trim();
+  if(!url){alert('Vui lòng nhập URL');return;}
+  if(!/^https?:\/\//i.test(url)){alert('URL phải bắt đầu bằng http:// hoặc https://');return;}
+  const key=String(stt);
+  if(!currentOrder.attachments[key])currentOrder.attachments[key]=[];
+  currentOrder.attachments[key].push({title:title||url,url,user:currentUser.name,role:currentUser.role,time:Date.now()});
+  const step=workflows.find(w=>w.stt===stt);
+  currentOrder.history.push({action:'attach',stepNum:stt,stepName:step.job,attachTitle:title||url,user:currentUser.name,role:currentUser.role,time:Date.now()});
+  await saveOrder();renderWorkflow();
 }
 
-async function removeAttach(stt, idx) {
-  const key = String(stt);
-  const a = (currentOrder.attachments[key]||[])[idx];
-  if (!a) return;
-  if (currentUser.role !== 'admin' && a.user !== currentUser.name) { alert('Chỉ người đăng hoặc Admin mới xóa được'); return; }
-  if (!confirm(`Xóa "${a.title}"?`)) return;
+async function removeAttach(stt,idx){
+  const key=String(stt),a=(currentOrder.attachments[key]||[])[idx];
+  if(!a)return;
+  if(currentUser.role!=='admin'&&a.user!==currentUser.name){alert('Chỉ người đăng hoặc Admin mới xóa được');return;}
+  if(!confirm(`Xóa "${a.title}"?`))return;
   showLoading('Đang xóa...');
-  try {
-    // Nếu là file storage thì xóa file thật trên Supabase Storage
-    if (a.type === 'storage' && a.path) {
-      await sb.storage.from('order-files').remove([a.path]);
-    }
-    currentOrder.attachments[key].splice(idx, 1);
-    const step = workflows.find(w => w.stt === stt);
-    currentOrder.history.push({ action:'detach', stepNum: stt, stepName: step.job, attachTitle: a.title, user: currentUser.name, role: currentUser.role, time: Date.now() });
-    await saveOrder();
-    renderWorkflow();
-  } catch(e) { alert('Lỗi: ' + e.message); } finally { hideLoading(); }
+  try{
+    if(a.type==='storage'&&a.path)await sb.storage.from('order-files').remove([a.path]);
+    currentOrder.attachments[key].splice(idx,1);
+    const step=workflows.find(w=>w.stt===stt);
+    currentOrder.history.push({action:'detach',stepNum:stt,stepName:step.job,attachTitle:a.title,user:currentUser.name,role:currentUser.role,time:Date.now()});
+    await saveOrder();renderWorkflow();
+  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
 }
 
-function updateStats() {
-  const done = countCompleted(currentOrder);
-  const pct = Math.round((done/TOTAL)*100);
-  document.getElementById('completedSteps').textContent = done;
-  document.getElementById('progressPercent').textContent = pct+'%';
-  document.getElementById('progressFill').style.width = pct+'%';
+function updateStats(){
+  const done=countCompleted(currentOrder),pct=Math.round((done/TOTAL)*100);
+  document.getElementById('completedSteps').textContent=done;
+  document.getElementById('progressPercent').textContent=pct+'%';
+  document.getElementById('progressFill').style.width=pct+'%';
 }
 
-async function deleteCurrentOrder() {
-  if (currentUser.role !== 'admin') { alert('Chỉ Admin được xóa'); return; }
-  if (!confirm(`Xóa đơn ${currentOrder.code}? Không thể hoàn tác.`)) return;
+async function deleteCurrentOrder(){
+  if(currentUser.role!=='admin'){alert('Chỉ Admin được xóa');return;}
+  if(!confirm(`Xóa đơn ${currentOrder.code}? Không thể hoàn tác.`))return;
   showLoading('Đang xóa...');
-  try {
-    const { error } = await sb.from('orders').delete().eq('id', currentOrderId);
-    if (error) throw error;
-    currentOrderId = null; currentOrder = null;
+  try{
+    const{error}=await sb.from('orders').delete().eq('id',currentOrderId);
+    if(error)throw error;
+    currentOrderId=null;currentOrder=null;
     document.getElementById('tabDetail').classList.add('hidden');
     document.getElementById('tabHistory').classList.add('hidden');
-    switchTab('list');
-    await loadOrderList();
-  } catch(e) { alert('Lỗi: ' + e.message); } finally { hideLoading(); }
+    switchTab('list');await loadOrderList();
+  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
 }
 
-// ============== HISTORY ==============
-function renderHistory() {
-  const o = currentOrder;
-  document.getElementById('historyTitle').textContent = `Lịch sử · ${o.code}`;
-  const list = document.getElementById('historyList');
-  if (!o.history?.length) { list.innerHTML = '<div class="empty-state"><p>Chưa có thao tác nào</p></div>'; return; }
-  const items = [...o.history].reverse();
-  list.innerHTML = items.map(h => {
-    const time = new Date(h.time).toLocaleString('vi-VN');
-    const roleLabel = DEPTS[h.role] || h.role;
-    let icon='✓', cls='', line='';
-    if (h.action==='create') { icon='✨'; line=`<strong>${esc(h.user)}</strong> đã tạo đơn hàng`; }
-    else if (h.action==='check') { line=`<strong>${esc(h.user)}</strong> (${roleLabel}) hoàn thành bước <strong>#${h.stepNum}</strong>: ${esc(h.stepName)}`; }
-    else if (h.action==='uncheck') { icon='↶'; cls='uncheck'; line=`<strong>${esc(h.user)}</strong> (${roleLabel}) bỏ tick bước <strong>#${h.stepNum}</strong>: ${esc(h.stepName)}`; }
-    else if (h.action==='attach') { icon='📎'; cls='attach'; line=`<strong>${esc(h.user)}</strong> (${roleLabel}) đính kèm "<em>${esc(h.attachTitle)}</em>" vào bước <strong>#${h.stepNum}</strong>`; }
-    else if (h.action==='detach') { icon='✕'; cls='detach'; line=`<strong>${esc(h.user)}</strong> (${roleLabel}) xóa link "<em>${esc(h.attachTitle)}</em>" khỏi bước <strong>#${h.stepNum}</strong>`; }
-    else if (h.action==='payment') { icon='💰'; cls='attach'; line=`<strong>${esc(h.user)}</strong> (${roleLabel}) cập nhật thanh toán: ${esc(h.detail||'')}`; }
-    else if (h.action==='cancel') { icon='🚫'; cls='detach'; line=`<strong>${esc(h.user)}</strong> đã <strong>hủy</strong> đơn hàng`; }
-    else if (h.action==='restore') { icon='↩'; cls='attach'; line=`<strong>${esc(h.user)}</strong> đã <strong>khôi phục</strong> đơn hàng`; }
-    return `<div class="history-item">
-      <div class="history-icon ${cls}">${icon}</div>
-      <div class="history-content">
-        <div class="history-line">${line}</div>
-        <div class="history-time">${time}</div>
-      </div></div>`;
+function renderHistory(){
+  const o=currentOrder;
+  document.getElementById('historyTitle').textContent=`Lịch sử · ${o.code}`;
+  const list=document.getElementById('historyList');
+  if(!o.history?.length){list.innerHTML='<div class="empty-state"><p>Chưa có thao tác nào</p></div>';return;}
+  const items=[...o.history].reverse();
+  list.innerHTML=items.map(h=>{
+    const time=new Date(h.time).toLocaleString('vi-VN'),roleLabel=DEPTS[h.role]||h.role;
+    let icon='✓',cls='',line='';
+    if(h.action==='create'){icon='✨';line=`<strong>${esc(h.user)}</strong> đã tạo đơn hàng`;}
+    else if(h.action==='check'){line=`<strong>${esc(h.user)}</strong> (${roleLabel}) hoàn thành bước <strong>#${h.stepNum}</strong>: ${esc(h.stepName)}`;}
+    else if(h.action==='uncheck'){icon='↶';cls='uncheck';line=`<strong>${esc(h.user)}</strong> (${roleLabel}) bỏ tick bước <strong>#${h.stepNum}</strong>: ${esc(h.stepName)}`;}
+    else if(h.action==='attach'){icon='📎';cls='attach';line=`<strong>${esc(h.user)}</strong> (${roleLabel}) đính kèm "<em>${esc(h.attachTitle)}</em>" vào bước <strong>#${h.stepNum}</strong>`;}
+    else if(h.action==='detach'){icon='✕';cls='detach';line=`<strong>${esc(h.user)}</strong> (${roleLabel}) xóa "<em>${esc(h.attachTitle)}</em>" khỏi bước <strong>#${h.stepNum}</strong>`;}
+    else if(h.action==='payment'){icon='💰';cls='attach';line=`<strong>${esc(h.user)}</strong> cập nhật thanh toán: ${esc(h.detail||'')}`;}
+    else if(h.action==='cancel'){icon='🚫';cls='detach';line=`<strong>${esc(h.user)}</strong> đã <strong>hủy</strong> đơn hàng`;}
+    else if(h.action==='restore'){icon='↩';cls='attach';line=`<strong>${esc(h.user)}</strong> đã <strong>khôi phục</strong> đơn hàng`;}
+    return`<div class="history-item"><div class="history-icon ${cls}">${icon}</div><div class="history-content"><div class="history-line">${line}</div><div class="history-time">${time}</div></div></div>`;
   }).join('');
 }
 
-// ============== ADMIN: USER MANAGEMENT ==============
-async function loadAdminUsers() {
-  showLoading('Đang tải danh sách user...');
-  try {
-    const { data, error } = await sb.from('profiles').select('*').order('created_at');
-    if (error) throw error;
-    allUsers = data || [];
-    renderUserList();
-  } catch(e) {
-    document.getElementById('userListContainer').innerHTML = `<p style="color:red;">Lỗi: ${e.message}</p>`;
-  } finally { hideLoading(); }
+async function loadAdminUsers(){
+  showLoading('Đang tải...');
+  try{
+    const{data,error}=await sb.from('profiles').select('*').order('created_at');
+    if(error)throw error;
+    allUsers=data||[];renderUserList();
+  }catch(e){document.getElementById('userListContainer').innerHTML=`<p style="color:red;">Lỗi: ${e.message}</p>`;}
+  finally{hideLoading();}
 }
 
-function renderUserList() {
-  const el = document.getElementById('userListContainer');
-  if (!allUsers.length) { el.innerHTML = '<div class="empty-state"><p>Chưa có thành viên</p></div>'; return; }
-  const roleBadge = (r) => `<span class="role-badge role-${r}">${DEPTS[r]||r}</span>`;
-  el.innerHTML = `<table class="user-table">
-    <thead><tr><th>Tên</th><th>Vai trò</th><th>Ngày thêm</th><th>Thao tác</th></tr></thead>
-    <tbody>
-      ${allUsers.map(u => `<tr>
-        <td><strong>${esc(u.name)}</strong></td>
-        <td>${roleBadge(u.role)}</td>
-        <td>${u.created_at ? new Date(u.created_at).toLocaleDateString('vi-VN') : ''}</td>
-        <td>
-          ${u.id !== currentUser.id
-            ? `<button class="btn btn-danger" style="padding:5px 10px;font-size:12px;" onclick="deleteUser('${u.id}','${esc(u.name)}')">Xóa</button>`
-            : '<span style="font-size:12px;color:#999;">(bạn)</span>'}
-        </td>
-      </tr>`).join('')}
-    </tbody>
-  </table>`;
+function renderUserList(){
+  const el=document.getElementById('userListContainer');
+  if(!allUsers.length){el.innerHTML='<div class="empty-state"><p>Chưa có thành viên</p></div>';return;}
+  const roleBadge=(r)=>`<span class="role-badge role-${r}">${DEPTS[r]||r}</span>`;
+  el.innerHTML=`<table class="user-table"><thead><tr><th>Tên</th><th>Vai trò</th><th>Ngày thêm</th><th>Thao tác</th></tr></thead><tbody>${allUsers.map(u=>`<tr><td><strong>${esc(u.name)}</strong></td><td>${roleBadge(u.role)}</td><td>${u.created_at?new Date(u.created_at).toLocaleDateString('vi-VN'):''}</td><td>${u.id!==currentUser.id?`<button class="btn btn-danger" style="padding:5px 10px;font-size:12px;" onclick="deleteUser('${u.id}','${esc(u.name)}')">Xóa</button>`:'<span style="font-size:12px;color:#999;">(bạn)</span>'}</td></tr>`).join('')}</tbody></table>`;
 }
 
-function openAddUserModal() {
-  document.getElementById('newUserName').value = '';
-  document.getElementById('newUserEmail').value = '';
-  document.getElementById('newUserPassword').value = '';
-  document.getElementById('addUserError').style.display = 'none';
+function openAddUserModal(){
+  ['newUserName','newUserEmail','newUserPassword'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('addUserError').style.display='none';
   document.getElementById('addUserModal').classList.remove('hidden');
-  setTimeout(() => document.getElementById('newUserName').focus(), 50);
+  setTimeout(()=>document.getElementById('newUserName').focus(),50);
 }
 
-async function addUser() {
-  const name = document.getElementById('newUserName').value.trim();
-  const email = document.getElementById('newUserEmail').value.trim();
-  const password = document.getElementById('newUserPassword').value.trim();
-  const role = document.getElementById('newUserRole').value;
-  const errEl = document.getElementById('addUserError');
-  errEl.style.display = 'none';
-  if (!name || !email || !password) { errEl.textContent = 'Vui lòng điền đầy đủ thông tin'; errEl.style.display='block'; return; }
-  if (password.length < 6) { errEl.textContent = 'Mật khẩu phải ít nhất 6 ký tự'; errEl.style.display='block'; return; }
-  const btn = document.getElementById('addUserBtn');
-  btn.disabled = true; btn.textContent = 'Đang tạo...';
-  showLoading('Đang tạo tài khoản...');
-  try {
-    // Dùng admin API qua service role — không có trực tiếp từ client
-    // Workaround: tạo user qua signUp rồi confirm, sau đó thêm profile
-    // Thực tế: cần service role key. Tạm dùng signUp + auto-confirm disabled
-    // → hướng dẫn Admin làm thủ công trên dashboard Supabase
-    errEl.textContent = 'Để thêm user mới, vui lòng vào Supabase Dashboard → Authentication → Users → Add user, sau đó vào SQL Editor chạy: INSERT INTO profiles (id, name, role) VALUES (\'<uuid>\', \''+name+'\', \''+role+'\');';
-    errEl.style.display = 'block';
-  } finally {
-    btn.disabled = false; btn.textContent = 'Tạo tài khoản';
-    hideLoading();
-  }
+async function addUser(){
+  const name=document.getElementById('newUserName').value.trim();
+  const email=document.getElementById('newUserEmail').value.trim();
+  const password=document.getElementById('newUserPassword').value.trim();
+  const role=document.getElementById('newUserRole').value;
+  const errEl=document.getElementById('addUserError');errEl.style.display='none';
+  if(!name||!email||!password){errEl.textContent='Vui lòng điền đầy đủ thông tin';errEl.style.display='block';return;}
+  errEl.textContent=`Để thêm user mới, vào Supabase Dashboard → Authentication → Users → Add user, sau đó SQL Editor: INSERT INTO profiles (id, name, role) VALUES ('<uuid>', '${name}', '${role}');`;
+  errEl.style.display='block';
 }
 
-async function deleteUser(id, name) {
-  if (!confirm(`Xóa tài khoản "${name}"? Họ sẽ không đăng nhập được nữa.`)) return;
+async function deleteUser(id,name){
+  if(!confirm(`Xóa tài khoản "${name}"?`))return;
   showLoading('Đang xóa...');
-  try {
-    const { error } = await sb.from('profiles').delete().eq('id', id);
-    if (error) throw error;
+  try{
+    const{error}=await sb.from('profiles').delete().eq('id',id);
+    if(error)throw error;
     await loadAdminUsers();
-    alert(`Đã xóa profile của "${name}". Để xóa hoàn toàn, vào Supabase → Authentication → Users → xóa thêm.`);
-  } catch(e) { alert('Lỗi: ' + e.message); } finally { hideLoading(); }
+  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
 }
 
-// ============== TABS ==============
-function switchTab(tab) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll(`[data-tab="${tab}"]`).forEach(t => t.classList.add('active'));
-  ['viewList','viewDetail','viewHistory','viewAdmin'].forEach(v => document.getElementById(v).classList.add('hidden'));
-  if (tab==='list') { document.getElementById('viewList').classList.remove('hidden'); renderOrderList(); }
-  else if (tab==='detail') { document.getElementById('viewDetail').classList.remove('hidden'); if (currentOrder) renderDetail(); }
-  else if (tab==='history') { document.getElementById('viewHistory').classList.remove('hidden'); if (currentOrder) renderHistory(); }
-  else if (tab==='admin') { document.getElementById('viewAdmin').classList.remove('hidden'); loadAdminUsers(); }
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll(`[data-tab="${tab}"]`).forEach(t=>t.classList.add('active'));
+  ['viewList','viewDetail','viewHistory','viewAdmin'].forEach(v=>document.getElementById(v).classList.add('hidden'));
+  if(tab==='list'){document.getElementById('viewList').classList.remove('hidden');renderOrderList();}
+  else if(tab==='detail'){document.getElementById('viewDetail').classList.remove('hidden');if(currentOrder)renderDetail();}
+  else if(tab==='history'){document.getElementById('viewHistory').classList.remove('hidden');if(currentOrder)renderHistory();}
+  else if(tab==='admin'){document.getElementById('viewAdmin').classList.remove('hidden');loadAdminUsers();}
 }
 
-// ============== EXPORT ==============
-function exportToExcel() {
-  const o = currentOrder;
-  const done = countCompleted(o);
-  let csv = "\uFEFFMã đơn,Khách hàng,Ngày xuất,Tổng,Hoàn thành,Tiến độ\n";
-  csv += `"${o.code}","${o.customer}","${new Date().toLocaleString('vi-VN')}","${TOTAL}","${done}","${Math.round((done/TOTAL)*100)}%"\n\n`;
-  csv += "STT,Công việc,Nội dung,Phụ trách,Trạng thái,Người tick,Thời gian,Link đính kèm\n";
-  workflows.forEach(s => {
-    const at = (o.attachments[String(s.stt)]||[]).map(a=>`${a.title}: ${a.url}`).join(' | ');
-    if (s.hasMultiCheck) {
-      s.teams.forEach(t => {
-        const key=`${s.stt}_${t}`, info=o.tick_info[key];
-        csv += `"${s.stt}.${t}","${s.job} (${DEPTS[t]})","${s.content}","${DEPTS[t]}","${o.completed[key]?'✓':''}","${info?info.user:''}","${info?new Date(info.time).toLocaleString('vi-VN'):''}","${at}"\n`;
-      });
-    } else {
-      const info=o.tick_info[s.stt];
-      csv += `"${s.stt}","${s.job}","${s.content}","${s.pic}","${o.completed[s.stt]?'✓':''}","${info?info.user:''}","${info?new Date(info.time).toLocaleString('vi-VN'):''}","${at}"\n`;
-    }
+function exportToExcel(){
+  const o=currentOrder,done=countCompleted(o);
+  let csv="\uFEFFMã đơn,Khách hàng,Ngày xuất,Tổng,Hoàn thành,Tiến độ\n";
+  csv+=`"${o.code}","${o.customer}","${new Date().toLocaleString('vi-VN')}","${TOTAL}","${done}","${Math.round((done/TOTAL)*100)}%"\n\nSTT,Công việc,Nội dung,Phụ trách,Trạng thái,Người tick,Thời gian\n`;
+  workflows.forEach(s=>{
+    if(s.hasMultiCheck){s.teams.forEach(t=>{const key=`${s.stt}_${t}`,info=o.tick_info[key];csv+=`"${s.stt}.${t}","${s.job} (${DEPTS[t]})","${s.content}","${DEPTS[t]}","${o.completed[key]?'✓':''}","${info?info.user:''}","${info?new Date(info.time).toLocaleString('vi-VN'):''}" \n`;});}
+    else{const info=o.tick_info[s.stt];csv+=`"${s.stt}","${s.job}","${s.content}","${s.pic}","${o.completed[s.stt]?'✓':''}","${info?info.user:''}","${info?new Date(info.time).toLocaleString('vi-VN'):''}" \n`;}
   });
-  const b = new Blob([csv],{type:'text/csv;charset=utf-8;'});
-  const l = document.createElement('a');
-  l.href = URL.createObjectURL(b);
-  l.download = `DonHang_${o.code}_${Date.now()}.csv`;
-  l.click();
+  const b=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const l=document.createElement('a');l.href=URL.createObjectURL(b);l.download=`DonHang_${o.code}_${Date.now()}.csv`;l.click();
 }
 
-// ============== UTILS ==============
-// ============== GOOGLE DRIVE TREE ==============
-const DRIVE_API_KEY = 'AIzaSyAMerIaY0PVgqfjjWFJChirrsbyc-DW7cQ';
-let driveTreeOpen = false;
+// ============== GOOGLE DRIVE ==============
+const DRIVE_API_KEY='AIzaSyAMerIaY0PVgqfjjWFJChirrsbyc-DW7cQ';
+let driveTreeOpen=false;
 
-function extractFolderId(url) {
-  if (!url) return null;
-  const m = url.match(/\/folders\/([a-zA-Z0-9_-]+)/);
-  return m ? m[1] : null;
+function extractFolderId(url){if(!url)return null;const m=url.match(/\/folders\/([a-zA-Z0-9_-]+)/);return m?m[1]:null;}
+
+function toggleDriveTree(){
+  driveTreeOpen=!driveTreeOpen;
+  const body=document.getElementById('driveBody'),icon=document.getElementById('driveToggleIcon');
+  if(!body)return;
+  if(driveTreeOpen){body.classList.remove('hidden');if(icon)icon.textContent='▲';loadDriveTree();}
+  else{body.classList.add('hidden');if(icon)icon.textContent='▼';}
 }
 
-async function loadDriveFileCounts() {
-  const ids = currentOrder?.step_folder_ids;
-  if (!ids) return;
-  const section = document.getElementById('driveFileCountSection');
-  const body = document.getElementById('driveFileCountBody');
-  const badge = document.getElementById('driveTotalBadge');
-  if (!section || !body) return;
-
-  section.classList.remove('hidden');
-  body.innerHTML = '<div style="font-size:12px;color:#888;">Đang đếm...</div>';
-
-  const depts = ['Sale', 'Sale Admin', 'Ke toan', 'Logistics'];
-  const colors = { 'Sale':'#e3f2fd', 'Sale Admin':'#f3e5f5', 'Ke toan':'#fff8e1', 'Logistics':'#e8f5e9' };
-  const textColors = { 'Sale':'#1565c0', 'Sale Admin':'#6a1b9a', 'Ke toan':'#e65100', 'Logistics':'#2e7d32' };
-
-  let totalAll = 0;
-  const results = [];
-
-  for (const dept of depts) {
-    const deptData = ids[dept];
-    if (!deptData) { results.push({ dept, count: 0, subs: [] }); continue; }
-    const deptFolderId = typeof deptData === 'object' ? deptData.id : deptData;
-    const subs = typeof deptData === 'object' ? deptData.subs : {};
-
-    try {
-      // Đếm file trong subfolder
-      let deptTotal = 0;
-      const subCounts = [];
-      for (const [subName, subId] of Object.entries(subs)) {
-        const items = await fetchDriveItems(subId);
-        const fileCount = items.filter(i => i.mimeType !== 'application/vnd.google-apps.folder').length;
-        deptTotal += fileCount;
-        if (fileCount > 0) subCounts.push(`${subName}: ${fileCount}`);
-      }
-      totalAll += deptTotal;
-      results.push({ dept, count: deptTotal, subs: subCounts });
-    } catch(e) {
-      results.push({ dept, count: '?', subs: [] });
-    }
-  }
-
-  if (badge) badge.textContent = `📎 ${totalAll} files`;
-
-  body.innerHTML = results.map(r => `
-    <div style="background:${colors[r.dept]||'#f5f5f5'};border-radius:8px;padding:10px 12px;">
-      <div style="font-size:11px;font-weight:600;color:${textColors[r.dept]||'#333'};margin-bottom:4px;">${r.dept}</div>
-      <div style="font-size:22px;font-weight:700;color:${textColors[r.dept]||'#333'};">${r.count}</div>
-      <div style="font-size:10px;color:#888;margin-top:4px;">${r.subs.length > 0 ? r.subs.join(' · ') : 'Chưa có file'}</div>
-    </div>
-  `).join('');
-}
-
-function toggleDriveTree() {
-  driveTreeOpen = !driveTreeOpen;
-  const body = document.getElementById('driveBody');
-  const icon = document.getElementById('driveToggleIcon');
-  if (!body) return;
-  if (driveTreeOpen) {
-    body.classList.remove('hidden');
-    if (icon) icon.textContent = '▲';
-    loadDriveTree();
-  } else {
-    body.classList.add('hidden');
-    if (icon) icon.textContent = '▼';
-  }
-}
-
-async function loadDriveTree() {
-  const folderId = extractFolderId(currentOrder.folder_url);
-  if (!folderId) return;
-  const treeEl = document.getElementById('driveTree');
-  const loadingEl = document.getElementById('driveLoading');
-  if (loadingEl) loadingEl.style.display = 'block';
-  if (treeEl) treeEl.innerHTML = '';
-  try {
-    const html = await renderDriveFolder(folderId, 0);
-    if (treeEl) treeEl.innerHTML = html;
-    if (loadingEl) loadingEl.style.display = 'none';
-    // Bind click events for folder toggles
-    document.querySelectorAll('.drive-folder-name').forEach(el => {
-      el.addEventListener('click', function() {
-        const files = this.nextElementSibling;
-        const toggle = this.querySelector('.drive-folder-toggle');
-        if (files) { files.classList.toggle('open'); }
-        if (toggle) { toggle.classList.toggle('open'); }
+async function loadDriveTree(){
+  const folderId=extractFolderId(currentOrder.folder_url);if(!folderId)return;
+  const treeEl=document.getElementById('driveTree'),loadingEl=document.getElementById('driveLoading');
+  if(loadingEl)loadingEl.style.display='block';if(treeEl)treeEl.innerHTML='';
+  try{
+    const html=await renderDriveFolder(folderId,0);
+    if(treeEl)treeEl.innerHTML=html;if(loadingEl)loadingEl.style.display='none';
+    document.querySelectorAll('.drive-folder-name').forEach(el=>{
+      el.addEventListener('click',function(){
+        const files=this.nextElementSibling,toggle=this.querySelector('.drive-folder-toggle');
+        if(files)files.classList.toggle('open');if(toggle)toggle.classList.toggle('open');
       });
     });
-  } catch(e) {
-    if (loadingEl) loadingEl.textContent = 'Lỗi tải thư mục: ' + e.message;
-  }
+  }catch(e){if(loadingEl)loadingEl.textContent='Lỗi: '+e.message;}
 }
 
-async function fetchDriveItems(folderId) {
-  const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&fields=files(id,name,mimeType,size,webViewLink)&orderBy=name&key=${DRIVE_API_KEY}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('Không thể đọc folder. Kiểm tra folder đã share "Anyone with the link" chưa.');
-  const data = await res.json();
-  return data.files || [];
+async function fetchDriveItems(folderId){
+  const url=`https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&fields=files(id,name,mimeType,size,webViewLink)&orderBy=name&key=${DRIVE_API_KEY}`;
+  const res=await fetch(url);
+  if(!res.ok)throw new Error('Không thể đọc folder. Kiểm tra folder đã share "Anyone with the link" chưa.');
+  const data=await res.json();return data.files||[];
 }
 
-async function renderDriveFolder(folderId, depth) {
-  const items = await fetchDriveItems(folderId);
-  if (!items.length) return '<div class="drive-empty">📭 Folder trống</div>';
-
-  const folders = items.filter(i => i.mimeType === 'application/vnd.google-apps.folder');
-  const files = items.filter(i => i.mimeType !== 'application/vnd.google-apps.folder');
-
-  let html = '';
-
-  // Render subfolders
-  for (const folder of folders) {
-    const subItems = await fetchDriveItems(folder.id);
-    const subFolders = subItems.filter(i => i.mimeType === 'application/vnd.google-apps.folder');
-    const subFiles = subItems.filter(i => i.mimeType !== 'application/vnd.google-apps.folder');
-
-    let subHtml = '';
-    for (const sf of subFolders) {
-      subHtml += `<div class="drive-folder-name">
-        <span class="drive-folder-toggle">▶</span>📁 ${esc(sf.name)}
-      </div><div class="drive-files"></div>`;
-    }
-    subFiles.forEach(f => {
-      subHtml += `<a href="${esc(f.webViewLink||'#')}" target="_blank" rel="noopener" class="drive-file">
-        <span class="drive-file-icon">${getDriveIcon(f.mimeType, f.name)}</span>
-        <span class="drive-file-name">${esc(f.name)}</span>
-        ${f.size ? `<span class="drive-file-size">${formatSize(parseInt(f.size))}</span>` : ''}
-      </a>`;
-    });
-    if (!subHtml) subHtml = '<div class="drive-empty">Folder trống</div>';
-
-    html += `<div class="drive-folder">
-      <div class="drive-folder-name">
-        <span class="drive-folder-toggle">▶</span>📁 ${esc(folder.name)}
-        <span style="font-size:11px;color:#999;margin-left:4px;">(${subItems.length})</span>
-      </div>
-      <div class="drive-files">${subHtml}</div>
-    </div>`;
+async function renderDriveFolder(folderId,depth){
+  const items=await fetchDriveItems(folderId);
+  if(!items.length)return'<div class="drive-empty">📭 Folder trống</div>';
+  const folders=items.filter(i=>i.mimeType==='application/vnd.google-apps.folder');
+  const files=items.filter(i=>i.mimeType!=='application/vnd.google-apps.folder');
+  let html='';
+  for(const folder of folders){
+    const subItems=await fetchDriveItems(folder.id);
+    let subHtml='';
+    subItems.filter(i=>i.mimeType==='application/vnd.google-apps.folder').forEach(sf=>{subHtml+=`<div class="drive-folder-name"><span class="drive-folder-toggle">▶</span>📁 ${esc(sf.name)}</div><div class="drive-files"></div>`;});
+    subItems.filter(i=>i.mimeType!=='application/vnd.google-apps.folder').forEach(f=>{subHtml+=`<a href="${esc(f.webViewLink||'#')}" target="_blank" rel="noopener" class="drive-file"><span class="drive-file-icon">${getDriveIcon(f.mimeType,f.name)}</span><span class="drive-file-name">${esc(f.name)}</span>${f.size?`<span class="drive-file-size">${formatSize(parseInt(f.size))}</span>`:''}</a>`;});
+    if(!subHtml)subHtml='<div class="drive-empty">Folder trống</div>';
+    html+=`<div class="drive-folder"><div class="drive-folder-name"><span class="drive-folder-toggle">▶</span>📁 ${esc(folder.name)}<span style="font-size:11px;color:#999;margin-left:4px;">(${subItems.length})</span></div><div class="drive-files">${subHtml}</div></div>`;
   }
-
-  // Render root files
-  files.forEach(f => {
-    html += `<a href="${esc(f.webViewLink||'#')}" target="_blank" rel="noopener" class="drive-file">
-      <span class="drive-file-icon">${getDriveIcon(f.mimeType, f.name)}</span>
-      <span class="drive-file-name">${esc(f.name)}</span>
-      ${f.size ? `<span class="drive-file-size">${formatSize(parseInt(f.size))}</span>` : ''}
-    </a>`;
-  });
-
+  files.forEach(f=>{html+=`<a href="${esc(f.webViewLink||'#')}" target="_blank" rel="noopener" class="drive-file"><span class="drive-file-icon">${getDriveIcon(f.mimeType,f.name)}</span><span class="drive-file-name">${esc(f.name)}</span>${f.size?`<span class="drive-file-size">${formatSize(parseInt(f.size))}</span>`:''}</a>`;});
   return html;
 }
 
-function getDriveIcon(mime, name) {
-  if (mime === 'application/vnd.google-apps.folder') return '📁';
-  if (mime === 'application/vnd.google-apps.document') return '📄';
-  if (mime === 'application/vnd.google-apps.spreadsheet') return '📊';
-  if (mime === 'application/vnd.google-apps.presentation') return '📊';
-  if (mime === 'application/pdf') return '📕';
-  if (mime.startsWith('image/')) return '🖼️';
-  const n = (name||'').toLowerCase();
-  if (n.match(/\.(xlsx|xls|csv)$/)) return '📊';
-  if (n.match(/\.(docx|doc)$/)) return '📄';
-  if (n.match(/\.(zip|rar)$/)) return '🗜️';
-  return '📎';
+function getDriveIcon(mime,name){
+  if(mime==='application/vnd.google-apps.folder')return'📁';
+  if(mime==='application/vnd.google-apps.document')return'📄';
+  if(mime==='application/vnd.google-apps.spreadsheet')return'📊';
+  if(mime==='application/pdf')return'📕';
+  if(mime.startsWith('image/'))return'🖼️';
+  const n=(name||'').toLowerCase();
+  if(n.match(/\.(xlsx|xls|csv)$/))return'📊';if(n.match(/\.(docx|doc)$/))return'📄';if(n.match(/\.(zip|rar)$/))return'🗜️';
+  return'📎';
 }
 
-async function saveFolderUrl() {
-  const input = document.getElementById('newFolderUrl');
-  if (!input) return;
-  const url = input.value.trim();
-  if (url && !/^https?:\/\//i.test(url)) { alert('URL không hợp lệ'); return; }
+async function saveFolderUrl(){
+  const input=document.getElementById('newFolderUrl');if(!input)return;
+  const url=input.value.trim();
+  if(url&&!/^https?:\/\//i.test(url)){alert('URL không hợp lệ');return;}
   showLoading('Đang lưu...');
-  try {
-    const { error } = await sb.from('orders').update({ folder_url: url || null }).eq('id', currentOrderId);
-    if (error) throw error;
-    currentOrder.folder_url = url || null;
-    driveTreeOpen = false;
-    renderDetail();
-  } catch(e) { alert('Lỗi: ' + e.message); } finally { hideLoading(); }
+  try{
+    const{error}=await sb.from('orders').update({folder_url:url||null}).eq('id',currentOrderId);
+    if(error)throw error;
+    currentOrder.folder_url=url||null;driveTreeOpen=false;renderDetail();
+  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
 }
 
 // ============== PAYMENT ==============
-const CURRENCIES = ['USD','VNĐ','EUR','GBP','JPY','CNY','SGD','AUD','KRW'];
-const canEditPayment = () => currentUser.role === 'admin' || currentUser.role === 'ketoan';
+const CURRENCIES=['USD','VNĐ','EUR','GBP','JPY','CNY','SGD','AUD','KRW'];
+const canEditPayment=()=>currentUser.role==='admin'||currentUser.role==='ketoan';
 
-function renderPaymentSection() {
-  const o = currentOrder;
-  const p = o.payment || {};
-  const canEdit = canEditPayment();
-  const dis = canEdit ? '' : 'disabled';
-  const cur = p.currency || 'USD';
-  const curOptions = CURRENCIES.map(c => `<option value="${c}" ${cur===c?'selected':''}>${c}</option>`).join('');
-  const fmt = n => (n||0) > 0 ? Number(n).toLocaleString('vi-VN') : '—';
+function renderPaymentSection(){
+  const o=currentOrder,p=o.payment||{},canEdit=canEditPayment(),dis=canEdit?'':'disabled';
+  const cur=p.currency||'USD';
+  const curOptions=CURRENCIES.map(c=>`<option value="${c}" ${cur===c?'selected':''}>${c}</option>`).join('');
+  const fmt=n=>(n||0)>0?Number(n).toLocaleString('vi-VN'):'—';
+  const totalVal=p.total!=null?p.total:'';
+  const depositVal=p.deposit!=null?p.deposit:'';
+  const remVal=p.remaining!=null?p.remaining:'';
+  const depositDate=p.depositDate||'';
+  const fullDate=p.fullDate||'';
+  const receivedDeposit=p.receivedDeposit||false;
+  const receivedFull=p.receivedFull||false;
+  const total=parseFloat(totalVal)||0;
+  const deposit=parseFloat(depositVal)||0;
+  // *** FIX: Dùng remVal nếu có, không thì tự tính
+  const rem=remVal!==''?parseFloat(remVal):Math.max(0,total-deposit);
+  const receivedAmt=(receivedDeposit?deposit:0)+(receivedFull?rem:0);
+  const diff=receivedAmt-total;
+  const pct=total>0?Math.round((deposit/total)*100):0;
+  const diffColor=receivedAmt===0?'#888':diff>0?'#2e7d32':diff<0?'#c0392b':'#2e7d32';
+  const diffLabel=receivedAmt===0?'—':diff>0?`+${diff.toLocaleString('vi-VN')} (dư)`:diff<0?`${diff.toLocaleString('vi-VN')} (thiếu)`:'0 (khớp)';
 
-  const totalVal  = p.total    != null ? p.total    : '';
-  const depositVal= p.deposit  != null ? p.deposit  : '';
-  const remVal    = p.remaining!= null ? p.remaining: '';
-  const depositDate = p.depositDate || '';
-  const fullDate    = p.fullDate    || '';
-  const receivedDeposit = p.receivedDeposit || false;
-  const receivedFull    = p.receivedFull    || false;
-
-  const total    = parseFloat(totalVal)   || 0;
-  const deposit  = parseFloat(depositVal) || 0;
-  const rem      = parseFloat(remVal) >= 0 ? parseFloat(remVal) : Math.max(0, total - deposit);
-
-  // Đã nhận thực tế = chỉ tính phần đã xác nhận nhận được
-  const receivedAmt = (receivedDeposit ? deposit : 0) + (receivedFull ? rem : 0);
-  const diff     = receivedAmt - total;
-  const pct      = total > 0 ? Math.round((deposit / total) * 100) : 0;
-  const diffColor = diff === 0 && receivedAmt === 0 ? '#888' : diff > 0 ? '#2e7d32' : diff < 0 ? '#c0392b' : '#2e7d32';
-  const diffLabel = receivedAmt === 0 ? '—' : diff > 0 ? `+${diff.toLocaleString('vi-VN')} (dư)` : diff < 0 ? `${diff.toLocaleString('vi-VN')} (thiếu)` : '0 (khớp)';
-
-  return `<div class="payment-section">
-    <div class="payment-header">
-      💰 Thông tin thanh toán
-      ${!canEdit ? '<span style="font-size:11px;color:#c0392b;font-weight:400;">🔒 chỉ Admin / Kế toán</span>' : ''}
-    </div>
+  return`<div class="payment-section">
+    <div class="payment-header">💰 Thông tin thanh toán${!canEdit?'<span style="font-size:11px;color:#c0392b;font-weight:400;">🔒 chỉ Admin / Kế toán</span>':''}</div>
     <div class="payment-body">
-
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;">
         <label style="font-size:12px;color:#888;white-space:nowrap;">Đơn vị tiền tệ:</label>
-        <select id="p_currency" ${dis} onchange="calcPayment()"
-          style="padding:6px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;">${curOptions}</select>
+        <select id="p_currency" ${dis} onchange="calcPayment(event)" style="padding:6px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;">${curOptions}</select>
       </div>
-
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;">
-        <div class="payment-card">
-          <div class="payment-card-label">📋 Tổng giá trị đơn</div>
+        <div style="background:#fafafa;border:1px solid #eee;border-radius:8px;padding:14px;">
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#888;margin-bottom:10px;font-weight:500;">📋 Tổng giá trị đơn</div>
           <input type="number" id="p_total_input" value="${totalVal}" placeholder="0" ${dis}
-            oninput="calcPayment()" style="width:100%;padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:15px;font-weight:600;box-sizing:border-box;">
+            oninput="calcPayment(event)" style="width:100%;padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:15px;font-weight:600;box-sizing:border-box;">
         </div>
-        <div class="payment-card">
-          <div class="payment-card-label">💵 Deposit</div>
+        <div style="background:#fafafa;border:1px solid #eee;border-radius:8px;padding:14px;">
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#888;margin-bottom:10px;font-weight:500;">💵 Deposit</div>
           <input type="number" id="p_deposit" value="${depositVal}" placeholder="0" ${dis}
-            oninput="calcPayment()" style="width:100%;padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:14px;box-sizing:border-box;">
+            oninput="calcPayment(event)" style="width:100%;padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:14px;box-sizing:border-box;">
           <div style="display:flex;align-items:center;gap:6px;margin-top:7px;">
             <label style="font-size:11px;color:#aaa;white-space:nowrap;">Ngày:</label>
-            <input type="date" id="p_depositDate" value="${depositDate}" ${dis}
-              style="flex:1;padding:4px 6px;border:1.5px solid #e0e0e0;border-radius:5px;font-size:11px;">
+            <input type="date" id="p_depositDate" value="${depositDate}" ${dis} style="flex:1;padding:4px 6px;border:1.5px solid #e0e0e0;border-radius:5px;font-size:11px;">
           </div>
         </div>
-        <div class="payment-card">
-          <div class="payment-card-label">⏳ Còn lại <span style="font-size:10px;color:#aaa;">(tự tính, có thể sửa)</span></div>
-          <input type="number" id="p_remaining" value="${rem > 0 || remVal !== '' ? rem : ''}" placeholder="0" ${dis}
-            oninput="calcPayment()" style="width:100%;padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:14px;box-sizing:border-box;">
+        <div style="background:#fafafa;border:1px solid #eee;border-radius:8px;padding:14px;">
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#888;margin-bottom:10px;font-weight:500;">⏳ Còn lại <span style="font-size:10px;color:#aaa;">(tự tính, có thể sửa)</span></div>
+          <input type="number" id="p_remaining" value="${rem>0||remVal!==''?rem:''}" placeholder="0" ${dis}
+            oninput="this.dataset.manualEdit='1';calcPayment(event)"
+            style="width:100%;padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:14px;box-sizing:border-box;">
           <div style="display:flex;align-items:center;gap:6px;margin-top:7px;">
             <label style="font-size:11px;color:#aaa;white-space:nowrap;">Ngày TT:</label>
-            <input type="date" id="p_fullDate" value="${fullDate}" ${dis}
-              style="flex:1;padding:4px 6px;border:1.5px solid #e0e0e0;border-radius:5px;font-size:11px;">
+            <input type="date" id="p_fullDate" value="${fullDate}" ${dis} style="flex:1;padding:4px 6px;border:1.5px solid #e0e0e0;border-radius:5px;font-size:11px;">
           </div>
         </div>
       </div>
-
-      <div class="payment-total" style="margin-bottom:12px;">
+      <div style="background:linear-gradient(135deg,#667eea10,#764ba210);border:1.5px solid #667eea33;border-radius:8px;padding:14px;margin-bottom:12px;">
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
           <div style="text-align:center;">
             <div style="font-size:11px;color:#888;margin-bottom:4px;">Tổng đơn hàng</div>
-            <div style="font-size:16px;font-weight:700;color:#333;" id="p_total_display">${fmt(total)} <span style="font-size:11px;font-weight:400;" id="p_cur1">${cur}</span></div>
+            <div style="font-size:16px;font-weight:700;color:#333;" id="p_total_display">${fmt(total)} <span style="font-size:11px;font-weight:400;">${cur}</span></div>
           </div>
           <div style="text-align:center;">
             <div style="font-size:11px;color:#888;margin-bottom:4px;">Đã nhận thực tế</div>
-            <div style="font-size:16px;font-weight:700;color:#667eea;" id="p_received_display">${receivedAmt > 0 ? receivedAmt.toLocaleString('vi-VN') : '—'} <span style="font-size:11px;font-weight:400;" id="p_cur2">${receivedAmt > 0 ? cur : ''}</span></div>
+            <div style="font-size:16px;font-weight:700;color:#667eea;" id="p_received_display">${receivedAmt>0?receivedAmt.toLocaleString('vi-VN')+'<span style="font-size:11px;font-weight:400;"> '+cur+'</span>':'—'}</div>
           </div>
           <div style="text-align:center;">
             <div style="font-size:11px;color:#888;margin-bottom:4px;">Lệch (phí ngân hàng...)</div>
             <div style="font-size:16px;font-weight:700;color:${diffColor};" id="p_diff_display">${diffLabel}</div>
           </div>
         </div>
-        <div class="payment-progress-bar" style="margin-top:12px;">
-          <div class="payment-progress-fill" id="p_bar" style="width:${pct}%"></div>
+        <div style="width:100%;height:6px;background:#e0e0e0;border-radius:3px;margin-top:12px;overflow:hidden;">
+          <div id="p_bar" style="height:100%;background:linear-gradient(90deg,#667eea,#764ba2);border-radius:3px;transition:width 0.3s;width:${pct}%"></div>
         </div>
-        <div class="payment-progress-labels">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#999;margin-top:5px;">
           <span id="p_depositPct">Deposit: ${fmt(deposit)} (${pct}%)</span>
           <span id="p_remPct">Còn lại: ${fmt(rem)}</span>
         </div>
       </div>
-
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:${canEdit?'12':'0'}px;">
-        <div class="payment-card" style="border-color:${receivedDeposit?'#43a047':'#eee'};background:${receivedDeposit?'#e8f5e9':'#fafafa'};">
+        <div style="background:${receivedDeposit?'#e8f5e9':'#fafafa'};border:1px solid ${receivedDeposit?'#43a047':'#eee'};border-radius:8px;padding:14px;">
           <label style="display:flex;align-items:center;gap:10px;cursor:${canEdit?'pointer':'not-allowed'};">
-            <input type="checkbox" id="p_receivedDeposit" ${receivedDeposit?'checked':''} ${dis}
-              style="width:18px;height:18px;accent-color:#43a047;flex-shrink:0;" onchange="calcPayment()">
-            <div>
-              <div style="font-size:13px;font-weight:600;color:${receivedDeposit?'#2e7d32':'#555'};">✅ Đã nhận deposit</div>
-              <div style="font-size:11px;color:#888;margin-top:2px;">${depositDate||'Chưa xác nhận'}</div>
-            </div>
+            <input type="checkbox" id="p_receivedDeposit" ${receivedDeposit?'checked':''} ${dis} style="width:18px;height:18px;accent-color:#43a047;flex-shrink:0;" onchange="calcPayment(event)">
+            <div><div style="font-size:13px;font-weight:600;color:${receivedDeposit?'#2e7d32':'#555'};">✅ Đã nhận deposit</div><div style="font-size:11px;color:#888;margin-top:2px;">${depositDate||'Chưa xác nhận'}</div></div>
           </label>
         </div>
-        <div class="payment-card" style="border-color:${receivedFull?'#1976d2':'#eee'};background:${receivedFull?'#e3f2fd':'#fafafa'};">
+        <div style="background:${receivedFull?'#e3f2fd':'#fafafa'};border:1px solid ${receivedFull?'#1976d2':'#eee'};border-radius:8px;padding:14px;">
           <label style="display:flex;align-items:center;gap:10px;cursor:${canEdit?'pointer':'not-allowed'};">
-            <input type="checkbox" id="p_receivedFull" ${receivedFull?'checked':''} ${dis}
-              style="width:18px;height:18px;accent-color:#1976d2;flex-shrink:0;" onchange="calcPayment()">
-            <div>
-              <div style="font-size:13px;font-weight:600;color:${receivedFull?'#1565c0':'#555'};">💰 Đã nhận đủ tiền</div>
-              <div style="font-size:11px;color:#888;margin-top:2px;">${fullDate||'Chưa xác nhận'}</div>
-            </div>
+            <input type="checkbox" id="p_receivedFull" ${receivedFull?'checked':''} ${dis} style="width:18px;height:18px;accent-color:#1976d2;flex-shrink:0;" onchange="calcPayment(event)">
+            <div><div style="font-size:13px;font-weight:600;color:${receivedFull?'#1565c0':'#555'};">💰 Đã nhận đủ tiền</div><div style="font-size:11px;color:#888;margin-top:2px;">${fullDate||'Chưa xác nhận'}</div></div>
           </label>
         </div>
       </div>
-
-      ${canEdit ? `<div class="payment-save-row">
-        <button class="btn btn-primary" onclick="savePayment()" style="padding:8px 20px;font-size:13px;">💾 Lưu thanh toán</button>
-      </div>` : ''}
+      ${canEdit?`<div style="display:flex;justify-content:flex-end;margin-top:12px;"><button class="btn btn-primary" onclick="savePayment()" style="padding:8px 20px;font-size:13px;">💾 Lưu thanh toán</button></div>`:''}
     </div>
   </div>`;
 }
 
-function calcPayment() {
+// *** HÀM ĐÃ SỬA: nhận event để biết field nào thay đổi ***
+function calcPayment(evt) {
   const total   = parseFloat(document.getElementById('p_total_input')?.value)  || 0;
   const deposit = parseFloat(document.getElementById('p_deposit')?.value)       || 0;
   const cur     = document.getElementById('p_currency')?.value || 'USD';
   const fmt = n => n > 0 ? n.toLocaleString('vi-VN') : '—';
 
-  // Tự tính còn lại nếu user chưa sửa tay
+  // Nếu user sửa Total hoặc Deposit → reset flag manualEdit, tự tính lại Còn lại
   const remEl = document.getElementById('p_remaining');
+  const changedId = evt?.target?.id || '';
+  if (changedId === 'p_total_input' || changedId === 'p_deposit') {
+    if (remEl) delete remEl.dataset.manualEdit;
+  }
+  // Chỉ tự tính nếu user chưa sửa tay
   if (remEl && !remEl.dataset.manualEdit) {
     const autoRem = Math.max(0, total - deposit);
     remEl.value = autoRem > 0 ? autoRem : '';
   }
   const rem = parseFloat(document.getElementById('p_remaining')?.value) || 0;
 
-  // Đã nhận thực tế = chỉ tính phần đã tick xác nhận
   const cbDep  = document.getElementById('p_receivedDeposit')?.checked || false;
   const cbFull = document.getElementById('p_receivedFull')?.checked    || false;
   const receivedAmt = (cbDep ? deposit : 0) + (cbFull ? rem : 0);
@@ -2008,23 +1193,20 @@ function calcPayment() {
   const diffColor = diff === null ? '#888' : diff > 0 ? '#2e7d32' : diff < 0 ? '#c0392b' : '#2e7d32';
   const diffLabel = diff === null ? '—' : diff > 0 ? `+${diff.toLocaleString('vi-VN')} (dư)` : diff < 0 ? `${diff.toLocaleString('vi-VN')} (thiếu)` : '0 (khớp)';
 
-  const set = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
   const setHtml = (id, v) => { const el = document.getElementById(id); if(el) el.innerHTML = v; };
-
   setHtml('p_total_display', `${fmt(total)} <span style="font-size:11px;font-weight:400;">${cur}</span>`);
-  setHtml('p_received_display', receivedAmt > 0
-    ? `${receivedAmt.toLocaleString('vi-VN')} <span style="font-size:11px;font-weight:400;">${cur}</span>`
-    : '—');
+  setHtml('p_received_display', receivedAmt > 0 ? `${receivedAmt.toLocaleString('vi-VN')} <span style="font-size:11px;font-weight:400;">${cur}</span>` : '—');
   const diffEl = document.getElementById('p_diff_display');
   if (diffEl) { diffEl.textContent = diffLabel; diffEl.style.color = diffColor; }
   const barEl = document.getElementById('p_bar');
   if (barEl) barEl.style.width = pct + '%';
+  const set = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
   set('p_depositPct', `Deposit: ${fmt(deposit)} (${pct}%)`);
   set('p_remPct', `Còn lại: ${fmt(rem)}`);
 }
 
-async function savePayment() {
-  if (!canEditPayment()) { alert('Chỉ Admin và Kế toán được chỉnh thanh toán'); return; }
+async function savePayment(){
+  if(!canEditPayment()){alert('Chỉ Admin và Kế toán được chỉnh thanh toán');return;}
   const total    = parseFloat(document.getElementById('p_total_input')?.value)  || 0;
   const deposit  = parseFloat(document.getElementById('p_deposit')?.value)      || 0;
   const remaining= parseFloat(document.getElementById('p_remaining')?.value)    || 0;
@@ -2034,300 +1216,126 @@ async function savePayment() {
   const receivedDeposit = document.getElementById('p_receivedDeposit')?.checked || false;
   const receivedFull    = document.getElementById('p_receivedFull')?.checked    || false;
   const diff = (deposit + remaining) - total;
-
-  const payment = { total, deposit, remaining, currency, depositDate, fullDate,
-    receivedDeposit, receivedFull, diff, updatedBy: currentUser.name, updatedAt: Date.now() };
-
+  const payment={total,deposit,remaining,currency,depositDate,fullDate,receivedDeposit,receivedFull,diff,updatedBy:currentUser.name,updatedAt:Date.now()};
   showLoading('Đang lưu...');
-  try {
-    const { error } = await sb.from('orders').update({ payment }).eq('id', currentOrderId);
-    if (error) throw error;
-    currentOrder.payment = payment;
-    currentOrder.history.push({
-      action: 'payment', user: currentUser.name, role: currentUser.role, time: Date.now(),
-      detail: `Tổng: ${total.toLocaleString()} ${currency} · Deposit: ${deposit.toLocaleString()} · Còn lại: ${remaining.toLocaleString()} · Lệch: ${diff.toLocaleString()} · ${receivedFull?'✅ Đã nhận đủ':receivedDeposit?'✅ Đã nhận deposit':'Chưa nhận'}`
-    });
-    await sb.from('orders').update({ history: currentOrder.history }).eq('id', currentOrderId);
-    renderDetail();
-    alert('Đã lưu!');
-  } catch(e) { alert('Lỗi: ' + e.message); } finally { hideLoading(); }
+  try{
+    const{error}=await sb.from('orders').update({payment}).eq('id',currentOrderId);
+    if(error)throw error;
+    currentOrder.payment=payment;
+    currentOrder.history.push({action:'payment',user:currentUser.name,role:currentUser.role,time:Date.now(),detail:`Tổng: ${total.toLocaleString()} ${currency} · Deposit: ${deposit.toLocaleString()} · Còn lại: ${remaining.toLocaleString()} · Lệch: ${diff.toLocaleString()} · ${receivedFull?'✅ Đã nhận đủ':receivedDeposit?'✅ Đã nhận deposit':'Chưa nhận'}`});
+    await sb.from('orders').update({history:currentOrder.history}).eq('id',currentOrderId);
+    renderDetail();alert('Đã lưu!');
+  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
 }
 
 // ============== STEP NOTES ==============
-function renderStepNote(stt) {
-  const notes = currentOrder.step_notes || {};
-  const note = notes[String(stt)] || {};
-  const isExp = expandedNotes[stt];
-  const hasNote = !!note.text;
-
-  const noteDisplay = hasNote
-    ? `<div class="step-note-display">${esc(note.text)}<div style="font-size:10px;color:#aaa;margin-top:4px;">${esc(note.user||'')} · ${note.time ? new Date(note.time).toLocaleString('vi-VN') : ''}</div></div>`
-    : '';
-
-  const form = isExp ? `
-    <div class="step-note-form">
-      <textarea id="noteText_${stt}" placeholder="Ghi chú cho bước này...">${esc(note.text||'')}</textarea>
-      <div style="display:flex;flex-direction:column;gap:4px;">
-        <button class="btn-mini" onclick="saveStepNote(${stt})">Lưu</button>
-        <button class="btn-mini" style="color:#c0392b;" onclick="toggleNote(${stt})">Đóng</button>
-      </div>
-    </div>` : '';
-
-  return `<div class="step-note-section">
-    ${hasNote && !isExp ? noteDisplay : ''}
-    <button class="step-note-toggle" onclick="toggleNote(${stt})">
-      ${isExp ? '▲ Đóng ghi chú' : hasNote ? '📝 Sửa ghi chú' : '📝 Thêm ghi chú'}
-    </button>
-    ${isExp ? form : ''}
-  </div>`;
+function renderStepNote(stt){
+  const notes=currentOrder.step_notes||{},note=notes[String(stt)]||{},isExp=expandedNotes[stt],hasNote=!!note.text;
+  const noteDisplay=hasNote?`<div class="step-note-display">${esc(note.text)}<div style="font-size:10px;color:#aaa;margin-top:4px;">${esc(note.user||'')} · ${note.time?new Date(note.time).toLocaleString('vi-VN'):''}</div></div>`:'';
+  const form=isExp?`<div class="step-note-form"><textarea id="noteText_${stt}" placeholder="Ghi chú...">${esc(note.text||'')}</textarea><div style="display:flex;flex-direction:column;gap:4px;"><button class="btn-mini" onclick="saveStepNote(${stt})">Lưu</button><button class="btn-mini" style="color:#c0392b;" onclick="toggleNote(${stt})">Đóng</button></div></div>`:'';
+  return`<div class="step-note-section">${hasNote&&!isExp?noteDisplay:''}<button class="step-note-toggle" onclick="toggleNote(${stt})">${isExp?'▲ Đóng ghi chú':hasNote?'📝 Sửa ghi chú':'📝 Thêm ghi chú'}</button>${isExp?form:''}</div>`;
 }
 
-function toggleNote(stt) {
-  expandedNotes[stt] = !expandedNotes[stt];
-  renderWorkflow();
-}
+function toggleNote(stt){expandedNotes[stt]=!expandedNotes[stt];renderWorkflow();}
 
-async function saveStepNote(stt) {
-  const textEl = document.getElementById('noteText_' + stt);
-  if (!textEl) return;
-  const text = textEl.value.trim();
-  if (!currentOrder.step_notes) currentOrder.step_notes = {};
-  if (text) {
-    currentOrder.step_notes[String(stt)] = { text, user: currentUser.name, time: Date.now() };
-  } else {
-    delete currentOrder.step_notes[String(stt)];
-  }
+async function saveStepNote(stt){
+  const textEl=document.getElementById('noteText_'+stt);if(!textEl)return;
+  const text=textEl.value.trim();
+  if(!currentOrder.step_notes)currentOrder.step_notes={};
+  if(text)currentOrder.step_notes[String(stt)]={text,user:currentUser.name,time:Date.now()};
+  else delete currentOrder.step_notes[String(stt)];
   showLoading('Đang lưu...');
-  try {
-    const { error } = await sb.from('orders').update({ step_notes: currentOrder.step_notes }).eq('id', currentOrderId);
-    if (error) throw error;
-    expandedNotes[stt] = false;
-    renderWorkflow();
-  } catch(e) { alert('Lỗi: ' + e.message); } finally { hideLoading(); }
+  try{
+    const{error}=await sb.from('orders').update({step_notes:currentOrder.step_notes}).eq('id',currentOrderId);
+    if(error)throw error;
+    expandedNotes[stt]=false;renderWorkflow();
+  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
 }
 
-function editSupplier() {
-  const row = document.getElementById('supplierEditRow');
-  if (row) { row.classList.remove('hidden'); row.style.display = 'flex'; }
-}
+function editSupplier(){const row=document.getElementById('supplierEditRow');if(row){row.classList.remove('hidden');row.style.display='flex';}}
 
-async function saveSupplier() {
-  const val = document.getElementById('supplierInput')?.value.trim() || '';
+async function saveSupplier(){
+  const val=document.getElementById('supplierInput')?.value.trim()||'';
   showLoading('Đang lưu...');
-  try {
-    const { error } = await sb.from('orders').update({ supplier: val }).eq('id', currentOrderId);
-    if (error) throw error;
-    currentOrder.supplier = val;
-    renderDetail();
-  } catch(e) { alert('Lỗi: ' + e.message); } finally { hideLoading(); }
+  try{const{error}=await sb.from('orders').update({supplier:val}).eq('id',currentOrderId);if(error)throw error;currentOrder.supplier=val;renderDetail();}
+  catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
 }
 
-// ============== CHECKLIST HỒ SƠ ==============
-const CHECKLIST_DEPTS = [
-  {
-    key: 'ketoan', label: 'Kế toán', icon: '🧾', color: 'var(--color-text-warning)',
-    roles: ['ketoan', 'admin'],
-    items: [
-      { id: 'kt1', step: 'B12', label: 'Hóa đơn đầu vào' },
-      { id: 'kt2', step: 'B15', label: 'UNC thanh toán NCC' },
-      { id: 'kt3', step: 'B22', label: 'Hóa đơn nháp đầu ra' },
-      { id: 'kt4', step: 'B24', label: 'Hóa đơn đã ký đầu ra' },
-      { id: 'kt5', step: 'B28', label: 'Chứng từ KH thanh toán' },
-    ]
-  },
-  {
-    key: 'logistics', label: 'Logistics', icon: '🚢', color: 'var(--color-text-success)',
-    roles: ['logistics', 'admin'],
-    items: [
-      { id: 'lg1', step: 'B16', label: 'Booking' },
-      { id: 'lg2', step: 'B18', label: 'Draft PL, Invoice, B/L',
-        subs: ['Draft Packing List', 'Draft Invoice', 'Draft B/L'] },
-      { id: 'lg3', step: 'B19', label: 'Tờ khai nháp' },
-      { id: 'lg4', step: 'B25', label: 'Tờ khai thông quan' },
-      { id: 'lg5', step: 'B26', label: 'Final Doc',
-        subs: ['Invoice', 'Packing List', 'B/L', 'Fumigation', 'Weight Certificate', 'Quality Certificate', 'Phyto', 'ICO', 'C/O'] },
-    ]
-  },
-  {
-    key: 'sale', label: 'Sale', icon: '📋', color: 'var(--color-text-info)',
-    roles: ['sale', 'admin'],
-    items: [
-      { id: 'sl1', step: 'B1', label: 'Proforma Invoice' },
-      { id: 'sl2', step: 'B1', label: 'Sales Contract' },
-      { id: 'sl3', step: 'B7', label: 'Shipping Instruction' },
-      { id: 'sl4', step: 'B7', label: 'Quy cách đóng gói - Marking' },
-      { id: 'sl5', step: 'B27', label: 'Phụ lục (nếu có)', optional: true },
-    ]
-  },
-  {
-    key: 'sale_admin', label: 'Sale Admin', icon: '📂', color: '#8e44ad',
-    roles: ['sale_admin', 'admin'],
-    items: [
-      { id: 'sa1', step: 'B4',  label: 'HĐ nội địa' },
-      { id: 'sa2', step: 'B6',  label: 'Thông báo đơn hàng cho team qua mail' },
-      { id: 'sa3', step: 'B7',  label: 'Kiểm tra chứng từ đầu vào',
-        subs: ['Phiếu xuất kho', 'Phiếu cân', 'Biên bản giao hàng', 'Hóa đơn'],
-        note: '*** Đối với đơn mua NCC ngoài Tín Thành Đạt' },
-      { id: 'sa4', step: 'B12', label: 'Lập ĐNTT cho NCC' },
-      { id: 'sa5', step: 'B20', label: 'Xác nhận lịch đóng hàng qua mail' },
-      { id: 'sa6', step: 'B30', label: 'Lưu trữ hồ sơ' },
-    ]
-  }
+// ============== CHECKLIST ==============
+const CHECKLIST_DEPTS=[
+  {key:'ketoan',label:'Kế toán',icon:'🧾',color:'#e65100',roles:['ketoan','admin'],items:[
+    {id:'kt1',step:'B12',label:'Hóa đơn đầu vào'},{id:'kt2',step:'B15',label:'UNC thanh toán NCC'},
+    {id:'kt3',step:'B22',label:'Hóa đơn nháp đầu ra'},{id:'kt4',step:'B24',label:'Hóa đơn đã ký đầu ra'},
+    {id:'kt5',step:'B28',label:'Chứng từ KH thanh toán'}]},
+  {key:'logistics',label:'Logistics',icon:'🚢',color:'#2e7d32',roles:['logistics','admin'],items:[
+    {id:'lg1',step:'B16',label:'Booking'},
+    {id:'lg2',step:'B18',label:'Draft PL, Invoice, B/L',subs:['Draft Packing List','Draft Invoice','Draft B/L']},
+    {id:'lg3',step:'B19',label:'Tờ khai nháp'},{id:'lg4',step:'B25',label:'Tờ khai thông quan'},
+    {id:'lg5',step:'B26',label:'Final Doc',subs:['Invoice','Packing List','B/L','Fumigation','Weight Certificate','Quality Certificate','Phyto','ICO','C/O']}]},
+  {key:'sale',label:'Sale',icon:'📋',color:'#1565c0',roles:['sale','admin'],items:[
+    {id:'sl1',step:'B1',label:'Proforma Invoice'},{id:'sl2',step:'B1',label:'Sales Contract'},
+    {id:'sl3',step:'B7',label:'Shipping Instruction'},{id:'sl4',step:'B7',label:'Quy cách đóng gói - Marking'},
+    {id:'sl5',step:'B27',label:'Phụ lục (nếu có)',optional:true}]},
+  {key:'sale_admin',label:'Sale Admin',icon:'📂',color:'#8e44ad',roles:['sale_admin','admin'],items:[
+    {id:'sa1',step:'B4',label:'HĐ nội địa'},{id:'sa2',step:'B6',label:'Thông báo đơn hàng cho team qua mail'},
+    {id:'sa3',step:'B7',label:'Kiểm tra chứng từ đầu vào',subs:['Phiếu xuất kho','Phiếu cân','Biên bản giao hàng','Hóa đơn'],note:'*** Đối với đơn mua NCC ngoài Tín Thành Đạt'},
+    {id:'sa4',step:'B12',label:'Lập ĐNTT cho NCC'},{id:'sa5',step:'B20',label:'Xác nhận lịch đóng hàng qua mail'},
+    {id:'sa6',step:'B30',label:'Lưu trữ hồ sơ'}]}
 ];
 
-let checklistOpen = true;
-let checklistExpanded = {};
+let checklistOpen=true,checklistExpanded={};
 
-function canTickChecklist(deptRoles) {
-  return deptRoles.includes(currentUser.role);
-}
-
-function renderChecklistSection() {
-  const cl = currentOrder.checklist || {};
-  const totalItems = CHECKLIST_DEPTS.reduce((s, d) => s + d.items.length, 0);
-  const totalDone = CHECKLIST_DEPTS.reduce((s, d) => s + d.items.filter(i => cl[i.id]).length, 0);
-
-  const deptHtml = CHECKLIST_DEPTS.map(d => {
-    const canTick = canTickChecklist(d.roles);
-    const done = d.items.filter(i => cl[i.id]).length;
-    const pct = Math.round((done / d.items.length) * 100);
-
-    const itemsHtml = d.items.map(i => {
-      const checked = !!cl[i.id];
-      const hasSubs = i.subs && i.subs.length;
-      const isExp = checklistExpanded[i.id];
-      const subDone = hasSubs ? i.subs.filter((_, j) => cl[`${i.id}_sub_${j}`]).length : 0;
-
-      const checkboxHtml = hasSubs
-        ? `<div data-cl-expand="${i.id}" style="width:17px;height:17px;border-radius:3px;flex-shrink:0;border:1px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:#667eea;cursor:${canTick?'pointer':'default'};">${subDone > 0 ? `${subDone}/${i.subs.length}` : ''}</div>`
-        : `<div data-cl-tick="${i.id}" style="width:17px;height:17px;border-radius:3px;flex-shrink:0;border:1px solid ${checked ? 'transparent' : '#ccc'};background:${checked ? '#e8f5e9' : 'white'};display:flex;align-items:center;justify-content:center;cursor:${canTick ? 'pointer' : 'not-allowed'};">
-            ${checked ? '<span style="color:#2e7d32;font-size:12px;">✓</span>' : ''}
-          </div>`;
-
-      const subHtml = hasSubs && isExp ? `<div style="padding:3px 0 4px 24px;display:grid;gap:1px;">` +
-        i.subs.map((s, j) => {
-          const subChecked = !!cl[`${i.id}_sub_${j}`];
-          return `<div data-cl-sub="${i.id}" data-cl-subj="${j}" style="display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:4px;cursor:${canTick ? 'pointer' : 'not-allowed'};">
-            <div style="width:13px;height:13px;border-radius:2px;flex-shrink:0;border:1px solid ${subChecked ? 'transparent' : '#ccc'};background:${subChecked ? '#e8f5e9' : 'white'};display:flex;align-items:center;justify-content:center;">
-              ${subChecked ? '<span style="color:#2e7d32;font-size:10px;">✓</span>' : ''}
-            </div>
-            <span style="font-size:11px;color:${subChecked ? '#aaa' : '#444'};${subChecked ? 'text-decoration:line-through;' : ''}">${esc(s)}</span>
-          </div>`;
-        }).join('') + `</div>` : '';
-
-      return `<div style="margin:1px 0;">
-        <div data-cl-row="${i.id}" data-has-subs="${hasSubs?'1':'0'}" style="display:flex;align-items:flex-start;gap:7px;padding:5px 6px;border-radius:5px;${checked && !hasSubs ? 'opacity:0.55;' : ''}cursor:${hasSubs && canTick ? 'pointer' : 'default'};">
-          ${checkboxHtml}
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:12px;color:${checked && !hasSubs ? '#aaa' : '#333'};${checked && !hasSubs ? 'text-decoration:line-through;' : ''}line-height:1.3;">
-              ${esc(i.label)}
-              ${i.optional ? `<span style="font-size:10px;color:#bbb;"> (opt)</span>` : ''}
-              ${hasSubs ? `<span style="font-size:10px;color:#999;">${isExp ? ' ▲' : ' ▼'}</span>` : ''}
-              ${!canTick ? `<span style="font-size:10px;color:#ccc;"> 🔒</span>` : ''}
-            </div>
-            ${i.note ? `<div style="font-size:10px;color:#e67e22;margin-top:2px;font-style:italic;">${esc(i.note)}</div>` : ''}
-            <div style="font-size:10px;color:#bbb;margin-top:1px;">${i.step}</div>
-          </div>
-        </div>
-        ${subHtml}
-      </div>`;
+function renderChecklistSection(){
+  const cl=currentOrder.checklist||{};
+  const totalItems=CHECKLIST_DEPTS.reduce((s,d)=>s+d.items.length,0);
+  const totalDone=CHECKLIST_DEPTS.reduce((s,d)=>s+d.items.filter(i=>cl[i.id]).length,0);
+  const deptHtml=CHECKLIST_DEPTS.map(d=>{
+    const canTick=d.roles.includes(currentUser.role);
+    const done=d.items.filter(i=>cl[i.id]).length,pct=Math.round((done/d.items.length)*100);
+    const itemsHtml=d.items.map(i=>{
+      const checked=!!cl[i.id],hasSubs=i.subs&&i.subs.length,isExp=checklistExpanded[i.id];
+      const subDone=hasSubs?i.subs.filter((_,j)=>cl[`${i.id}_sub_${j}`]).length:0;
+      const checkboxHtml=hasSubs
+        ?`<div data-cl-expand="${i.id}" style="width:17px;height:17px;border-radius:3px;flex-shrink:0;border:1px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:#667eea;cursor:${canTick?'pointer':'default'};">${subDone>0?`${subDone}/${i.subs.length}`:''}</div>`
+        :`<div data-cl-tick="${i.id}" style="width:17px;height:17px;border-radius:3px;flex-shrink:0;border:1px solid ${checked?'transparent':'#ccc'};background:${checked?'#e8f5e9':'white'};display:flex;align-items:center;justify-content:center;cursor:${canTick?'pointer':'not-allowed'};">${checked?'<span style="color:#2e7d32;font-size:12px;">✓</span>':''}</div>`;
+      const subHtml=hasSubs&&isExp?`<div style="padding:3px 0 4px 24px;display:grid;gap:1px;">`+i.subs.map((s,j)=>{const subChecked=!!cl[`${i.id}_sub_${j}`];return`<div data-cl-sub="${i.id}" data-cl-subj="${j}" style="display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:4px;cursor:${canTick?'pointer':'not-allowed'};"><div style="width:13px;height:13px;border-radius:2px;flex-shrink:0;border:1px solid ${subChecked?'transparent':'#ccc'};background:${subChecked?'#e8f5e9':'white'};display:flex;align-items:center;justify-content:center;">${subChecked?'<span style="color:#2e7d32;font-size:10px;">✓</span>':''}</div><span style="font-size:11px;color:${subChecked?'#aaa':'#444'};${subChecked?'text-decoration:line-through;':''}">${esc(s)}</span></div>`;}).join('')+`</div>`:'';
+      return`<div style="margin:1px 0;"><div data-cl-row="${i.id}" data-has-subs="${hasSubs?'1':'0'}" style="display:flex;align-items:flex-start;gap:7px;padding:5px 6px;border-radius:5px;${checked&&!hasSubs?'opacity:0.55;':''}cursor:${hasSubs&&canTick?'pointer':'default'};">${checkboxHtml}<div style="flex:1;min-width:0;"><div style="font-size:12px;color:${checked&&!hasSubs?'#aaa':'#333'};${checked&&!hasSubs?'text-decoration:line-through;':''}line-height:1.3;">${esc(i.label)}${i.optional?'<span style="font-size:10px;color:#bbb;"> (opt)</span>':''}${hasSubs?`<span style="font-size:10px;color:#999;">${isExp?' ▲':' ▼'}</span>`:''}${!canTick?'<span style="font-size:10px;color:#ccc;"> 🔒</span>':''}</div>${i.note?`<div style="font-size:10px;color:#e67e22;margin-top:2px;font-style:italic;">${esc(i.note)}</div>`:''}<div style="font-size:10px;color:#bbb;margin-top:1px;">${i.step}</div></div></div>${subHtml}</div>`;
     }).join('');
-
-    return `<div style="background:white;border:1px solid #eee;border-radius:8px;overflow:hidden;">
-      <div style="padding:8px 10px;background:#fafafa;border-bottom:1px solid #eee;">
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:5px;">
-            <span style="font-size:13px;">${d.icon}</span>
-            <span style="font-size:12px;font-weight:600;color:#333;">${d.label}</span>
-          </div>
-          <span style="font-size:11px;color:#888;">${done}/${d.items.length}</span>
-        </div>
-        <div style="height:3px;background:#eee;border-radius:2px;overflow:hidden;margin-top:5px;">
-          <div style="height:100%;width:${pct}%;background:${d.color};border-radius:2px;transition:width 0.3s;"></div>
-        </div>
-      </div>
-      <div style="padding:6px 4px;">${itemsHtml}</div>
-    </div>`;
+    return`<div style="background:white;border:1px solid #eee;border-radius:8px;overflow:hidden;"><div style="padding:8px 10px;background:#fafafa;border-bottom:1px solid #eee;"><div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:13px;">${d.icon}</span><span style="font-size:12px;font-weight:600;color:#333;">${d.label}</span></div><span style="font-size:11px;color:#888;">${done}/${d.items.length}</span></div><div style="height:3px;background:#eee;border-radius:2px;overflow:hidden;margin-top:5px;"><div style="height:100%;width:${pct}%;background:${d.color};border-radius:2px;transition:width 0.3s;"></div></div></div><div style="padding:6px 4px;">${itemsHtml}</div></div>`;
   }).join('');
-
-  return `<div style="border:2px solid #eee;border-radius:10px;overflow:hidden;margin-top:12px;" id="checklistSection">
-    <div onclick="toggleChecklist()" style="display:flex;align-items:center;justify-content:space-between;padding:11px 16px;background:#f8f9fc;cursor:pointer;user-select:none;">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span>📑</span>
-        <span style="font-size:14px;font-weight:600;color:#333;">Checklist hồ sơ chứng từ</span>
-        <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${totalDone===totalItems?'#e8f5e9':'#f0f4ff'};color:${totalDone===totalItems?'#2e7d32':'#667eea'};font-weight:600;">${totalDone}/${totalItems}</span>
-      </div>
-      <span style="font-size:12px;color:#888;" id="checklistToggleIcon">${checklistOpen ? '▲' : '▼'}</span>
-    </div>
-    <div id="checklistBody" style="padding:10px;display:${checklistOpen ? 'grid' : 'none'};grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">
-      ${deptHtml}
-    </div>
-  </div>`;
+  return`<div style="border:2px solid #eee;border-radius:10px;overflow:hidden;margin-top:12px;" id="checklistSection"><div onclick="toggleChecklist()" style="display:flex;align-items:center;justify-content:space-between;padding:11px 16px;background:#f8f9fc;cursor:pointer;user-select:none;"><div style="display:flex;align-items:center;gap:10px;"><span>📑</span><span style="font-size:14px;font-weight:600;color:#333;">Checklist hồ sơ chứng từ</span><span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${totalDone===totalItems?'#e8f5e9':'#f0f4ff'};color:${totalDone===totalItems?'#2e7d32':'#667eea'};font-weight:600;">${totalDone}/${totalItems}</span></div><span style="font-size:12px;color:#888;" id="checklistToggleIcon">${checklistOpen?'▲':'▼'}</span></div><div id="checklistBody" style="padding:10px;display:${checklistOpen?'grid':'none'};grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">${deptHtml}</div></div>`;
 }
 
-function toggleChecklist() {
-  checklistOpen = !checklistOpen;
-  const body = document.getElementById('checklistBody');
-  const icon = document.getElementById('checklistToggleIcon');
-  if (body) body.style.display = checklistOpen ? 'grid' : 'none';
-  if (icon) icon.textContent = checklistOpen ? '▲' : '▼';
+function toggleChecklist(){
+  checklistOpen=!checklistOpen;
+  const body=document.getElementById('checklistBody'),icon=document.getElementById('checklistToggleIcon');
+  if(body)body.style.display=checklistOpen?'grid':'none';if(icon)icon.textContent=checklistOpen?'▲':'▼';
 }
 
-function toggleChecklistExpand(id) {
-  checklistExpanded[id] = !checklistExpanded[id];
-  renderDetail();
+function toggleChecklistExpand(id){checklistExpanded[id]=!checklistExpanded[id];renderDetail();}
+
+async function tickChecklist(itemId){
+  const cl=currentOrder.checklist||{};cl[itemId]=!cl[itemId];currentOrder.checklist=cl;await saveChecklist();
+}
+async function tickChecklistSub(itemId,j){
+  const cl=currentOrder.checklist||{},key=`${itemId}_sub_${j}`;cl[key]=!cl[key];currentOrder.checklist=cl;await saveChecklist();
+}
+async function saveChecklist(){
+  try{const{error}=await sb.from('orders').update({checklist:currentOrder.checklist}).eq('id',currentOrderId);if(error)throw error;renderDetail();}
+  catch(e){alert('Lỗi: '+e.message);}
 }
 
-async function tickChecklist(itemId) {
-  const cl = currentOrder.checklist || {};
-  cl[itemId] = !cl[itemId];
-  currentOrder.checklist = cl;
-  await saveChecklist();
-}
+function esc(s){if(s==null)return'';return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function closeModal(id){document.getElementById(id).classList.add('hidden');}
 
-async function tickChecklistSub(itemId, j) {
-  const cl = currentOrder.checklist || {};
-  const key = `${itemId}_sub_${j}`;
-  cl[key] = !cl[key];
-  currentOrder.checklist = cl;
-  await saveChecklist();
-}
-
-async function saveChecklist() {
-  try {
-    const { error } = await sb.from('orders').update({ checklist: currentOrder.checklist }).eq('id', currentOrderId);
-    if (error) throw error;
-    renderDetail();
-  } catch(e) { alert('Lỗi lưu checklist: ' + e.message); }
-}
-
-function esc(s) {
-  if (s==null) return '';
-  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-
-// ============== INIT ==============
-(async function init() {
+(async function init(){
   showLoading('Đang khởi động...');
-  try {
-    const { data: { session } } = await sb.auth.getSession();
-    if (session?.user) {
-      await loadCurrentUser(session.user);
-    }
-  } catch(e) { console.error(e); }
-  finally { hideLoading(); }
-
-  sb.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_OUT') {
-      document.getElementById('mainApp').classList.add('hidden');
-      document.getElementById('loginScreen').classList.remove('hidden');
-    }
+  try{const{data:{session}}=await sb.auth.getSession();if(session?.user)await loadCurrentUser(session.user);}
+  catch(e){console.error(e);}finally{hideLoading();}
+  sb.auth.onAuthStateChange(async(event,session)=>{
+    if(event==='SIGNED_OUT'){document.getElementById('mainApp').classList.add('hidden');document.getElementById('loginScreen').classList.remove('hidden');}
   });
-
-  document.getElementById('loginPassword').addEventListener('keypress', e => {
-    if (e.key === 'Enter') login();
-  });
+  document.getElementById('loginPassword').addEventListener('keypress',e=>{if(e.key==='Enter')login();});
 })();
 </script>
 </body>
