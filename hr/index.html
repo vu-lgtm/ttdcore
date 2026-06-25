@@ -772,22 +772,59 @@ function updateClock(){
 setInterval(updateClock,1000);updateClock();
 
 // ============ LEAVES ============
+// _lvMonth/_lvYear = tháng đầu tiên trong block 4 tháng
 let _lvMonth=new Date().getMonth()+1, _lvYear=new Date().getFullYear();
+// Căn về đầu block 4 tháng: 1-4, 5-8, 9-12
+_lvMonth=Math.floor((_lvMonth-1)/4)*4+1;
+
 const LV_COLORS=[['rgba(0,191,165,.15)','#00BFA5'],['rgba(21,101,192,.18)','#4fc3f7'],['rgba(171,71,188,.15)','#ab47bc'],['rgba(255,112,67,.18)','#ff7043'],['rgba(200,151,58,.18)','#c8973a'],['rgba(239,83,80,.15)','#ef5350']];
 const TYPE_LABEL={'annual':'Phép năm','sick':'Nghỉ bệnh','personal':'Việc riêng','unpaid':'Không lương'};
 const STATUS_LABEL={'pending':'⏳ Chờ duyệt','approved':'✓ Đã duyệt','rejected':'✗ Từ chối'};
 const STATUS_CSS={'pending':'color:#f0a500;background:rgba(240,165,0,.1)','approved':'color:#00BFA5;background:rgba(0,191,165,.1)','rejected':'color:#ef5350;background:rgba(239,83,80,.1)'};
 
-function changeLeaveMonth(d){_lvMonth+=d;if(_lvMonth>12){_lvMonth=1;_lvYear++;}if(_lvMonth<1){_lvMonth=12;_lvYear--;}renderLeaves();}
+function changeLeaveMonth(d){
+  _lvMonth+=d*4;
+  if(_lvMonth>12){_lvMonth=1;_lvYear++;}
+  if(_lvMonth<1){_lvMonth=9;_lvYear--;}
+  renderLeaves();
+}
+
+function renderOneMonth(year,month,dayMap,today){
+  const daysInMonth=new Date(year,month,0).getDate();
+  const firstDow=new Date(year,month-1,1).getDay();
+  const startOff=firstDow===0?6:firstDow-1;
+  const MONTH_NAMES=['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+  const dows=['T2','T3','T4','T5','T6','T7','CN'];
+  let h=`<div style="margin-bottom:20px;">
+    <div style="font-family:Montserrat,sans-serif;font-size:13px;font-weight:700;color:var(--teal);margin-bottom:10px;letter-spacing:.5px;">${MONTH_NAMES[month-1]}/${year}</div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px;">
+      ${dows.map(d=>`<div style="text-align:center;font-family:Montserrat,sans-serif;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;padding:4px 0;">${d}</div>`).join('')}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">`;
+  for(let i=0;i<startOff;i++)h+=`<div style="min-height:60px;"></div>`;
+  for(let day=1;day<=daysInMonth;day++){
+    const dow=(startOff+day-1)%7;
+    const isWe=dow>=5;
+    const isT=day===today.getDate()&&month===today.getMonth()+1&&year===today.getFullYear();
+    const dk=`${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const offs=dayMap[dk]||[];
+    const bg=isT?'background:rgba(0,191,165,.08);border-color:rgba(0,191,165,.5);':isWe?'background:rgba(255,255,255,.01);':'';
+    h+=`<div style="min-height:60px;background:var(--dark2);border:1px solid var(--border2);border-radius:5px;padding:5px 6px;${bg}">
+      <div style="font-family:Montserrat,sans-serif;font-size:11px;font-weight:600;color:${isT?'var(--teal)':'var(--muted)'};">${day}</div>
+      ${offs.map(o=>`<div style="font-size:9px;font-weight:600;padding:1px 4px;border-radius:2px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:${o.color[0]};color:${o.color[1]};" title="${o.name}">${o.name}</div>`).join('')}
+    </div>`;
+  }
+  h+=`</div></div>`;
+  return h;
+}
 
 function renderLeaves(){
-  document.getElementById('leaveMonthLabel').textContent=`Tháng ${_lvMonth}/${_lvYear}`;
+  // Label: hiển thị range 4 tháng
+  const endMonth=Math.min(_lvMonth+3,12);
+  document.getElementById('leaveMonthLabel').textContent=`Tháng ${_lvMonth} – ${endMonth}/${_lvYear}`;
   updateStats();
 
-  // Calendar
-  const daysInMonth=new Date(_lvYear,_lvMonth,0).getDate();
-  const firstDow=new Date(_lvYear,_lvMonth-1,1).getDay();
-  const startOff=firstDow===0?6:firstDow-1;
+  // Build dayMap cho tất cả leaves
   const today=new Date();
   const approved=_leaves.filter(l=>l.status==='approved');
   const pending=_leaves.filter(l=>l.status==='pending');
@@ -798,31 +835,23 @@ function renderLeaves(){
     const from=new Date(l.from),to=new Date(l.to);
     for(let d=new Date(from);d<=to;d.setDate(d.getDate()+1)){
       const y=d.getFullYear(),m=d.getMonth()+1,day=d.getDate();
-      if(y===_lvYear&&m===_lvMonth){
-        const k=`${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-        if(!dayMap[k])dayMap[k]=[];
-        const nm=l.empName.split(' ').slice(-1)[0]+(l.status==='pending'?'?':'');
-        const col=l.status==='pending'?['rgba(240,165,0,.12)','#f0a500']:empColors[l.ma];
-        dayMap[k].push({name:nm,color:col});
-      }
+      const k=`${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      if(!dayMap[k])dayMap[k]=[];
+      const nm=l.empName.split(' ').slice(-1)[0]+(l.status==='pending'?'?':'');
+      const col=l.status==='pending'?['rgba(240,165,0,.12)','#f0a500']:empColors[l.ma];
+      dayMap[k].push({name:nm,color:col});
     }
   });
-  const dows=['T2','T3','T4','T5','T6','T7','CN'];
-  let html=`<div class="cal-header">${dows.map(d=>`<div class="cal-dow">${d}</div>`).join('')}</div><div class="cal-grid">`;
-  for(let i=0;i<startOff;i++)html+=`<div class="cal-day empty"></div>`;
-  for(let day=1;day<=daysInMonth;day++){
-    const dow=(startOff+day-1)%7;
-    const isWe=dow>=5;
-    const isT=day===today.getDate()&&_lvMonth===today.getMonth()+1&&_lvYear===today.getFullYear();
-    const dk=`${_lvYear}-${String(_lvMonth).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-    const offs=dayMap[dk]||[];
-    html+=`<div class="cal-day${isT?' today':''}${isWe?' weekend':''}">
-      <div class="cal-day-num">${day}</div>
-      ${offs.map(o=>`<div class="cal-leave-pill" style="background:${o.color[0]};color:${o.color[1]};" title="${o.name}">${o.name}</div>`).join('')}
-    </div>`;
+
+  // Render 4 tháng dạng 2x2 grid
+  let calHtml='<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">';
+  for(let i=0;i<4;i++){
+    let m=_lvMonth+i, y=_lvYear;
+    if(m>12){m-=12;y++;}
+    calHtml+=`<div>${renderOneMonth(y,m,dayMap,today)}</div>`;
   }
-  html+='</div>';
-  document.getElementById('leaveCalendar').innerHTML=html;
+  calHtml+='</div>';
+  document.getElementById('leaveCalendar').innerHTML=calHtml;
 
   // Leave list
   const pel=document.getElementById('leavePending');
@@ -1016,7 +1045,12 @@ function switchTab(name,btn){
   document.getElementById('tab-'+name).classList.add('active');
   btn.classList.add('active');
   if(name==='chamcong')renderAttendance();
-  if(name==='nghiphep'){_lvMonth=new Date().getMonth()+1;_lvYear=new Date().getFullYear();renderLeaves();}
+  if(name==='nghiphep'){
+    const m=new Date().getMonth()+1;
+    _lvMonth=Math.floor((m-1)/4)*4+1;
+    _lvYear=new Date().getFullYear();
+    renderLeaves();
+  }
 }
 
 // ============ EMP SELECTS ============
