@@ -233,7 +233,7 @@ select option{background:#071828;color:#fff;}
   <!-- TAB NGHỈ PHÉP -->
   <div class="tab-content" id="tab-nghiphep">
     <div class="info-box" id="leaveInfoBox">
-      📋 <strong>Chính sách nghỉ phép:</strong> Mỗi tháng được cộng thêm <strong>1 ngày phép</strong>. Phép không dùng <strong>không cộng dồn</strong> sang tháng sau (hết hạn 30/06 năm sau). Hết phép thì phải chọn <strong>nghỉ không lương</strong>.
+      📋 <strong>Chính sách nghỉ phép:</strong> Mỗi tháng được cộng thêm <strong>1 ngày phép</strong>. Phép được cộng dồn và sử dụng đến hết <strong>30/06 năm sau</strong>. Hết phép thì phải chọn <strong>nghỉ không lương</strong>.
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
       <div class="month-nav">
@@ -286,9 +286,7 @@ select option{background:#071828;color:#fff;}
     <div class="form-group">
       <label>Loại nghỉ</label>
       <select id="leaveType">
-        <option value="annual">Phép năm</option>
-        <option value="sick">Nghỉ bệnh</option>
-        <option value="personal">Việc riêng</option>
+        <option value="annual">Nghỉ phép</option>
         <option value="unpaid">Không lương</option>
       </select>
     </div>
@@ -778,7 +776,7 @@ let _lvMonth=new Date().getMonth()+1, _lvYear=new Date().getFullYear();
 _lvMonth=Math.floor((_lvMonth-1)/4)*4+1;
 
 const LV_COLORS=[['rgba(0,191,165,.15)','#00BFA5'],['rgba(21,101,192,.18)','#4fc3f7'],['rgba(171,71,188,.15)','#ab47bc'],['rgba(255,112,67,.18)','#ff7043'],['rgba(200,151,58,.18)','#c8973a'],['rgba(239,83,80,.15)','#ef5350']];
-const TYPE_LABEL={'annual':'Phép năm','sick':'Nghỉ bệnh','personal':'Việc riêng','unpaid':'Không lương'};
+const TYPE_LABEL={'annual':'Nghỉ phép','unpaid':'Không lương','sick':'Nghỉ phép','personal':'Nghỉ phép'};
 const STATUS_LABEL={'pending':'⏳ Chờ duyệt','approved':'✓ Đã duyệt','rejected':'✗ Từ chối'};
 const STATUS_CSS={'pending':'color:#f0a500;background:rgba(240,165,0,.1)','approved':'color:#00BFA5;background:rgba(0,191,165,.1)','rejected':'color:#ef5350;background:rgba(239,83,80,.1)'};
 
@@ -862,7 +860,7 @@ function renderLeaves(){
   ${[..._leaves].reverse().map((l,ri)=>{
     const idx=_leaves.length-1-ri;
     const days=Math.round((new Date(l.to)-new Date(l.from))/86400000)+1;
-    const icon=l.type==='sick'?'🤒':l.type==='personal'?'🏠':l.type==='unpaid'?'💸':'🏖️';
+    const icon=l.type==='unpaid'?'💸':'🏖️';
 
     // Buttons logic
     let btns='';
