@@ -259,7 +259,10 @@ select option{background:#071828;color:#fff;}
     <div class="form-group"><label>Họ và tên</label><input type="text" id="newTen" placeholder="Nguyễn Văn A"></div>
     <div class="form-row">
       <div class="form-group"><label>Vị trí</label><select id="newVitri"><option>Sale</option><option>Sale Admin</option><option>Manager</option><option>Kế Toán</option><option>Logistic</option></select></div>
-      <div class="form-group"><label>Ngày đã dùng trước TTDCore</label><input type="number" id="newBalance" placeholder="0" step="0.5"></div>
+      <div class="form-group"><label>Loại NV</label><select id="newLoaiNV"><option value="chinh_thuc">✅ Chính thức</option><option value="thu_viec">🔄 Thử việc</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Ngày đã dùng phép trước TTDCore</label><input type="number" id="newBalance" placeholder="0" step="0.5"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>SĐT</label><input type="text" id="newSdt" placeholder="0901234567"></div>
@@ -277,19 +280,32 @@ select option{background:#071828;color:#fff;}
   <div class="modal">
     <h3>🏖️ Đăng ký nghỉ phép</h3>
     <div class="form-group"><label>Nhân viên</label><select id="leaveEmp" onchange="onLeaveEmpChange()"></select></div>
+    <div id="leaveProbationWarn" style="display:none;background:rgba(200,151,58,.08);border:1px solid rgba(200,151,58,.25);border-radius:8px;padding:10px 14px;font-size:12px;color:#c8973a;margin-bottom:12px;">
+      ⚠️ <strong>Nhân viên thử việc</strong> — không có phép năm. Chỉ được <strong>Không lương</strong> hoặc <strong>Đi trễ</strong>.
+    </div>
     <div id="leaveBalanceInfo" style="background:rgba(0,191,165,.06);border:1px solid rgba(0,191,165,.12);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:14px;display:none;"></div>
     <div class="form-row">
       <div class="form-group"><label>Từ ngày</label><input type="date" id="leaveFrom" onchange="onLeaveDateChange()"></div>
       <div class="form-group"><label>Đến ngày</label><input type="date" id="leaveTo" onchange="onLeaveDateChange()"></div>
     </div>
-    <div id="leaveDaysInfo" style="font-size:12px;color:var(--muted);margin-bottom:12px;"></div>
-    <div class="form-group">
-      <label>Loại nghỉ</label>
-      <select id="leaveType">
-        <option value="annual">Nghỉ phép</option>
-        <option value="unpaid">Không lương</option>
-      </select>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Loại nghỉ</label>
+        <select id="leaveType" onchange="onLeaveTypeChange()">
+          <option value="annual">🏖️ Nghỉ phép</option>
+          <option value="unpaid">💸 Không lương</option>
+          <option value="late">⚠️ Đi trễ</option>
+        </select>
+      </div>
+      <div class="form-group" id="durationGroup">
+        <label>Số ngày nghỉ</label>
+        <select id="leaveDuration" onchange="onLeaveDateChange()">
+          <option value="1">Cả ngày (1 ngày)</option>
+          <option value="0.5">Nửa ngày (0.5 ngày)</option>
+        </select>
+      </div>
     </div>
+    <div id="leaveDaysInfo" style="font-size:12px;color:var(--muted);margin-bottom:12px;"></div>
     <div id="leaveTypeWarning" style="display:none;background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.2);border-radius:6px;padding:10px 14px;font-size:12px;color:#ef5350;margin-bottom:12px;">
       ⚠️ Nhân viên này đã hết phép năm. Đơn sẽ tự động chuyển sang <strong>Nghỉ không lương</strong>.
     </div>
@@ -311,6 +327,13 @@ select option{background:#071828;color:#fff;}
       Số âm = nghỉ vượt phép → tính là <strong>không lương</strong>.
     </div>
     <div class="form-group">
+      <label>Loại nhân viên</label>
+      <select id="adjustLoaiNV" onchange="onAdjustLoaiChange()">
+        <option value="chinh_thuc">✅ Chính thức</option>
+        <option value="thu_viec">🔄 Thử việc (không có phép)</option>
+      </select>
+    </div>
+    <div class="form-group" id="adjustBalanceGroup">
       <label>Ngày đã dùng trước khi dùng TTDCore</label>
       <input type="number" id="adjustBalance" step="0.5" placeholder="VD: 3.5">
     </div>
@@ -389,7 +412,7 @@ async function loadAll(){
       sbFetch('attendance','order=date.desc,ma'),
       sbFetch('leaves','order=sent_at.desc')
     ]);
-    _emps=e.map(x=>({ma:x.ma,cty:x.cty,ten:x.ten,vitri:x.vitri||'',sdt:x.sdt||'',email:x.email||'',used_before:parseFloat(x.used_before)||0}));
+    _emps=e.map(x=>({ma:x.ma,cty:x.cty,ten:x.ten,vitri:x.vitri||'',sdt:x.sdt||'',email:x.email||'',used_before:parseFloat(x.used_before)||0,loai_nv:x.loai_nv||'chinh_thuc'}));
     _att=a.map(x=>({ma:x.ma,name:x.name,date:x.date,checkin:x.checkin||'',checkout:x.checkout||'',status:x.status,device:x.device||''}));
     _leaves=l.map(x=>({_id:x.id,ma:x.ma,empName:x.emp_name,from:x.from_date,to:x.to_date,type:x.type,reason:x.reason||'',status:x.status,cancel_requested:x.cancel_requested||false,cancel_reason:x.cancel_reason||'',actionBy:x.action_by||'',actionAt:x.action_at||'',sentAt:x.sent_at}));
   }catch(e){console.error(e);}
@@ -427,6 +450,7 @@ async function initAuth(){
 function isSuperAdmin(){return _email===SUPER_ADMIN;}
 function isLeaveApprover(){return _email===LEAVE_APPROVER||isSuperAdmin();}
 function isAdmin(){return isLeaveApprover();}
+function canAdjustLeave(){return _email===LEAVE_APPROVER||isSuperAdmin();}
 
 // ============ LEAVE BALANCE LOGIC ============
 // Tổng phép cả năm = 12 ngày (cố định)
@@ -442,6 +466,8 @@ function getLeaveBalance(ma){
   const accrued=now.getMonth()+1; // tháng 1=1, tháng 6=6, tháng 12=12
 
   const emp=_emps.find(e=>e.ma===ma);
+  const isProbation=(emp?.loai_nv||'chinh_thuc')==='thu_viec';
+  if(isProbation)return{accrued:0,usedBefore:0,usedInSystem:0,totalUsed:0,remaining:0,maxYear:0,isProbation:true};
   const usedBefore=emp?parseFloat(emp.used_before)||0:0;
 
   // Ngày đã dùng qua TTDCore (approved, không tính unpaid, trong năm hiện tại)
@@ -496,11 +522,15 @@ function renderEmployees(){
       :todayRec?.checkin
       ?`<span class="presence-badge"><span class="presence-dot"></span>Có mặt</span>`:'';
     const bal=getLeaveBalance(e.ma);
-    const balColor=bal.remaining<0?'#ef5350':bal.remaining<=2?'#f0a500':'var(--teal)';
-    const balPct=Math.max(0,Math.min(100,Math.round((bal.remaining/bal.accrued)*100)));
-    const balStr=bal.remaining<0
-      ?`<span style="color:#ef5350">Âm ${Math.abs(bal.remaining)}ngày</span>`
-      :`<span style="color:${balColor}">Còn ${bal.remaining}/${bal.accrued}ngày</span>`;
+    const isProbation2=(e.loai_nv||'chinh_thuc')==='thu_viec';
+    let balStr='',balColor='var(--teal)',balPct=0;
+    if(isProbation2){
+      balStr=`<span style="color:#c8973a;font-size:11px;">🔄 Thử việc</span>`;
+    }else{
+      balColor=bal.remaining<0?'#ef5350':bal.remaining<=2?'#f0a500':'var(--teal)';
+      balPct=Math.max(0,Math.min(100,Math.round((bal.remaining/Math.max(bal.accrued,1))*100)));
+      balStr=bal.remaining<0?`<span style="color:#ef5350">Âm ${Math.abs(bal.remaining)}ngày</span>`:`<span style="color:${balColor}">Còn ${bal.remaining}/${bal.accrued}ngày</span>`;
+    }
     return`<div class="emp-card${onLeave?' on-leave':todayRec?.checkin?' present':''}">
       <div class="emp-card-header">
         <div class="emp-avatar" style="background:linear-gradient(135deg,${c[0]},${c[1]});">${initials(e.ten)}</div>
@@ -509,6 +539,7 @@ function renderEmployees(){
           <div style="display:flex;gap:4px;margin-top:3px;flex-wrap:wrap;">
             <span class="emp-badge ${cc}">${e.cty}</span>
             <span class="emp-badge ${bc}">${e.vitri}</span>
+            ${(()=>{const ip=(e.loai_nv||'chinh_thuc')==='thu_viec';return ip?'<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(200,151,58,.12);color:#c8973a;border:1px solid rgba(200,151,58,.3);">Thử việc</span>':'<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(0,191,165,.08);color:var(--teal);border:1px solid rgba(0,191,165,.2);">Chính thức</span>';})()}
             ${presencePill}
           </div>
         </div>
@@ -521,7 +552,7 @@ function renderEmployees(){
           ${todayRec?`<div class="emp-info-col">⏱<span style="color:var(--teal);">${todayRec.checkin||'—'} → ${todayRec.checkout||'—'}</span></div>`:''}
         </div>
         <div class="emp-actions">
-          ${isSuperAdmin()?`<button onclick="openAdjustModal('${e.ma}','${e.ten}')" style="background:rgba(0,191,165,.08);border:1px solid rgba(0,191,165,.2);color:var(--teal);border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer;" title="Điều chỉnh phép">✏️ Phép</button>`:''}
+          ${canAdjustLeave()?`<button onclick="openAdjustModal('${e.ma}','${e.ten}')" style="background:rgba(0,191,165,.08);border:1px solid rgba(0,191,165,.2);color:var(--teal);border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer;" title="Điều chỉnh phép">✏️ Phép</button>`:''}
           ${isSuperAdmin()?`<button onclick="deleteEmployee('${e.ma}','${e.ten}')" style="background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.2);color:#ef5350;border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer;" title="Xóa">🗑</button>`:''}
         </div>
       </div>
@@ -552,7 +583,7 @@ async function addEmployee(){
   const ma=document.getElementById('newMa').value.trim();
   const ten=document.getElementById('newTen').value.trim();
   if(!ma||!ten){alert('Nhập đủ thông tin!');return;}
-  const data={ma,cty:document.getElementById('newCty').value,ten,vitri:document.getElementById('newVitri').value,sdt:document.getElementById('newSdt').value,email:document.getElementById('newEmail').value,used_before:parseFloat(document.getElementById('newBalance').value)||0};
+  const data={ma,cty:document.getElementById('newCty').value,ten,vitri:document.getElementById('newVitri').value,loai_nv:document.getElementById('newLoaiNV')?.value||'chinh_thuc',sdt:document.getElementById('newSdt').value,email:document.getElementById('newEmail').value,used_before:parseFloat(document.getElementById('newBalance').value)||0};
   try{
     await sbUpsert('employees',data,'ma');
     _emps.push({...data});
@@ -573,39 +604,51 @@ async function deleteEmployee(ma,ten){
 // ============ ADJUST used_before (Super Admin only) ============
 let _adjMa=null;
 function openAdjustModal(ma,ten){
-  if(!isSuperAdmin()){alert('Chỉ Super Admin mới có quyền!');return;}
+  if(!canAdjustLeave()){alert('Chỉ Admin mới có quyền!');return;}
   _adjMa=ma;
   document.getElementById('adjustEmpName').textContent=`${ten} (${ma})`;
   const emp=_emps.find(e=>e.ma===ma);
+  const loai=emp?.loai_nv||'chinh_thuc';
+  document.getElementById('adjustLoaiNV').value=loai;
   document.getElementById('adjustBalance').value=emp?.used_before||0;
-  document.getElementById('adjustNote').value='';
+  document.getElementById('adjustBalanceGroup').style.display=loai==='thu_viec'?'none':'';
   updateAdjustPreview();
   document.getElementById('adjustModal').classList.remove('hidden');
 }
+function onAdjustLoaiChange(){
+  const isPro=document.getElementById('adjustLoaiNV').value==='thu_viec';
+  document.getElementById('adjustBalanceGroup').style.display=isPro?'none':'';
+  updateAdjustPreview();
+}
 function updateAdjustPreview(){
   if(!_adjMa)return;
+  const loai=document.getElementById('adjustLoaiNV')?.value||'chinh_thuc';
+  if(loai==='thu_viec'){
+    document.getElementById('adjustPreview').innerHTML=`<span style="color:#c8973a;">🔄 Thử việc — không có phép năm.</span>`;
+    return;
+  }
   const ub=parseFloat(document.getElementById('adjustBalance').value)||0;
   const emp=_emps.find(e=>e.ma===_adjMa);
-  const oldUb=emp?.used_before||0;
-  if(emp)emp.used_before=ub;
+  const oldUb=emp?.used_before||0;const oldLoai=emp?.loai_nv||'chinh_thuc';
+  if(emp){emp.used_before=ub;emp.loai_nv='chinh_thuc';}
   const bal=getLeaveBalance(_adjMa);
-  if(emp)emp.used_before=oldUb;
+  if(emp){emp.used_before=oldUb;emp.loai_nv=oldLoai;}
   const remColor=bal.remaining<0?'#ef5350':bal.remaining<=2?'#f0a500':'var(--teal)';
   document.getElementById('adjustPreview').innerHTML=
-    `Tháng ${bal.accrued}/2026 tích lũy: <strong style="color:var(--teal)">${bal.accrued} ngày</strong><br>
-     Đã dùng trước TTDCore: <strong>${ub}</strong> + Qua hệ thống: <strong>${bal.usedInSystem}</strong> = Tổng dùng: <strong>${(ub+bal.usedInSystem).toFixed(1)}</strong><br>
+    `Tháng ${bal.accrued} tích lũy: <strong style="color:var(--teal)">${bal.accrued} ngày</strong><br>
+     Đã dùng trước: <strong>${ub}</strong> + Qua hệ thống: <strong>${bal.usedInSystem}</strong> = <strong>${(ub+bal.usedInSystem).toFixed(1)}</strong><br>
      → Còn lại: <strong style="color:${remColor}">${(bal.accrued-ub-bal.usedInSystem).toFixed(1)} ngày</strong>`;
 }
 document.getElementById('adjustBalance')?.addEventListener('input',updateAdjustPreview);
 async function saveAdjust(){
   if(!_adjMa)return;
-  const ub=parseFloat(document.getElementById('adjustBalance').value)||0;
+  const loai=document.getElementById('adjustLoaiNV')?.value||'chinh_thuc';
+  const ub=loai==='thu_viec'?0:parseFloat(document.getElementById('adjustBalance').value)||0;
   try{
-    await sbPatch('employees',{used_before:ub},{ma:_adjMa});
+    await sbPatch('employees',{loai_nv:loai,used_before:ub},{ma:_adjMa});
     const emp=_emps.find(e=>e.ma===_adjMa);
-    if(emp)emp.used_before=ub;
-    closeModal('adjustModal');
-    renderEmployees();
+    if(emp){emp.loai_nv=loai;emp.used_before=ub;}
+    closeModal('adjustModal');renderEmployees();
   }catch(e){alert('Lỗi: '+e.message);}
 }
 
@@ -776,7 +819,7 @@ let _lvMonth=new Date().getMonth()+1, _lvYear=new Date().getFullYear();
 _lvMonth=Math.floor((_lvMonth-1)/4)*4+1;
 
 const LV_COLORS=[['rgba(0,191,165,.15)','#00BFA5'],['rgba(21,101,192,.18)','#4fc3f7'],['rgba(171,71,188,.15)','#ab47bc'],['rgba(255,112,67,.18)','#ff7043'],['rgba(200,151,58,.18)','#c8973a'],['rgba(239,83,80,.15)','#ef5350']];
-const TYPE_LABEL={'annual':'Nghỉ phép','unpaid':'Không lương','sick':'Nghỉ phép','personal':'Nghỉ phép'};
+const TYPE_LABEL={'annual':'Nghỉ phép','unpaid':'Không lương','late':'Đi trễ','sick':'Nghỉ phép','personal':'Nghỉ phép'};
 const STATUS_LABEL={'pending':'⏳ Chờ duyệt','approved':'✓ Đã duyệt','rejected':'✗ Từ chối'};
 const STATUS_CSS={'pending':'color:#f0a500;background:rgba(240,165,0,.1)','approved':'color:#00BFA5;background:rgba(0,191,165,.1)','rejected':'color:#ef5350;background:rgba(239,83,80,.1)'};
 
@@ -860,7 +903,7 @@ function renderLeaves(){
   ${[..._leaves].reverse().map((l,ri)=>{
     const idx=_leaves.length-1-ri;
     const days=Math.round((new Date(l.to)-new Date(l.from))/86400000)+1;
-    const icon=l.type==='unpaid'?'💸':'🏖️';
+    const icon=l.type==='unpaid'?'💸':l.type==='late'?'⚠️':'🏖️';
 
     // Buttons logic
     let btns='';
@@ -981,54 +1024,99 @@ function openLeaveModal(){
 function onLeaveEmpChange(){
   const ma=document.getElementById('leaveEmp').value;
   if(!ma){document.getElementById('leaveBalanceInfo').style.display='none';return;}
+  const emp=_emps.find(e=>e.ma===ma);
+  const isProbation=(emp?.loai_nv||'chinh_thuc')==='thu_viec';
   const bal=getLeaveBalance(ma);
   const info=document.getElementById('leaveBalanceInfo');
-  const color=bal.remaining<0?'#ef5350':bal.remaining<=2?'#f0a500':'#00BFA5';
-  info.style.display='block';
-  if(bal.remaining<=0){
-    info.innerHTML=`⚠️ <strong style="color:#ef5350;">Hết phép!</strong> Tháng ${bal.accrued} tích lũy ${bal.accrued} ngày, đã dùng ${bal.totalUsed} ngày. Đơn sẽ tự chuyển sang <strong>Nghỉ không lương</strong>.`;
-    document.getElementById('leaveType').value='unpaid';
-    document.getElementById('leaveTypeWarning').style.display='block';
-  }else{
-    info.innerHTML=`🏖️ Tháng ${bal.accrued} tích lũy <strong>${bal.accrued} ngày</strong> · Đã dùng <strong>${bal.totalUsed}</strong> · Còn lại: <strong style="color:${color};">${bal.remaining} ngày</strong>`;
+  const probWarn=document.getElementById('leaveProbationWarn');
+  const typeEl=document.getElementById('leaveType');
+  if(isProbation){
+    info.style.display='none';if(probWarn)probWarn.style.display='block';
+    typeEl.value='unpaid';
+    Array.from(typeEl.options).forEach(o=>{o.disabled=(o.value==='annual');});
     document.getElementById('leaveTypeWarning').style.display='none';
+  }else{
+    if(probWarn)probWarn.style.display='none';
+    Array.from(typeEl.options).forEach(o=>{o.disabled=false;});
+    info.style.display='block';
+    const color=bal.remaining<0?'#ef5350':bal.remaining<=2?'#f0a500':'#00BFA5';
+    if(bal.remaining<=0){
+      info.innerHTML=`⚠️ <strong style="color:#ef5350;">Hết phép!</strong> Tháng ${bal.accrued} tích lũy ${bal.accrued} ngày, đã dùng ${bal.totalUsed} ngày.`;
+      typeEl.value='unpaid';document.getElementById('leaveTypeWarning').style.display='block';
+    }else{
+      info.innerHTML=`🏖️ Tháng ${bal.accrued} tích lũy <strong>${bal.accrued} ngày</strong> · Đã dùng <strong>${bal.totalUsed}</strong> · Còn lại: <strong style="color:${color};">${bal.remaining} ngày</strong>`;
+      document.getElementById('leaveTypeWarning').style.display='none';
+    }
+  }
+  onLeaveTypeChange();
+}
+
+function onLeaveTypeChange(){
+  const type=document.getElementById('leaveType').value;
+  const dg=document.getElementById('durationGroup');
+  const toRow=document.getElementById('leaveTo')?.closest('.form-row');
+  if(type==='late'){
+    if(dg)dg.style.display='none';
+    if(toRow)toRow.style.opacity='0.4';
+  }else{
+    if(dg)dg.style.display='';
+    if(toRow)toRow.style.opacity='1';
   }
   onLeaveDateChange();
 }
+
 function onLeaveDateChange(){
   const from=document.getElementById('leaveFrom').value;
-  const to=document.getElementById('leaveTo').value;
-  if(!from||!to)return;
-  const days=Math.round((new Date(to)-new Date(from))/86400000)+1;
-  if(days<1){document.getElementById('leaveDaysInfo').textContent='Ngày không hợp lệ!';return;}
+  const type=document.getElementById('leaveType')?.value||'annual';
+  const infoEl=document.getElementById('leaveDaysInfo');
+  if(type==='late'){
+    infoEl.innerHTML=`⚠️ Ghi nhận đi trễ ngày <strong>${from||'chưa chọn'}</strong> — không trừ ngày phép.`;
+    return;
+  }
+  const to=document.getElementById('leaveTo').value||from;
+  if(!from){infoEl.textContent='';return;}
+  const duration=parseFloat(document.getElementById('leaveDuration')?.value)||1;
+  const calDays=Math.round((new Date(to)-new Date(from))/86400000)+1;
+  const days=duration<1?0.5:calDays;
+  if(days<0.5){infoEl.textContent='Ngày không hợp lệ!';return;}
   const ma=document.getElementById('leaveEmp').value;
   const bal=getLeaveBalance(ma);
   const afterBalance=bal.remaining-days;
   const color=afterBalance<0?'#ef5350':afterBalance<=2?'#f0a500':'#00BFA5';
-  document.getElementById('leaveDaysInfo').innerHTML=`Nghỉ: <strong>${days} ngày</strong> · Sau khi nghỉ còn: <strong style="color:${color};">${afterBalance.toFixed(1)} ngày</strong>${afterBalance<0?' ⚠️ Vượt phép — tính không lương':''}`;
+  const halfNote=duration<1?' (nửa ngày)':'';
+  infoEl.innerHTML=`Nghỉ: <strong>${days} ngày${halfNote}</strong> · Sau khi nghỉ còn: <strong style="color:${color};">${afterBalance.toFixed(1)} ngày</strong>${afterBalance<0?' ⚠️ Vượt phép — tính không lương':''}`;
 }
+
 async function submitLeave(){
   const from=document.getElementById('leaveFrom').value;
-  const to=document.getElementById('leaveTo').value;
-  if(!from||!to){alert('Chọn ngày nghỉ!');return;}
+  if(!from){alert('Chọn ngày!');return;}
+  const type=document.getElementById('leaveType').value;
+  const duration=type==='late'?0:parseFloat(document.getElementById('leaveDuration')?.value)||1;
+  const to=type==='late'?from:(document.getElementById('leaveTo').value||from);
+  if(!to){alert('Chọn đến ngày!');return;}
   const sel=document.getElementById('leaveEmp');
   const ma=sel.value;
   const empName=sel.options[sel.selectedIndex].text.split(' (')[0];
   const bal=getLeaveBalance(ma);
-  const days=Math.round((new Date(to)-new Date(from))/86400000)+1;
-  // Auto force unpaid nếu hết phép
-  let type=document.getElementById('leaveType').value;
-  if(bal.remaining<=0&&type!=='unpaid'){
-    type='unpaid';
-    alert('Nhân viên đã hết phép năm. Đơn sẽ được chuyển thành Nghỉ không lương.');
+  const calDays=Math.round((new Date(to)-new Date(from))/86400000)+1;
+  const days=type==='late'?0:duration<1?0.5:calDays;
+  // Block annual for probation; auto force unpaid nếu hết phép
+  let finalType=type;
+  if(isProbation&&type==='annual'){alert('Nhân viên thử việc không có phép năm.');return;}
+  if(!isProbation&&type==='annual'){
+    if(bal.remaining<=0){finalType='unpaid';alert('Hết phép — chuyển sang Không lương.');}
   }
-  const leave={ma,empName,from,to,type,reason:document.getElementById('leaveReason').value.trim()||'Không có lý do',status:'pending',cancel_requested:false,cancel_reason:'',actionBy:'',actionAt:'',sentAt:new Date().toLocaleString('vi-VN')};
+  const reason=document.getElementById('leaveReason').value.trim()||'Không có lý do';
+  const note=duration<1?'Nửa ngày':'';
+  const leave={ma,empName,from,to,type:finalType,duration:days,reason:reason+(note?' ('+note+')':''),status:'pending',cancel_requested:false,cancel_reason:'',actionBy:'',actionAt:'',sentAt:new Date().toLocaleString('vi-VN')};
   try{
     const res=await sbPost('leaves',{ma:leave.ma,emp_name:leave.empName,from_date:leave.from,to_date:leave.to,type:leave.type,reason:leave.reason,status:'pending',cancel_requested:false,cancel_reason:''});
     leave._id=res[0]?.id;
     _leaves.push(leave);
     closeModal('leaveModal');renderLeaves();updateStats();
-    alert(`✅ Đã gửi đơn nghỉ ${days} ngày (${TYPE_LABEL[type]}) — chờ duyệt.`);
+    const typeLabel=TYPE_LABEL[finalType]||finalType;
+    const daysLabel=finalType==='late'?'đi trễ':`${days} ngày`;
+    alert(`✅ Đã gửi đơn ${typeLabel} ${daysLabel} — chờ duyệt.`);
   }catch(e){alert('Lỗi: '+e.message);}
 }
 
