@@ -1097,6 +1097,8 @@ async function submitLeave(){
   const sel=document.getElementById('leaveEmp');
   const ma=sel.value;
   const empName=sel.options[sel.selectedIndex].text.split(' (')[0];
+  const emp=_emps.find(e=>e.ma===ma);
+  const isProbation=(emp?.loai_nv||'chinh_thuc')==='thu_viec';
   const bal=getLeaveBalance(ma);
   const calDays=Math.round((new Date(to)-new Date(from))/86400000)+1;
   const days=type==='late'?0:duration<1?0.5:calDays;
