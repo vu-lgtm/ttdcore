@@ -86,7 +86,7 @@ header{background:var(--dark2);border-bottom:2px solid var(--teal2);padding:14px
 .leave-info{flex:1;}
 .leave-name{font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;color:var(--white);}
 .leave-meta{font-size:12px;color:var(--muted);margin-top:3px;}
-.leave-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.leave-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
 .btn-approve{background:rgba(0,191,165,.12);border:1px solid rgba(0,191,165,.3);color:var(--teal);border-radius:5px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;}
 .btn-approve:hover{background:rgba(0,191,165,.25);}
 .btn-reject{background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.2);color:#ef5350;border-radius:5px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;}
@@ -117,18 +117,6 @@ select option{background:#071828;color:#fff;}
 .btn-checkout:hover{transform:translateY(-2px);}
 .btn-checkout:disabled{background:#333;cursor:not-allowed;transform:none;}
 .device-info{font-size:11px;color:var(--muted);}
-.cal-header{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;}
-.cal-dow{text-align:center;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;padding:6px 0;}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
-.cal-day{min-height:72px;background:var(--dark2);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;transition:border-color .2s;}
-.cal-day.today{border-color:rgba(0,191,165,.5);background:rgba(0,191,165,.04);}
-.cal-day.weekend{background:rgba(255,255,255,.01);}
-.cal-day.empty{background:transparent;border-color:transparent;}
-.cal-day-num{font-family:'Montserrat',sans-serif;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;}
-.cal-day.today .cal-day-num{color:var(--teal);}
-.cal-leave-pill{font-size:10px;font-weight:600;padding:2px 5px;border-radius:3px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.leave-balance-bar{width:100%;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;margin-top:2px;}
-.leave-balance-fill{height:100%;border-radius:3px;transition:width .3s;}
 .info-box{background:rgba(0,191,165,.06);border:1px solid rgba(0,191,165,.12);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:16px;}
 .info-box strong{color:var(--white);}
 @media(max-width:768px){
@@ -390,11 +378,10 @@ select option{background:#071828;color:#fff;}
 </div>
 
 <script>
-// ============ SUPABASE ============
-const SB_URL = 'https://fyjinbtabsentsvnkqzg.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5amluYnRhYnNlbnRzdm5rcXpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MTAxNTUsImV4cCI6MjA5NDI4NjE1NX0.m1H8bOT7gUXJxPoQT6bDqtRUjo4nCSxb4A1rth7Eols';
-const SB_H = { 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY, 'Content-Type':'application/json', 'Prefer':'return=representation' };
-const _sb = supabase.createClient(SB_URL, SB_KEY);
+const SB_URL='https://fyjinbtabsentsvnkqzg.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5amluYnRhYnNlbnRzdm5rcXpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MTAxNTUsImV4cCI6MjA5NDI4NjE1NX0.m1H8bOT7gUXJxPoQT6bDqtRUjo4nCSxb4A1rth7Eols';
+const SB_H={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'};
+const _sb=supabase.createClient(SB_URL,SB_KEY);
 
 async function sbFetch(t,p=''){const r=await fetch(`${SB_URL}/rest/v1/${t}?${p}`,{headers:SB_H});if(!r.ok)throw new Error(await r.text());return r.json();}
 async function sbPost(t,d){const r=await fetch(`${SB_URL}/rest/v1/${t}`,{method:'POST',headers:SB_H,body:JSON.stringify(d)});if(!r.ok)throw new Error(await r.text());return r.json();}
@@ -402,8 +389,7 @@ async function sbPatch(t,d,m){const p=Object.entries(m).map(([k,v])=>`${k}=eq.${
 async function sbUpsert(t,d,c){const r=await fetch(`${SB_URL}/rest/v1/${t}?on_conflict=${c}`,{method:'POST',headers:{...SB_H,'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(d)});if(!r.ok)throw new Error(await r.text());return r.json();}
 async function sbDel(t,m){const p=Object.entries(m).map(([k,v])=>`${k}=eq.${encodeURIComponent(v)}`).join('&');const r=await fetch(`${SB_URL}/rest/v1/${t}?${p}`,{method:'DELETE',headers:SB_H});if(!r.ok)throw new Error(await r.text());}
 
-// ============ CACHE ============
-let _emps=[], _att=[], _leaves=[];
+let _emps=[],_att=[],_leaves=[];
 
 async function loadAll(){
   try{
@@ -418,27 +404,19 @@ async function loadAll(){
   }catch(e){console.error(e);}
 }
 
-// ============ PERMISSIONS ============
-// SUPER_ADMIN: vu@ttdglobal.vn — full quyền
-// LEAVE_APPROVER: duom@ttdglobal.vn — duyệt/từ chối/approve-hủy phép
-// Còn lại: xem + tự submit + tự hủy đơn pending của mình
-const SUPER_ADMIN = 'vu@ttdglobal.vn';
-const LEAVE_APPROVER = 'duom@ttdglobal.vn';
-let _email = '';
+const SUPER_ADMIN='vu@ttdglobal.vn';
+const LEAVE_APPROVER='duom@ttdglobal.vn';
+let _email='';
 
 async function initAuth(){
   const {data:{session}}=await _sb.auth.getSession();
-  if(session?.user?.email) _email=session.user.email;
-  else{
-    try{const s=localStorage.getItem('sb-fyjinbtabsentsvnkqzg-auth-token');if(s)_email=JSON.parse(s)?.user?.email||'';}catch{}
-  }
+  if(session?.user?.email)_email=session.user.email;
+  else{try{const s=localStorage.getItem('sb-fyjinbtabsentsvnkqzg-auth-token');if(s)_email=JSON.parse(s)?.user?.email||'';}catch{}}
   const badge=document.getElementById('userBadge');
   if(isSuperAdmin()){badge.textContent='⚡ Super Admin';badge.style.background='rgba(0,191,165,.15)';}
   else if(isLeaveApprover()){badge.textContent='✓ Duyệt phép';badge.style.background='rgba(79,195,247,.1)';}
   else if(_email){badge.textContent=_email;}
   else{badge.textContent='Guest';}
-
-  // Show admin controls
   if(isSuperAdmin()||isLeaveApprover()){
     document.getElementById('btnAddEmp').style.display='flex';
     document.getElementById('btnAddAtt').style.display='block';
@@ -452,49 +430,28 @@ function isLeaveApprover(){return _email===LEAVE_APPROVER||isSuperAdmin();}
 function isAdmin(){return isLeaveApprover();}
 function canAdjustLeave(){return _email===LEAVE_APPROVER||isSuperAdmin();}
 
-// ============ LEAVE BALANCE LOGIC ============
-// Tổng phép cả năm = 12 ngày (cố định)
-// Tích lũy theo tháng: tháng 1=1, tháng 2=2, ..., tháng 12=12
-// Số dư = tháng_hiện_tại - used_before - ngày_đã_dùng_trong_TTDCore
-// used_before = ngày đã dùng trước khi dùng TTDCore (nhập tay 1 lần)
-// Số dư có thể âm → các ngày âm tính là không lương
-const TOTAL_ANNUAL = 12;
+const TOTAL_ANNUAL=12;
 
 function getLeaveBalance(ma){
   const now=new Date();
   const year=now.getFullYear();
-  const accrued=now.getMonth()+1; // tháng 1=1, tháng 6=6, tháng 12=12
-
+  const accrued=now.getMonth()+1;
   const emp=_emps.find(e=>e.ma===ma);
   const isProbation=(emp?.loai_nv||'chinh_thuc')==='thu_viec';
   if(isProbation)return{accrued:0,usedBefore:0,usedInSystem:0,totalUsed:0,remaining:0,maxYear:0,isProbation:true};
   const usedBefore=emp?parseFloat(emp.used_before)||0:0;
-
-  // Ngày đã dùng qua TTDCore (approved, không tính unpaid, trong năm hiện tại)
   const usedInSystem=_leaves.filter(l=>
-    l.ma===ma && l.status==='approved' && l.type!=='unpaid' &&
+    l.ma===ma&&l.status==='approved'&&l.type!=='unpaid'&&
     new Date(l.from).getFullYear()===year
-  ).reduce((s,l)=>{
-    return s+Math.round((new Date(l.to)-new Date(l.from))/86400000)+1;
-  },0);
-
+  ).reduce((s,l)=>s+Math.round((new Date(l.to)-new Date(l.from))/86400000)+1,0);
   const totalUsed=usedBefore+usedInSystem;
-  const remaining=parseFloat((accrued-totalUsed).toFixed(1)); // có thể âm
-  return{
-    accrued,          // tích lũy đến tháng này
-    usedBefore,       // đã dùng trước TTDCore
-    usedInSystem,     // đã dùng qua TTDCore
-    totalUsed:parseFloat(totalUsed.toFixed(1)),
-    remaining,        // còn lại (âm = vượt)
-    maxYear:TOTAL_ANNUAL
-  };
+  const remaining=parseFloat((accrued-totalUsed).toFixed(1));
+  return{accrued,usedBefore,usedInSystem,totalUsed:parseFloat(totalUsed.toFixed(1)),remaining,maxYear:TOTAL_ANNUAL};
 }
 
 function isOutOfLeave(ma){return getLeaveBalance(ma).remaining<=0;}
 
-// ============ RENDER EMPLOYEES ============
-let _filter='ALL', _search='';
-
+let _filter='ALL',_search='';
 const BADGE_CLS={'Sale':'badge-sale','Manager':'badge-manager','Kế Toán':'badge-ketoan','Logistic':'badge-logistic','Sale Admin':'badge-saleadmin'};
 const AVATARS=[['#00BFA5','#1565C0'],['#1565C0','#00897B'],['#ab47bc','#1565C0'],['#ff7043','#c8973a'],['#00897B','#ab47bc'],['#c8973a','#ff7043']];
 function initials(n){const p=n.trim().split(' ');return p.length>=2?p[p.length-2][0]+p[p.length-1][0]:p[0][0];}
@@ -547,13 +504,13 @@ function renderEmployees(){
           <div class="emp-info-col">📱<span>${e.sdt}</span></div>
           <div class="emp-info-col">✉️<span>${e.email}</span></div>
           <div class="emp-info-col">🏖️${balStr}
-            <div class="leave-balance-bar" style="width:60px;"><div class="leave-balance-fill" style="width:${balPct}%;background:${balColor};"></div></div>
+            <div class="leave-balance-bar" style="width:60px;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;margin-top:2px;"><div style="height:100%;border-radius:3px;width:${balPct}%;background:${balColor};"></div></div>
           </div>
           ${todayRec?`<div class="emp-info-col">⏱<span style="color:var(--teal);">${todayRec.checkin||'—'} → ${todayRec.checkout||'—'}</span></div>`:''}
         </div>
         <div class="emp-actions">
-          ${canAdjustLeave()?`<button onclick="openAdjustModal('${e.ma}','${e.ten}')" style="background:rgba(0,191,165,.08);border:1px solid rgba(0,191,165,.2);color:var(--teal);border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer;" title="Sửa loại NV & ngày phép">✏️ Sửa</button>`:''}
-          ${isSuperAdmin()?`<button onclick="deleteEmployee('${e.ma}','${e.ten}')" style="background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.2);color:#ef5350;border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer;" title="Xóa">🗑</button>`:''}
+          ${canAdjustLeave()?`<button onclick="openAdjustModal('${e.ma}','${e.ten}')" style="background:rgba(0,191,165,.08);border:1px solid rgba(0,191,165,.2);color:var(--teal);border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer;">✏️ Sửa</button>`:''}
+          ${isSuperAdmin()?`<button onclick="deleteEmployee('${e.ma}','${e.ten}')" style="background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.2);color:#ef5350;border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer;">🗑</button>`:''}
         </div>
       </div>
     </div>`;
@@ -568,7 +525,6 @@ function filterByCompany(c,btn){
   renderEmployees();
 }
 
-// ============ STATS ============
 function updateStats(){
   document.getElementById('st0').textContent=_emps.length;
   document.getElementById('st1').textContent=_emps.filter(e=>e.cty==='TTD').length;
@@ -577,7 +533,6 @@ function updateStats(){
   document.getElementById('st4').textContent=_leaves.filter(l=>l.cancel_requested&&l.status==='approved').length;
 }
 
-// ============ ADD EMPLOYEE ============
 function openAddModal(){document.getElementById('addModal').classList.remove('hidden');}
 async function addEmployee(){
   const ma=document.getElementById('newMa').value.trim();
@@ -587,8 +542,7 @@ async function addEmployee(){
   try{
     await sbUpsert('employees',data,'ma');
     _emps.push({...data});
-    closeModal('addModal');
-    renderEmployees();updateStats();initEmpSelects();
+    closeModal('addModal');renderEmployees();updateStats();initEmpSelects();
   }catch(e){alert('Lỗi: '+e.message);}
 }
 async function deleteEmployee(ma,ten){
@@ -600,8 +554,6 @@ async function deleteEmployee(ma,ten){
   }catch(e){alert('Lỗi: '+e.message);}
 }
 
-// ============ ADJUST LEAVE BALANCE ============
-// ============ ADJUST used_before (Super Admin only) ============
 let _adjMa=null;
 function openAdjustModal(ma,ten){
   if(!canAdjustLeave()){alert('Chỉ Admin mới có quyền!');return;}
@@ -623,10 +575,7 @@ function onAdjustLoaiChange(){
 function updateAdjustPreview(){
   if(!_adjMa)return;
   const loai=document.getElementById('adjustLoaiNV')?.value||'chinh_thuc';
-  if(loai==='thu_viec'){
-    document.getElementById('adjustPreview').innerHTML=`<span style="color:#c8973a;">🔄 Thử việc — không có phép năm.</span>`;
-    return;
-  }
+  if(loai==='thu_viec'){document.getElementById('adjustPreview').innerHTML=`<span style="color:#c8973a;">🔄 Thử việc — không có phép năm.</span>`;return;}
   const ub=parseFloat(document.getElementById('adjustBalance').value)||0;
   const emp=_emps.find(e=>e.ma===_adjMa);
   const oldUb=emp?.used_before||0;const oldLoai=emp?.loai_nv||'chinh_thuc';
@@ -652,8 +601,7 @@ async function saveAdjust(){
   }catch(e){alert('Lỗi: '+e.message);}
 }
 
-// ============ ATTENDANCE ============
-let _attMonth=new Date().getMonth()+1, _attYear=new Date().getFullYear();
+let _attMonth=new Date().getMonth()+1,_attYear=new Date().getFullYear();
 function changeMonth(d){_attMonth+=d;if(_attMonth>12){_attMonth=1;_attYear++;}if(_attMonth<1){_attMonth=12;_attYear--;}renderAttendance();}
 function renderAttendance(){
   document.getElementById('monthLabel').textContent=`Tháng ${_attMonth}/${_attYear}`;
@@ -715,7 +663,6 @@ async function delAtt(ma,date){
   }catch(e){alert('Lỗi: '+e.message);}
 }
 
-// ============ CHECKIN LOGIC ============
 let _selEmp=null;
 function populateCheckinSel(){
   const s=document.getElementById('checkinEmpSel');
@@ -737,7 +684,6 @@ function resetCheckin(){
   document.getElementById('btnCheckin').disabled=true;
   document.getElementById('btnCheckout').disabled=true;
   document.getElementById('checkinStatus').textContent='Chọn nhân viên để bắt đầu';
-  document.getElementById('checkinStatus').style.cssText='width:100%;';
   document.getElementById('monthStats').innerHTML='<div style="color:var(--muted);font-size:13px;">Chọn nhân viên để xem</div>';
 }
 function loadTodayStatus(){
@@ -764,7 +710,6 @@ function loadTodayStatus(){
     st.textContent='Chưa check-in hôm nay';
     st.style.cssText='background:rgba(255,255,255,.05);color:var(--muted);width:100%;';
   }
-  // Monthly stats
   const now=new Date();
   const pre=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const myAtt=_att.filter(a=>a.ma===_selEmp.ma&&a.date.startsWith(pre));
@@ -812,10 +757,7 @@ function updateClock(){
 }
 setInterval(updateClock,1000);updateClock();
 
-// ============ LEAVES ============
-// _lvMonth/_lvYear = tháng đầu tiên trong block 4 tháng
-let _lvMonth=new Date().getMonth()+1, _lvYear=new Date().getFullYear();
-// Căn về đầu block 4 tháng: 1-4, 5-8, 9-12
+let _lvMonth=new Date().getMonth()+1,_lvYear=new Date().getFullYear();
 _lvMonth=Math.floor((_lvMonth-1)/4)*4+1;
 
 const LV_COLORS=[['rgba(0,191,165,.15)','#00BFA5'],['rgba(21,101,192,.18)','#4fc3f7'],['rgba(171,71,188,.15)','#ab47bc'],['rgba(255,112,67,.18)','#ff7043'],['rgba(200,151,58,.18)','#c8973a'],['rgba(239,83,80,.15)','#ef5350']];
@@ -860,12 +802,9 @@ function renderOneMonth(year,month,dayMap,today){
 }
 
 function renderLeaves(){
-  // Label: hiển thị range 4 tháng
   const endMonth=Math.min(_lvMonth+3,12);
   document.getElementById('leaveMonthLabel').textContent=`Tháng ${_lvMonth} – ${endMonth}/${_lvYear}`;
   updateStats();
-
-  // Build dayMap cho tất cả leaves
   const today=new Date();
   const approved=_leaves.filter(l=>l.status==='approved');
   const pending=_leaves.filter(l=>l.status==='pending');
@@ -883,18 +822,15 @@ function renderLeaves(){
       dayMap[k].push({name:nm,color:col});
     }
   });
-
-  // Render 4 tháng dạng 2x2 grid
   let calHtml='<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">';
   for(let i=0;i<4;i++){
-    let m=_lvMonth+i, y=_lvYear;
+    let m=_lvMonth+i,y=_lvYear;
     if(m>12){m-=12;y++;}
     calHtml+=`<div>${renderOneMonth(y,m,dayMap,today)}</div>`;
   }
   calHtml+='</div>';
   document.getElementById('leaveCalendar').innerHTML=calHtml;
 
-  // Leave list
   const pel=document.getElementById('leavePending');
   if(!_leaves.length){pel.innerHTML='<div style="text-align:center;color:var(--muted);padding:32px;">Chưa có đơn nghỉ phép nào</div>';return;}
 
@@ -904,8 +840,6 @@ function renderLeaves(){
     const idx=_leaves.length-1-ri;
     const days=Math.round((new Date(l.to)-new Date(l.from))/86400000)+1;
     const icon=l.type==='unpaid'?'💸':l.type==='late'?'⚠️':'🏖️';
-
-    // Buttons logic
     let btns='';
     const isMine=_emps.find(e=>e.ma===l.ma)?.email===_email;
     const isApprovable=isLeaveApprover();
@@ -915,21 +849,19 @@ function renderLeaves(){
         btns+=`<button class="btn-approve" onclick="approveLeave(${idx},'approved')">✓ Duyệt</button>
                <button class="btn-reject" onclick="approveLeave(${idx},'rejected')">✗ Từ chối</button>`;
       }
-      // Người gửi hoặc admin có thể hủy đơn pending
       if(isMine||isAdmin()){
         btns+=`<button class="btn-reject" onclick="cancelPendingLeave(${idx})">🚫 Hủy đơn</button>`;
       }
     } else if(l.status==='approved'){
       if(l.cancel_requested){
-        // Có yêu cầu hủy → approver xử lý
-        btns+=`<span style="color:#f0a500;font-size:11px;font-weight:600;">⚠️ Yêu cầu hủy: "${l.cancel_reason}"</span>`;
+        btns+=`<span style="color:#f0a500;font-size:11px;font-weight:600;padding:4px 10px;background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.2);border-radius:5px;">⚠️ Yêu cầu hủy: "${l.cancel_reason}"</span>`;
         if(isApprovable){
           btns+=`<button class="btn-approve" onclick="handleCancelReq(${idx},'approved')" style="background:rgba(239,83,80,.12);border-color:rgba(239,83,80,.3);color:#ef5350;">✓ Chấp nhận hủy</button>
                  <button class="btn-reject" onclick="handleCancelReq(${idx},'rejected')">✗ Giữ nguyên</button>`;
         }
       } else {
-        // Người nghỉ có thể gửi yêu cầu hủy
-        if(isMine){
+        // Người nghỉ HOẶC Vũ/Đượm đều có thể yêu cầu hủy
+        if(isMine||isLeaveApprover()){
           btns+=`<button class="btn-cancel-req" onclick="openCancelModal(${idx})">🚫 Yêu cầu hủy</button>`;
         }
         btns+=`<span class="leave-status" style="${STATUS_CSS[l.status]||''};padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700;">${STATUS_LABEL[l.status]}</span>`;
@@ -951,7 +883,6 @@ function renderLeaves(){
   </div>`;
 }
 
-// ============ LEAVE ACTIONS ============
 async function approveLeave(idx,status){
   if(!isLeaveApprover()){alert('Không có quyền!');return;}
   const l=_leaves[idx];if(!l)return;
@@ -996,14 +927,12 @@ async function handleCancelReq(idx,decision){
   if(!isLeaveApprover())return;
   const l=_leaves[idx];if(!l)return;
   if(decision==='approved'){
-    // Chấp nhận hủy: status→cancelled, hoàn trả phép
     try{
       await sbPatch('leaves',{status:'cancelled',cancel_requested:false,action_by:_email,action_at:new Date().toISOString()},{id:l._id});
       _leaves.splice(idx,1);
       renderLeaves();renderEmployees();updateStats();
     }catch(e){alert('Lỗi: '+e.message);}
   }else{
-    // Từ chối hủy: xóa cancel_request
     try{
       await sbPatch('leaves',{cancel_requested:false,cancel_reason:''},{id:l._id});
       l.cancel_requested=false;l.cancel_reason='';
@@ -1012,11 +941,9 @@ async function handleCancelReq(idx,decision){
   }
 }
 
-// ============ SUBMIT LEAVE ============
 function openLeaveModal(){
   const s=document.getElementById('leaveEmp');
   s.innerHTML=_emps.map(e=>`<option value="${e.ma}">${e.ten} (${e.ma})</option>`).join('');
-  // Pre-select mình nếu không phải admin
   if(!isAdmin()){const mine=_emps.find(e=>e.email===_email);if(mine)s.value=mine.ma;}
   onLeaveEmpChange();
   document.getElementById('leaveModal').classList.remove('hidden');
@@ -1050,29 +977,19 @@ function onLeaveEmpChange(){
   }
   onLeaveTypeChange();
 }
-
 function onLeaveTypeChange(){
   const type=document.getElementById('leaveType').value;
   const dg=document.getElementById('durationGroup');
   const toRow=document.getElementById('leaveTo')?.closest('.form-row');
-  if(type==='late'){
-    if(dg)dg.style.display='none';
-    if(toRow)toRow.style.opacity='0.4';
-  }else{
-    if(dg)dg.style.display='';
-    if(toRow)toRow.style.opacity='1';
-  }
+  if(type==='late'){if(dg)dg.style.display='none';if(toRow)toRow.style.opacity='0.4';}
+  else{if(dg)dg.style.display='';if(toRow)toRow.style.opacity='1';}
   onLeaveDateChange();
 }
-
 function onLeaveDateChange(){
   const from=document.getElementById('leaveFrom').value;
   const type=document.getElementById('leaveType')?.value||'annual';
   const infoEl=document.getElementById('leaveDaysInfo');
-  if(type==='late'){
-    infoEl.innerHTML=`⚠️ Ghi nhận đi trễ ngày <strong>${from||'chưa chọn'}</strong> — không trừ ngày phép.`;
-    return;
-  }
+  if(type==='late'){infoEl.innerHTML=`⚠️ Ghi nhận đi trễ ngày <strong>${from||'chưa chọn'}</strong> — không trừ ngày phép.`;return;}
   const to=document.getElementById('leaveTo').value||from;
   if(!from){infoEl.textContent='';return;}
   const duration=parseFloat(document.getElementById('leaveDuration')?.value)||1;
@@ -1086,7 +1003,6 @@ function onLeaveDateChange(){
   const halfNote=duration<1?' (nửa ngày)':'';
   infoEl.innerHTML=`Nghỉ: <strong>${days} ngày${halfNote}</strong> · Sau khi nghỉ còn: <strong style="color:${color};">${afterBalance.toFixed(1)} ngày</strong>${afterBalance<0?' ⚠️ Vượt phép — tính không lương':''}`;
 }
-
 async function submitLeave(){
   const from=document.getElementById('leaveFrom').value;
   if(!from){alert('Chọn ngày!');return;}
@@ -1102,12 +1018,9 @@ async function submitLeave(){
   const bal=getLeaveBalance(ma);
   const calDays=Math.round((new Date(to)-new Date(from))/86400000)+1;
   const days=type==='late'?0:duration<1?0.5:calDays;
-  // Block annual for probation; auto force unpaid nếu hết phép
   let finalType=type;
   if(isProbation&&type==='annual'){alert('Nhân viên thử việc không có phép năm.');return;}
-  if(!isProbation&&type==='annual'){
-    if(bal.remaining<=0){finalType='unpaid';alert('Hết phép — chuyển sang Không lương.');}
-  }
+  if(!isProbation&&type==='annual'){if(bal.remaining<=0){finalType='unpaid';alert('Hết phép — chuyển sang Không lương.');}}
   const reason=document.getElementById('leaveReason').value.trim()||'Không có lý do';
   const note=duration<1?'Nửa ngày':'';
   const leave={ma,empName,from,to,type:finalType,duration:days,reason:reason+(note?' ('+note+')':''),status:'pending',cancel_requested:false,cancel_reason:'',actionBy:'',actionAt:'',sentAt:new Date().toLocaleString('vi-VN')};
@@ -1116,17 +1029,13 @@ async function submitLeave(){
     leave._id=res[0]?.id;
     _leaves.push(leave);
     closeModal('leaveModal');renderLeaves();updateStats();
-    const typeLabel=TYPE_LABEL[finalType]||finalType;
-    const daysLabel=finalType==='late'?'đi trễ':`${days} ngày`;
-    alert(`✅ Đã gửi đơn ${typeLabel} ${daysLabel} — chờ duyệt.`);
+    alert(`✅ Đã gửi đơn ${TYPE_LABEL[finalType]||finalType} ${days} ngày — chờ duyệt.`);
   }catch(e){alert('Lỗi: '+e.message);}
 }
 
-// ============ MODALS ============
 function closeModal(id){document.getElementById(id).classList.add('hidden');}
 document.querySelectorAll('.modal-backdrop').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.add('hidden');}));
 
-// ============ TAB ============
 function switchTab(name,btn){
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -1141,16 +1050,15 @@ function switchTab(name,btn){
   }
 }
 
-// ============ EMP SELECTS ============
 function initEmpSelects(){
   const s=document.getElementById('empSelect');
   while(s.options.length>1)s.remove(1);
   _emps.forEach(e=>s.appendChild(new Option(`${e.ten} (${e.ma})`,e.ma)));
   s.addEventListener('change',renderAttendance);
   populateCheckinSel();
+  document.getElementById('checkinEmpSel').addEventListener('change',onEmpSelect);
 }
 
-// ============ INIT ============
 async function init(){
   await loadAll();
   await initAuth();
