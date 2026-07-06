@@ -320,7 +320,7 @@ select option{background:#071828;color:#fff;}
 <!-- MODAL ĐIỀU CHỈNH SỐ DƯ PHÉP -->
 <div class="modal-backdrop hidden" id="adjustModal">
   <div class="modal">
-    <h3>✏️ Điều chỉnh số dư phép</h3>
+    <h3>✏️ Sửa loại NV & ngày phép</h3>
     <div id="adjustEmpName" style="font-size:13px;color:var(--muted);margin-bottom:16px;"></div>
     <div class="info-box">
       Công thức: <strong>Tích lũy theo tháng</strong> (tháng 1=1, tháng 6=6, tháng 12=12) − <strong>Ngày đã dùng trước TTDCore</strong> − <strong>Ngày dùng qua hệ thống</strong> = Số dư còn lại.<br>
@@ -552,7 +552,7 @@ function renderEmployees(){
           ${todayRec?`<div class="emp-info-col">⏱<span style="color:var(--teal);">${todayRec.checkin||'—'} → ${todayRec.checkout||'—'}</span></div>`:''}
         </div>
         <div class="emp-actions">
-          ${canAdjustLeave()?`<button onclick="openAdjustModal('${e.ma}','${e.ten}')" style="background:rgba(0,191,165,.08);border:1px solid rgba(0,191,165,.2);color:var(--teal);border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer;" title="Điều chỉnh phép">✏️ Phép</button>`:''}
+          ${canAdjustLeave()?`<button onclick="openAdjustModal('${e.ma}','${e.ten}')" style="background:rgba(0,191,165,.08);border:1px solid rgba(0,191,165,.2);color:var(--teal);border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer;" title="Sửa loại NV & ngày phép">✏️ Sửa</button>`:''}
           ${isSuperAdmin()?`<button onclick="deleteEmployee('${e.ma}','${e.ten}')" style="background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.2);color:#ef5350;border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer;" title="Xóa">🗑</button>`:''}
         </div>
       </div>
