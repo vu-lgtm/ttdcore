@@ -610,6 +610,7 @@ body {
 }
 .section-edit-btn:hover { border-color: var(--gold); color: var(--gold); }
 .section-edit-btn.saving { border-color: var(--green); color: var(--green); }
+.doc-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px;
@@ -1104,14 +1105,16 @@ async function saveContracts() {
   }
 }
 
-async function deleteContract(contractId) {
+async function deleteRemoteContract(contractId) {
   try {
     const res = await fetch(`${SB_URL}/rest/v1/logistics_contracts?contract_id=eq.${encodeURIComponent(contractId)}`, {
       method: 'DELETE', headers: SB_H
     });
     if (!res.ok) throw new Error(await res.text());
+    return true;
   } catch(e) {
     toast('⚠ Lỗi xóa: ' + e.message, 'warn');
+    return false;
   }
 }
 let activeId = null;
@@ -1833,10 +1836,12 @@ function updateKPIs() {
 }
 
 // ── DELETE CONTRACT ───────────────────
-function deleteContract(id) {
+async function deleteContract(id) {
+  if (!id) return;
   if (!confirm(`Xóa đơn hàng ${id}?\nHành động này không thể hoàn tác.`)) return;
+  const deleted = await deleteRemoteContract(id);
+  if (!deleted) return;
   contracts = contracts.filter(c => c.id !== id);
-  saveContracts();
   updateKPIs();
   if (activeId === id) {
     activeId = null;
@@ -1854,9 +1859,9 @@ async function init() {
   await loadContracts();
   updateKPIs();
   renderSidebar();
+  if (contracts.length > 0) selectContract(contracts[0].id);
 }
 init();
-if (contracts.length > 0) selectContract(contracts[0].id);
 </script>
 </body>
 </html>
