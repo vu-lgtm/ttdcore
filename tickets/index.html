@@ -180,6 +180,15 @@ select option{background:#071828;color:#fff;}
       <option value="medium">🟡 Trung bình</option>
       <option value="low">🟢 Thấp</option>
     </select>
+    <select class="filter-sel" id="filterDept" onchange="renderTickets()">
+      <option value="">Tất cả phòng ban</option>
+          <option value="Sale">Sale</option>
+          <option value="Sale Admin">Sale Admin</option>
+          <option value="Kế Toán">Kế Toán</option>
+          <option value="Thu Mua">Thu Mua</option>
+          <option value="Logistics">Logistics</option>
+          <option value="Ban Giám Đốc">Ban Giám Đốc</option>
+    </select>
     <button class="add-btn" onclick="openCreateModal()">＋ Tạo yêu cầu</button>
   </div>
 
@@ -214,6 +223,18 @@ select option{background:#071828;color:#fff;}
           <option value="low">🟢 Thấp</option>
         </select>
       </div>
+    </div>
+    <div class="form-group">
+      <label>Phòng ban *</label>
+      <select id="fDept">
+        <option value="">-- Chọn phòng ban --</option>
+          <option value="Sale">Sale</option>
+          <option value="Sale Admin">Sale Admin</option>
+          <option value="Kế Toán">Kế Toán</option>
+          <option value="Thu Mua">Thu Mua</option>
+          <option value="Logistics">Logistics</option>
+          <option value="Ban Giám Đốc">Ban Giám Đốc</option>
+      </select>
     </div>
     <div class="form-group">
       <label>Mô tả chi tiết</label>
@@ -345,17 +366,19 @@ function renderTickets(){
   const search=document.querySelector('.search-box').value.toLowerCase();
   const typeF=document.getElementById('filterType').value;
   const prioF=document.getElementById('filterPriority').value;
+  const deptF=document.getElementById('filterDept')?.value||'';
 
   let filtered=_tickets.filter(t=>{
     const ms=!search||(t.title||'').toLowerCase().includes(search)||(t.description||'').toLowerCase().includes(search)||(t.code||'').toLowerCase().includes(search)||(t.created_by_name||'').toLowerCase().includes(search);
     const mt=!typeF||t.type===typeF;
     const mp=!prioF||t.priority===prioF;
+    const md=!deptF||t.dept===deptF;
     let mst=true;
     if(_statusFilter!=='all'){
       if(_statusFilter==='approved')mst=t.status==='approved'||t.status==='done';
       else mst=t.status===_statusFilter;
     }
-    return ms&&mt&&mp&&mst;
+    return ms&&mt&&mp&&md&&mst;
   });
 
   const list=document.getElementById('ticketList');
@@ -390,12 +413,14 @@ function renderTickets(){
         <div style="display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;">
           <span class="badge b-${t.priority}">${PRIORITY_LABEL[t.priority]||t.priority}</span>
           <span class="badge b-${t.status}">${STATUS_LABEL[t.status]||t.status}</span>
+          ${t.dept?`<span class="badge" style="background:rgba(255,255,255,.06);color:var(--muted);">🏢 ${t.dept}</span>`:''}
         </div>
       </div>
       ${t.description?`<div class="tc-desc">${t.description}</div>`:''}
       <div class="tc-footer">
         <div class="tc-meta">
           <span class="badge b-${t.type}">${TYPE_LABEL[t.type]||t.type}</span>
+          ${t.dept?`<span class="badge" style="background:rgba(255,255,255,.06);color:var(--muted);">🏢 ${t.dept}</span>`:''}
           <span>📅 ${date}</span>
           ${t.attachment_url?`<a href="${t.attachment_url}" target="_blank" onclick="event.stopPropagation()" style="color:var(--teal);font-size:11px;text-decoration:none;">📎 ${t.attachment_name||'Link'}</a>`:''}
         </div>
@@ -534,6 +559,7 @@ async function createTicket(){
     title,
     type:document.getElementById('fType').value,
     priority:document.getElementById('fPriority').value,
+    dept:document.getElementById('fDept').value||'',
     description:document.getElementById('fDesc').value.trim()||null,
     attachment_url:document.getElementById('fUrl').value.trim()||null,
     attachment_name:document.getElementById('fUrlName').value.trim()||null,
@@ -548,6 +574,7 @@ async function createTicket(){
     closeModal('createModal');
     // Clear form
     ['fTitle','fDesc','fUrl','fUrlName'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('fDept').value='';
     updateStats();renderTickets();
     alert(`✅ Đã gửi yêu cầu ${code} — chờ quản lý duyệt.`);
   }catch(e){alert('Lỗi: '+e.message);}
