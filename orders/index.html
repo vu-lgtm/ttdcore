@@ -958,134 +958,154 @@ function renderPaymentSection() {
 function renderParentPaymentSection() {
   const o = currentOrder, p = o.payment || {}, canEdit = canEditPayment(), dis = canEdit ? '' : 'disabled';
   const cur = p.currency || 'USD';
-  const curOptions = CURRENCIES.map(c => `<option value="${c}" ${cur === c ? 'selected' : ''}>${c}</option>`).join('');
+  const curOptions = CURRENCIES.map(c => `<option value="${c}" ${cur===c?'selected':''}>${c}</option>`).join('');
   const total = parseFloat(p.total) || 0;
   const deposit = parseFloat(p.deposit) || 0;
   const depositDate = p.depositDate || '';
   const receivedDeposit = p.receivedDeposit || false;
   const fmt = n => n > 0 ? Number(n).toLocaleString('vi-VN') : '—';
-  const pct = total > 0 ? Math.round((deposit / total) * 100) : 0;
 
-  // Tổng hợp từ con (lấy từ allOrders cache)
-  const kids = allOrders.filter(k => k.parent_order_id === o.id);
-  const sumChildTotal = kids.reduce((s, k) => s + (parseFloat(k.payment?.total) || 0), 0);
-  const sumChildReceived = kids.reduce((s, k) => {
-    const kp = k.payment || {};
-    return s + (kp.receivedFull ? (parseFloat(kp.total) || 0) : 0);
-  }, 0);
+  // Tổng hợp từ con
+  const kids = allOrders.filter(k => k.parent_order_id === o.id)
+    .sort((a,b) => (a.shipment_no||0)-(b.shipment_no||0));
+  const sumChildReceived = kids.reduce((s,k) => s + (k.payment?.receivedFull ? (parseFloat(k.payment?.total)||0) : 0), 0);
   const totalReceived = (receivedDeposit ? deposit : 0) + sumChildReceived;
   const remaining = Math.max(0, total - totalReceived);
+  const pct = total > 0 ? Math.round((totalReceived / total) * 100) : 0;
   const diff = totalReceived > 0 ? totalReceived - total : null;
-  const diffColor = diff === null ? 'var(--text-muted)' : diff > 0 ? 'var(--text-success)' : diff < 0 ? 'var(--text-danger)' : 'var(--text-success)';
-  const diffLabel = diff === null ? '—' : diff > 0 ? `+${diff.toLocaleString('vi-VN')} (dư)` : diff < 0 ? `${diff.toLocaleString('vi-VN')} (thiếu)` : '0 (khớp)';
+  const diffLabel = diff===null ? '' : diff>0 ? `+${diff.toLocaleString('vi-VN')} (dư)` : diff<0 ? `${diff.toLocaleString('vi-VN')} (thiếu)` : '✓ khớp';
+  const diffColor = diff===null ? '' : diff>0 ? '#2e7d32' : diff<0 ? '#c0392b' : '#2e7d32';
 
-  // Bảng từng lần giao
   const kidRows = kids.length === 0
-    ? `<tr><td colspan="4" style="padding:12px;text-align:center;font-size:12px;color:var(--text-muted);">Chưa có lần giao nào</td></tr>`
-    : kids.sort((a, b) => (a.shipment_no || 0) - (b.shipment_no || 0)).map(k => {
+    ? `<tr><td colspan="4" style="padding:14px;text-align:center;font-size:12px;color:#aaa;">Chưa có lần giao nào</td></tr>`
+    : kids.map(k => {
         const kp = k.payment || {};
         const kTotal = parseFloat(kp.total) || 0;
-        const kReceived = kp.receivedFull ? kTotal : 0;
-        const kPct = kTotal > 0 ? Math.round((kReceived / kTotal) * 100) : 0;
         const badge = kp.receivedFull
-          ? `<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--bg-success);color:var(--text-success);font-weight:600;">✓ Đã TT đủ</span>`
-          : `<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--surface-1);color:var(--text-muted);border:1px solid var(--border);">Chưa TT</span>`;
-        return `<tr style="border-bottom:1px solid var(--border);" onclick="openOrder('${k.id}')" class="child-row">
-          <td style="padding:8px 12px;font-size:12px;font-weight:600;color:var(--text-accent);">
-            <span style="font-size:10px;background:var(--text-accent);color:white;padding:1px 6px;border-radius:6px;margin-right:4px;">L${String(k.shipment_no||'?').padStart(2,'0')}</span>
-            ${k.shipment_month || '—'}
+          ? `<span style="font-size:11px;padding:3px 10px;border-radius:20px;background:#e8f5e9;color:#2e7d32;font-weight:600;border:1px solid #c8e6c9;">✓ Đã TT đủ</span>`
+          : `<span style="font-size:11px;padding:3px 10px;border-radius:20px;background:#f5f5f5;color:#888;font-weight:500;border:1px solid #e0e0e0;">Chưa TT</span>`;
+        return `<tr style="border-bottom:1px solid #f0f0f0;cursor:pointer;" onclick="openOrder('${k.id}')"
+          onmouseover="this.style.background='#f8f8ff'" onmouseout="this.style.background=''">
+          <td style="padding:11px 14px;">
+            <span style="font-size:11px;background:#667eea;color:white;padding:2px 8px;border-radius:10px;font-weight:600;margin-right:6px;">L${String(k.shipment_no||'?').padStart(2,'0')}</span>
+            <span style="font-size:13px;color:#333;">${k.shipment_month||'—'}</span>
           </td>
-          <td style="padding:8px 12px;font-size:12px;">${k.shipment_qty || '—'}</td>
-          <td style="padding:8px 12px;font-size:12px;">${kTotal > 0 ? kTotal.toLocaleString('vi-VN') + ' ' + cur : '—'}</td>
-          <td style="padding:8px 12px;">${badge}</td>
+          <td style="padding:11px 14px;font-size:13px;color:#555;">${k.shipment_qty||'—'}</td>
+          <td style="padding:11px 14px;font-size:13px;font-weight:600;color:#333;">${kTotal>0 ? kTotal.toLocaleString('vi-VN')+' '+cur : '—'}</td>
+          <td style="padding:11px 14px;">${badge}</td>
         </tr>`;
       }).join('');
 
   return `<div class="payment-section">
-    <div class="payment-header">💰 Thanh toán tổng hợp ${!canEdit ? '<span style="font-size:11px;color:var(--text-danger);font-weight:400;">🔒 chỉ Admin / Kế toán</span>' : ''}</div>
+    <div class="payment-header" style="display:flex;align-items:center;justify-content:space-between;">
+      <span>💰 Thanh toán tổng hợp</span>
+      ${!canEdit ? '<span style="font-size:11px;color:#c0392b;font-weight:400;">🔒 chỉ Admin / Kế toán</span>' : ''}
+    </div>
     <div class="payment-body">
 
       <!-- Tiền tệ -->
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;">
-        <label style="font-size:12px;color:var(--text-secondary);">Tiền tệ:</label>
-        <select id="p_currency" ${dis} onchange="calcParentPayment()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;background:var(--surface-2);">${curOptions}</select>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
+        <label style="font-size:13px;color:#555;font-weight:500;">Tiền tệ:</label>
+        <select id="p_currency" ${dis} onchange="calcParentPayment()"
+          style="padding:7px 12px;border:2px solid #e0e0e0;border-radius:8px;font-size:13px;font-weight:600;background:white;cursor:pointer;">
+          ${curOptions}
+        </select>
       </div>
 
-      <!-- Tổng HĐ + Deposit -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-        <div style="background:var(--surface-1);border:1px solid var(--border);border-radius:8px;padding:14px;">
-          <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;font-weight:500;">📋 Tổng giá trị hợp đồng</div>
-          <input type="number" id="p_total_input" value="${p.total != null ? p.total : ''}" placeholder="0" ${dis}
+      <!-- Tổng HĐ + Deposit: 2 cột đều nhau -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+
+        <!-- Tổng HĐ -->
+        <div style="border:2px solid #e0e0e0;border-radius:10px;padding:16px;background:#fafafa;">
+          <div style="font-size:12px;color:#888;font-weight:500;margin-bottom:10px;">📋 Tổng giá trị hợp đồng</div>
+          <input type="number" id="p_total_input" value="${p.total!=null?p.total:''}" placeholder="0" ${dis}
             oninput="calcParentPayment()"
-            style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:16px;font-weight:600;box-sizing:border-box;background:var(--surface-2);color:var(--text-primary);">
-          <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Tổng giá trị toàn bộ hợp đồng</div>
+            style="width:100%;padding:10px 12px;border:2px solid ${canEdit?'#e0e0e0':'#f0f0f0'};border-radius:8px;font-size:18px;font-weight:700;color:#333;background:${canEdit?'white':'#f5f5f5'};box-sizing:border-box;">
         </div>
-        <div style="background:var(--surface-1);border:1px solid var(--border);border-radius:8px;padding:14px;">
-          <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;font-weight:500;">💵 Deposit (đặt cọc trước)</div>
-          <input type="number" id="p_deposit" value="${p.deposit != null ? p.deposit : ''}" placeholder="0" ${dis}
+
+        <!-- Deposit -->
+        <div style="border:2px solid #e0e0e0;border-radius:10px;padding:16px;background:#fafafa;">
+          <div style="font-size:12px;color:#888;font-weight:500;margin-bottom:10px;">💵 Deposit (đặt cọc)</div>
+          <input type="number" id="p_deposit" value="${p.deposit!=null?p.deposit:''}" placeholder="0" ${dis}
             oninput="calcParentPayment()"
-            style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;box-sizing:border-box;background:var(--surface-2);color:var(--text-primary);">
-          <div style="display:flex;align-items:center;gap:6px;margin-top:8px;">
-            <label style="font-size:11px;color:var(--text-muted);white-space:nowrap;">Ngày nhận:</label>
+            style="width:100%;padding:10px 12px;border:2px solid ${canEdit?'#e0e0e0':'#f0f0f0'};border-radius:8px;font-size:18px;font-weight:700;color:#333;background:${canEdit?'white':'#f5f5f5'};box-sizing:border-box;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <label style="font-size:12px;color:#888;white-space:nowrap;">Ngày nhận:</label>
             <input type="date" id="p_depositDate" value="${depositDate}" ${dis}
-              style="flex:1;padding:4px 6px;border:1.5px solid var(--border);border-radius:5px;font-size:11px;background:var(--surface-2);color:var(--text-primary);">
+              style="flex:1;padding:5px 8px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:12px;background:white;">
           </div>
         </div>
       </div>
 
-      <!-- Đã nhận deposit checkbox -->
-      <div style="background:${receivedDeposit ? 'var(--bg-success)' : 'var(--surface-1)'};border:1px solid ${receivedDeposit ? 'var(--border-success)' : 'var(--border)'};border-radius:8px;padding:12px 14px;margin-bottom:14px;">
-        <label style="display:flex;align-items:center;gap:10px;cursor:${canEdit ? 'pointer' : 'not-allowed'};">
-          <input type="checkbox" id="p_receivedDeposit" ${receivedDeposit ? 'checked' : ''} ${dis}
-            style="width:18px;height:18px;accent-color:#43a047;flex-shrink:0;" onchange="calcParentPayment()">
+      <!-- Checkbox đã nhận deposit — full width rõ ràng -->
+      <div style="border:2px solid ${receivedDeposit?'#a5d6a7':'#e0e0e0'};border-radius:10px;padding:14px 18px;
+                  background:${receivedDeposit?'#f1f8e9':'white'};margin-bottom:16px;cursor:${canEdit?'pointer':'default'};"
+           onclick="${canEdit ? "document.getElementById('p_receivedDeposit').click()" : ''}">
+        <label style="display:flex;align-items:center;gap:12px;cursor:${canEdit?'pointer':'not-allowed'};">
+          <input type="checkbox" id="p_receivedDeposit" ${receivedDeposit?'checked':''} ${dis}
+            style="width:20px;height:20px;accent-color:#43a047;flex-shrink:0;" onchange="calcParentPayment()"
+            onclick="event.stopPropagation()">
           <div>
-            <div style="font-size:13px;font-weight:600;color:${receivedDeposit ? 'var(--text-success)' : 'var(--text-primary)'};">✅ Đã nhận deposit</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${depositDate || 'Chưa xác nhận ngày'}</div>
+            <div style="font-size:14px;font-weight:600;color:${receivedDeposit?'#2e7d32':'#444'};">
+              ${receivedDeposit?'✅':'⬜'} Đã nhận deposit
+            </div>
+            <div style="font-size:12px;color:#888;margin-top:2px;">
+              ${depositDate ? `Ngày: ${depositDate}` : 'Chưa xác nhận ngày nhận'}
+              ${deposit>0 ? ` · ${fmt(deposit)} ${cur}` : ''}
+            </div>
           </div>
         </label>
       </div>
 
-      <!-- Summary bar -->
-      <div style="background:var(--surface-1);border:1.5px solid var(--border-accent);border-radius:8px;padding:14px;margin-bottom:14px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;text-align:center;">
-          <div>
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Tổng HĐ</div>
-            <div style="font-size:15px;font-weight:600;color:var(--text-primary);" id="p_total_display">${fmt(total)} <span style="font-size:11px;font-weight:400;">${cur}</span></div>
+      <!-- Summary 4 ô -->
+      <div style="border:2px solid #e8e8f8;border-radius:10px;overflow:hidden;margin-bottom:14px;background:#f9f8ff;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-bottom:1px solid #e8e8f8;">
+          <div style="padding:14px;border-right:1px solid #e8e8f8;">
+            <div style="font-size:11px;color:#888;margin-bottom:6px;font-weight:500;">TỔNG HĐ</div>
+            <div style="font-size:16px;font-weight:700;color:#333;" id="p_total_display">${fmt(total)}</div>
+            <div style="font-size:11px;color:#aaa;margin-top:2px;">${cur}</div>
           </div>
-          <div>
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Deposit nhận</div>
-            <div style="font-size:15px;font-weight:600;color:var(--text-accent);" id="p_dep_display">${receivedDeposit ? fmt(deposit) : '—'} <span style="font-size:11px;font-weight:400;">${receivedDeposit ? cur : ''}</span></div>
+          <div style="padding:14px;border-right:1px solid #e8e8f8;">
+            <div style="font-size:11px;color:#888;margin-bottom:6px;font-weight:500;">DEPOSIT ĐÃ NHẬN</div>
+            <div style="font-size:16px;font-weight:700;color:#667eea;" id="p_dep_display">${receivedDeposit?fmt(deposit):'—'}</div>
+            <div style="font-size:11px;color:#aaa;margin-top:2px;">${receivedDeposit?cur:''}</div>
           </div>
-          <div>
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Từng lần đã TT</div>
-            <div style="font-size:15px;font-weight:600;color:var(--text-success);" id="p_child_display">${fmt(sumChildReceived)} <span style="font-size:11px;font-weight:400;">${sumChildReceived > 0 ? cur : ''}</span></div>
+          <div style="padding:14px;border-right:1px solid #e8e8f8;">
+            <div style="font-size:11px;color:#888;margin-bottom:6px;font-weight:500;">TỪNG LẦN ĐÃ TT</div>
+            <div style="font-size:16px;font-weight:700;color:#2e7d32;" id="p_child_display">${fmt(sumChildReceived)}</div>
+            <div style="font-size:11px;color:#aaa;margin-top:2px;">${sumChildReceived>0?cur:''}</div>
           </div>
-          <div>
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Còn lại</div>
-            <div style="font-size:15px;font-weight:600;color:var(--text-danger);" id="p_rem_display">${fmt(remaining)} <span style="font-size:11px;font-weight:400;">${remaining > 0 ? cur : ''}</span></div>
+          <div style="padding:14px;">
+            <div style="font-size:11px;color:#888;margin-bottom:6px;font-weight:500;">CÒN LẠI</div>
+            <div style="font-size:16px;font-weight:700;color:${remaining>0?'#c0392b':'#2e7d32'};" id="p_rem_display">${fmt(remaining)}</div>
+            <div style="font-size:11px;color:#aaa;margin-top:2px;">${remaining>0?cur:''}</div>
           </div>
         </div>
-        <div style="width:100%;height:6px;background:var(--border);border-radius:3px;margin-top:12px;overflow:hidden;">
-          <div id="p_bar" style="height:100%;background:linear-gradient(90deg,#667eea,#764ba2);border-radius:3px;transition:width 0.3s;width:${total > 0 ? Math.round((totalReceived / total) * 100) : 0}%"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:5px;">
-          <span id="p_pct_label">Đã nhận: ${total > 0 ? Math.round((totalReceived / total) * 100) : 0}%</span>
-          <span style="color:${diffColor};" id="p_diff_display">${diffLabel}</span>
+        <!-- Progress bar row -->
+        <div style="padding:10px 14px;background:white;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:#666;margin-bottom:6px;">
+            <span id="p_pct_label" style="font-weight:600;">Đã nhận: ${pct}%</span>
+            <span style="color:${diffColor};font-weight:600;" id="p_diff_display">${diffLabel}</span>
+          </div>
+          <div style="height:8px;background:#eee;border-radius:4px;overflow:hidden;">
+            <div id="p_bar" style="height:100%;background:linear-gradient(90deg,#667eea,#764ba2);border-radius:4px;transition:width 0.4s;width:${pct}%"></div>
+          </div>
         </div>
       </div>
 
       <!-- Bảng từng lần giao -->
-      <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:${canEdit ? '14' : '0'}px;">
-        <div style="padding:8px 12px;background:var(--surface-1);font-size:12px;font-weight:600;color:var(--text-secondary);border-bottom:1px solid var(--border);">
-          Thanh toán từng lần giao <span style="font-weight:400;color:var(--text-muted);">(click vào lần để cập nhật)</span>
+      <div style="border:2px solid #e0e0e0;border-radius:10px;overflow:hidden;margin-bottom:${canEdit?'14':'0'}px;">
+        <div style="padding:10px 14px;background:#f8f9fc;border-bottom:2px solid #e0e0e0;display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:13px;font-weight:600;color:#333;">Thanh toán từng lần giao</span>
+          <span style="font-size:12px;color:#888;">Click vào lần giao để cập nhật →</span>
         </div>
         <table style="width:100%;border-collapse:collapse;">
           <thead>
-            <tr style="background:var(--surface-0);">
-              <th style="padding:6px 12px;text-align:left;font-size:11px;color:var(--text-muted);font-weight:600;">Lần giao</th>
-              <th style="padding:6px 12px;text-align:left;font-size:11px;color:var(--text-muted);font-weight:600;">Số lượng</th>
-              <th style="padding:6px 12px;text-align:left;font-size:11px;color:var(--text-muted);font-weight:600;">Giá trị</th>
-              <th style="padding:6px 12px;text-align:left;font-size:11px;color:var(--text-muted);font-weight:600;">Trạng thái</th>
+            <tr style="background:#f8f9fc;">
+              <th style="padding:8px 14px;text-align:left;font-size:11px;color:#888;font-weight:600;border-bottom:1px solid #eee;">Lần giao</th>
+              <th style="padding:8px 14px;text-align:left;font-size:11px;color:#888;font-weight:600;border-bottom:1px solid #eee;">Số lượng</th>
+              <th style="padding:8px 14px;text-align:left;font-size:11px;color:#888;font-weight:600;border-bottom:1px solid #eee;">Giá trị</th>
+              <th style="padding:8px 14px;text-align:left;font-size:11px;color:#888;font-weight:600;border-bottom:1px solid #eee;">Trạng thái</th>
             </tr>
           </thead>
           <tbody>${kidRows}</tbody>
@@ -1093,11 +1113,12 @@ function renderParentPaymentSection() {
       </div>
 
       ${canEdit ? `<div style="display:flex;justify-content:flex-end;">
-        <button class="btn btn-primary" onclick="saveParentPayment()" style="padding:8px 20px;font-size:13px;">💾 Lưu thanh toán</button>
+        <button class="btn btn-primary" onclick="saveParentPayment()" style="padding:10px 24px;font-size:13px;">💾 Lưu thanh toán</button>
       </div>` : ''}
     </div>
   </div>`;
 }
+
 
 // ══════════════════════════════════════════════════════
 // 2. ĐƠN CON — chỉ có Tổng lần giao + Đã nhận đủ
