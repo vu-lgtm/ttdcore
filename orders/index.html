@@ -1119,54 +1119,75 @@ function renderParentPaymentSection() {
 // ══════════════════════════════════════════════════════
 function renderChildPaymentSection() {
   const o = currentOrder, p = o.payment || {}, canEdit = canEditPayment(), dis = canEdit ? '' : 'disabled';
-  const cur = p.currency || (allOrders.find(x => x.id === o.parent_order_id)?.payment?.currency) || 'USD';
+  const parentOrder = allOrders.find(x => x.id === o.parent_order_id);
+  const cur = parentOrder?.payment?.currency || p.currency || 'USD';
   const total = parseFloat(p.total) || 0;
   const receivedFull = p.receivedFull || false;
   const fullDate = p.fullDate || '';
   const fmt = n => n > 0 ? Number(n).toLocaleString('vi-VN') : '—';
+  const parentDeposit = parseFloat(parentOrder?.payment?.deposit) || 0;
+  const parentReceivedDeposit = parentOrder?.payment?.receivedDeposit || false;
 
   return `<div style="border:2px solid #e0e0e0;border-radius:10px;overflow:hidden;margin-top:12px;">
     <div style="padding:12px 16px;background:#f8f9fc;border-bottom:2px solid #e0e0e0;display:flex;align-items:center;justify-content:space-between;">
-      <span style="font-size:14px;font-weight:600;color:#333;">💰 Thanh toán · Lần L${String(o.shipment_no||'?').padStart(2,'0')}</span>
+      <span style="font-size:14px;font-weight:600;color:#333;">
+        💰 Thanh toán · <span style="background:#667eea;color:white;font-size:12px;padding:2px 10px;border-radius:10px;margin-left:4px;">L${String(o.shipment_no||'?').padStart(2,'0')}</span>
+      </span>
       ${!canEdit ? '<span style="font-size:11px;color:#c0392b;">🔒 chỉ Admin / Kế toán</span>' : ''}
     </div>
     <div style="padding:18px;">
 
-      <div style="background:#eef0fc;border-left:3px solid #667eea;border-radius:0 6px 6px 0;padding:10px 14px;margin-bottom:16px;font-size:13px;color:#3f3f8c;">
-        💡 Deposit quản lý ở <strong>đơn tổng hợp</strong>. Tại đây nhập giá trị lần giao và xác nhận khi đã nhận đủ tiền.
-      </div>
+      <!-- Thông tin deposit từ đơn cha -->
+      ${parentOrder ? `<div style="background:#eef0fc;border:1px solid #c5c5e6;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <div style="font-size:13px;color:#3f3f8c;font-weight:500;">📋 Hợp đồng gốc: <strong>${esc(parentOrder.code||'')}</strong></div>
+        <div style="font-size:13px;color:#3f3f8c;">
+          Deposit: <strong>${parentDeposit>0?fmt(parentDeposit)+' '+cur:'—'}</strong>
+          ${parentReceivedDeposit ? '<span style="font-size:11px;background:#d4edda;color:#155724;padding:2px 8px;border-radius:10px;margin-left:6px;font-weight:600;">✓ Đã nhận</span>' : '<span style="font-size:11px;background:#f0f0f0;color:#888;padding:2px 8px;border-radius:10px;margin-left:6px;">Chưa nhận</span>'}
+        </div>
+        <button class="btn-mini" onclick="openOrder('${parentOrder.id}')" style="margin-left:auto;">Xem đơn tổng →</button>
+      </div>` : ''}
 
       <!-- Giá trị lần giao -->
       <div style="border:2px solid #e0e0e0;border-radius:10px;padding:16px;background:#fafafa;margin-bottom:14px;">
-        <div style="font-size:11px;color:#888;font-weight:600;letter-spacing:0.5px;margin-bottom:10px;">📋 GIÁ TRỊ LẦN GIAO NÀY</div>
+        <div style="font-size:11px;color:#888;font-weight:600;letter-spacing:0.5px;margin-bottom:10px;">📦 GIÁ TRỊ LẦN GIAO NÀY</div>
         <div style="display:flex;align-items:center;gap:10px;">
           <input type="number" id="p_total_input" value="${p.total!=null?p.total:''}" placeholder="0" ${dis}
-            style="flex:1;padding:10px 12px;border:2px solid #d0d0d0;border-radius:8px;font-size:20px;font-weight:700;color:#333;background:white;outline:none;">
-          <span style="font-size:14px;font-weight:600;color:#555;white-space:nowrap;">${cur}</span>
+            style="flex:1;padding:10px 12px;border:2px solid #d0d0d0;border-radius:8px;font-size:22px;font-weight:700;color:#333;background:white;outline:none;box-sizing:border-box;">
+          <span style="font-size:15px;font-weight:600;color:#555;white-space:nowrap;background:#f0f0f0;padding:10px 14px;border-radius:8px;">${cur}</span>
         </div>
-        ${o.shipment_month||o.shipment_qty ? `<div style="font-size:12px;color:#888;margin-top:8px;">
-          ${o.shipment_month?'📅 '+o.shipment_month:''}${o.shipment_qty?' · ⚖️ '+o.shipment_qty:''}
+        ${o.shipment_month||o.shipment_qty ? `<div style="display:flex;gap:16px;margin-top:10px;font-size:13px;color:#666;">
+          ${o.shipment_month?`<span>📅 Tháng: <strong>${o.shipment_month}</strong></span>`:''}
+          ${o.shipment_qty?`<span>⚖️ Số lượng: <strong>${o.shipment_qty}</strong></span>`:''}
         </div>` : ''}
       </div>
 
-      <!-- Đã nhận đủ -->
-      <div style="border:2px solid ${receivedFull?'#a5d6a7':'#e0e0e0'};border-radius:10px;padding:16px;background:${receivedFull?'#f1f8e9':'#fafafa'};margin-bottom:${canEdit?'14':'0'}px;">
-        <label style="display:flex;align-items:center;gap:14px;cursor:${canEdit?'pointer':'not-allowed'};">
+      <!-- Đã nhận đủ tiền -->
+      <div style="border:2px solid ${receivedFull?'#a5d6a7':'#e0e0e0'};border-radius:10px;
+                  background:${receivedFull?'#f1f8e9':'#fafafa'};margin-bottom:${canEdit?'14':'0'}px;overflow:hidden;">
+
+        <!-- Header box -->
+        <div style="padding:14px 18px;display:flex;align-items:center;gap:14px;">
           <input type="checkbox" id="p_receivedFull" ${receivedFull?'checked':''} ${dis}
             style="width:22px;height:22px;accent-color:#1976d2;flex-shrink:0;cursor:${canEdit?'pointer':'not-allowed'};">
-          <div>
+          <label for="p_receivedFull" style="cursor:${canEdit?'pointer':'not-allowed'};flex:1;">
             <div style="font-size:15px;font-weight:600;color:${receivedFull?'#155724':'#444'};">
-              ${receivedFull ? '💰 Đã nhận đủ tiền lần này' : '💰 Đã nhận đủ tiền lần này'}
+              ${receivedFull?'💰 Đã nhận đủ tiền lần này':'💰 Đã nhận đủ tiền lần này'}
             </div>
-            <div style="font-size:12px;color:#888;margin-top:4px;">
-              ${receivedFull ? `✓ Đã nhận ${fmt(total)} ${cur}${fullDate?' ngày '+fullDate:''}` : `Tick khi nhận đủ ${fmt(total)||'(chưa nhập)'} ${cur}`}
+            <div style="font-size:12px;color:#888;margin-top:3px;">
+              ${receivedFull
+                ? `✓ Nhận ${total>0?fmt(total)+' '+cur:'đủ'}${fullDate?' · ngày '+fullDate:''}`
+                : `Tick khi nhận đủ ${total>0?fmt(total)+' '+cur:'(nhập giá trị ở trên)'}`}
             </div>
-          </div>
-        </label>
-        <div style="margin-top:12px;padding-top:12px;border-top:1px solid ${receivedFull?'#c8e6c9':'#eeeeee'};display:flex;align-items:center;gap:10px;">
-          <label style="font-size:12px;color:#888;white-space:nowrap;font-weight:500;">Ngày nhận tiền:</label>
+          </label>
+          ${receivedFull ? `<span style="font-size:20px;">✅</span>` : ''}
+        </div>
+
+        <!-- Ngày nhận (luôn hiển thị rõ) -->
+        <div style="padding:12px 18px;background:${receivedFull?'#e8f5e9':'#f5f5f5'};border-top:1px solid ${receivedFull?'#c8e6c9':'#eee'};display:flex;align-items:center;gap:10px;">
+          <label style="font-size:13px;color:#555;font-weight:500;white-space:nowrap;">📅 Ngày nhận tiền:</label>
           <input type="date" id="p_fullDate" value="${fullDate}" ${dis}
-            style="flex:1;padding:6px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;background:white;color:#333;">
+            style="flex:1;max-width:200px;padding:7px 10px;border:2px solid ${receivedFull?'#a5d6a7':'#e0e0e0'};border-radius:8px;font-size:13px;background:white;color:#333;font-weight:${fullDate?'600':'400'};">
+          ${fullDate?`<span style="font-size:13px;color:#2e7d32;font-weight:600;">${fullDate}</span>`:'<span style="font-size:12px;color:#aaa;">Chưa nhập</span>'}
         </div>
       </div>
 
