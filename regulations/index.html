@@ -46,9 +46,9 @@ header{background:var(--dark2);border-bottom:2px solid var(--teal2);padding:14px
 .cat-tab.active{background:rgba(0,191,165,.12);border-color:var(--teal);color:var(--teal);}
 
 /* FILE GRID */
-.file-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
-.file-card{background:var(--dark2);border:1px solid var(--border2);border-radius:10px;padding:18px;transition:border-color .2s,transform .15s;display:flex;flex-direction:column;gap:12px;}
-.file-card:hover{border-color:rgba(0,191,165,.3);transform:translateY(-2px);}
+.file-grid{width:100%;border-collapse:collapse;background:var(--dark2);border-radius:10px;overflow:hidden;border:1px solid var(--border2);}
+.file-card th{background:rgba(0,191,165,.08);padding:11px 16px;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:1px;text-align:left;border-bottom:1px solid var(--border2);}.file-card td{padding:13px 16px;font-size:13px;color:var(--white);border-bottom:1px solid var(--border2);vertical-align:middle;}.file-card tr:last-child td{border-bottom:none;}.file-card tr:hover td{background:rgba(0,191,165,.03);cursor:pointer;}
+
 .file-icon{width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
 .file-icon.pdf{background:rgba(239,83,80,.12);}
 .file-icon.word{background:rgba(21,101,192,.12);}
@@ -99,7 +99,7 @@ select option{background:#071828;}
 
 @media(max-width:768px){
   .stats-row{grid-template-columns:repeat(2,1fr);}
-  .file-grid{grid-template-columns:1fr;}
+
 }
 </style>
 </head>
@@ -148,8 +148,8 @@ select option{background:#071828;}
     <div class="cat-tab" onclick="setCat('other',this)">📁 Khác</div>
   </div>
 
-  <div class="file-grid" id="fileGrid">
-    <div class="loading">⏳ Đang tải...</div>
+  <table class="file-grid" id="fileGrid">
+    <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--muted);">⏳ Đang tải...</td></tr>
   </div>
 </div>
 
@@ -285,35 +285,40 @@ function renderFiles(){
 
   const grid=document.getElementById('fileGrid');
   if(!filtered.length){
-    grid.innerHTML=`<div class="empty" style="grid-column:1/-1;"><div class="empty-ico">📭</div><p>Chưa có tài liệu nào</p></div>`;
+    grid.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:60px;color:var(--muted);"><div style="font-size:40px;margin-bottom:12px;">📭</div><p>Chưa có tài liệu nào</p></td></tr>`;return;
     return;
   }
 
-  grid.innerHTML=filtered.map(f=>{
+  // Add table header
+  const thead=`<thead><tr>
+    <th style="width:40px;"></th>
+    <th>Tên tài liệu</th>
+    <th style="width:140px;">Danh mục</th>
+    <th style="width:120px;">Ngày đăng</th>
+    <th style="width:140px;">Thao tác</th>
+  </tr></thead>`;
+  const rows=filtered.map(f=>{
     const icon=getFileIcon(f.file_type);
     const date=f.created_at?new Date(f.created_at).toLocaleDateString('vi-VN'):'';
-    const delBtn=canDelete(f.uploaded_by_email)?`<button class="btn-delete" onclick="deleteFile('${f.id}','${f.file_path}','${f.title.replace(/'/g,'')}')">🗑</button>`:'';
-    return`<div class="file-card">
-      <div style="display:flex;gap:12px;align-items:flex-start;">
-        <div class="file-icon ${icon.cls}">${icon.ico}</div>
-        <div style="flex:1;min-width:0;">
-          <div class="file-name">${f.title}</div>
-          ${f.description?`<div class="file-desc">${f.description}</div>`:''}
+    const delBtn=canDelete(f.uploaded_by_email)?`<button class="btn-delete" style="padding:5px 10px;font-size:11px;" onclick="event.stopPropagation();deleteFile('${f.id}','${f.file_path}','${f.title.replace(/'/g,'')}')">🗑</button>`:'';
+    return`<tr onclick="downloadFile('${f.file_path}','${f.file_name}')" title="Click để tải xuống">
+      <td><span style="font-size:20px;">${icon.ico}</span></td>
+      <td>
+        <div style="font-family:Montserrat,sans-serif;font-size:13px;font-weight:600;color:var(--white);">${f.title}</div>
+        ${f.description?`<div style="font-size:11px;color:var(--muted);margin-top:3px;">${f.description}</div>`:''}
+        <div style="font-size:11px;color:var(--muted);margin-top:3px;">⬆ ${f.uploaded_by_name} ${f.file_size?'· '+formatSize(f.file_size):''}</div>
+      </td>
+      <td><span class="cat-badge">${CAT_LABEL[f.category]||f.category}</span></td>
+      <td style="font-size:12px;color:var(--muted);">${date}</td>
+      <td>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button class="btn-download" style="padding:6px 12px;font-size:11px;white-space:nowrap;" onclick="event.stopPropagation();downloadFile('${f.file_path}','${f.file_name}')">⬇ Tải xuống</button>
+          ${delBtn}
         </div>
-      </div>
-      <div class="file-meta">
-        <span class="cat-badge">${CAT_LABEL[f.category]||f.category}</span>
-        ${f.file_size?`<span class="file-size-txt">${formatSize(f.file_size)}</span>`:''}
-      </div>
-      <div style="font-size:11px;color:var(--muted);">
-        ⬆ ${f.uploaded_by_name} · 📅 ${date}
-      </div>
-      <div class="file-actions">
-        <button class="btn-download" onclick="downloadFile('${f.file_path}','${f.file_name}')">⬇ Tải xuống</button>
-        ${delBtn}
-      </div>
-    </div>`;
+      </td>
+    </tr>`;
   }).join('');
+  grid.innerHTML=thead+'<tbody>'+rows+'</tbody>';
 }
 
 // ============ DOWNLOAD ============
