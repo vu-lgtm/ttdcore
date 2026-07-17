@@ -3,515 +3,177 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nhận định cà phê · acaphe.com</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<title>Giá cà phê hôm nay 16/7/2026</title>
 <style>
-:root{
-  --bg:#f8f5f0;--paper:#fff;--paper2:#f2ede6;
-  --ink:#1a1612;--muted:#7a7168;--dim:#b5afa6;
-  --border:#e2dbd2;--border2:#cec5ba;
-  --green:#1d6b42;--gbg:#e8f4ee;--gbd:rgba(29,107,66,.2);
-  --red:#8b1f1f;--rbg:#faeaea;--rbd:rgba(139,31,31,.2);
-  --amber:#7a4f00;--abg:#fdf3e0;--abd:rgba(122,79,0,.2);
-  --blue:#1e4d8c;--bbg:#e8f0fb;--bbd:rgba(30,77,140,.2);
-  --accent:#2d5a8e;
-  --fn:'DM Serif Display',serif;--ss:'DM Sans',sans-serif;--mo:'DM Mono',monospace;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--ink);font-family:var(--ss);font-size:13px;line-height:1.6}
-.nav{background:var(--ink);color:#f8f5f0;display:flex;align-items:center;border-bottom:2px solid #333;position:sticky;top:0;z-index:50}
-.nav-logo{font-family:var(--fn);font-size:17px;padding:13px 20px 13px 24px;border-right:1px solid #333;white-space:nowrap}
-.nav-dates{display:flex;flex:1;overflow-x:auto}
-.nd{font-size:11px;padding:13px 15px;cursor:pointer;color:#888;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;font-family:var(--ss);background:transparent;border-top:none;border-left:none;border-right:none;transition:all .15s}
-.nd:hover{color:#f8f5f0;background:rgba(255,255,255,.05)}
-.nd.active{color:#f8f5f0;border-bottom-color:#c8a97e}
-.nav-right{margin-left:auto;padding:0 16px}
-.pb{font-size:11px;padding:5px 12px;background:transparent;color:#888;border:1px solid #444;border-radius:2px;cursor:pointer;font-family:var(--ss)}
-.pb:hover{color:#f8f5f0;border-color:#888}
-.page{max-width:960px;margin:0 auto;padding:32px 24px 80px}
-@media(max-width:600px){.page{padding:18px 14px 60px}}
-
-.mast{border-bottom:1.5px solid var(--ink);padding-bottom:18px;margin-bottom:24px}
-.mast-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
-.mast-ey{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
-.mast-h{font-family:var(--fn);font-size:28px;color:var(--ink);line-height:1.1}
-.mast-s{font-size:11px;color:var(--muted);margin-top:4px}
-.mast-dr{text-align:right;flex-shrink:0}
-.mast-db{font-family:var(--fn);font-size:19px;color:var(--ink)}
-.mast-ds{font-size:10px;color:var(--muted);margin-top:2px}
-
-.pr-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border2);border:1px solid var(--border2);border-radius:3px;overflow:hidden;margin-bottom:10px}
-@media(max-width:580px){.pr-row{grid-template-columns:1fr 1fr}}
-.pr-i{background:var(--paper);padding:11px 13px}
-.pr-l{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
-.pr-p{font-family:var(--mo);font-size:17px;color:var(--ink)}
-.pr-c{font-size:11px;font-weight:500;margin-top:2px;font-family:var(--mo)}
-.pr-u{font-size:10px;color:var(--dim)}
-.cup{color:var(--green)}.cdn{color:var(--red)}.cfl{color:var(--muted)}
-
-.spr{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.si{flex:1;min-width:100px;background:var(--paper2);border:1px solid var(--border);border-radius:3px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:6px}
-.sil{font-size:10px;color:var(--muted)}.sin{font-size:10px;color:var(--dim)}.siv{font-family:var(--mo);font-size:12px;font-weight:500;color:var(--ink);white-space:nowrap}
-
-.sl{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:9px;display:flex;align-items:center;gap:9px}
-.sl::after{content:'';flex:1;height:1px;background:var(--border)}
-.sec{margin-bottom:22px}
-
-.hl{border-radius:3px;padding:10px 13px;margin-bottom:8px;border-left:3px solid}
-.hl-g{background:var(--gbg);border-color:var(--green)}
-.hl-r{background:var(--rbg);border-color:var(--red)}
-.hl-a{background:var(--abg);border-color:var(--amber)}
-.hl-b{background:var(--bbg);border-color:var(--blue)}
-.hh{font-size:10px;letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px}
-.hl-g .hh{color:var(--green)}.hl-r .hh{color:var(--red)}.hl-a .hh{color:var(--amber)}.hl-b .hh{color:var(--blue)}
-.hb{font-size:12.5px;color:var(--ink);line-height:1.75}
-
-.ftbl{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px}
-.ftbl th{font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);padding:6px 9px;border-bottom:1.5px solid var(--border2);text-align:left;white-space:nowrap}
-.ftbl td{padding:6px 9px;border-bottom:1px solid var(--border);vertical-align:middle;font-family:var(--mo);font-size:11.5px}
-.ftbl tr:last-child td{border-bottom:none}
-.ftbl tr.hi td{background:var(--paper2);font-weight:500}
-.ftbl tr.warn td{background:var(--abg)}
-.up{color:var(--green);font-weight:500}.dn{color:var(--red);font-weight:500}
-
-.macro-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px;margin-bottom:12px}
-.macro-item{background:var(--paper);border:1px solid var(--border);border-radius:3px;padding:8px 10px}
-.macro-l{font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
-.macro-v{font-family:var(--mo);font-size:14px;color:var(--ink)}
-.macro-c{font-size:10px;font-family:var(--mo);margin-top:2px}
-
-.stbl{width:100%;border-collapse:collapse}
-.stbl th{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);padding:6px 10px;border-bottom:1.5px solid var(--border2);text-align:left}
-.stbl td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:12px}
-.stbl tr:last-child td{border-bottom:none}
-.stbl tr:hover td{background:var(--paper2)}
-.src{color:var(--dim);font-size:10px;font-family:var(--mo)}
-.tag{display:inline-flex;font-size:10px;padding:2px 7px;border-radius:2px;white-space:nowrap}
-.t-up{background:var(--gbg);color:var(--green);border:1px solid var(--gbd)}
-.t-dn{background:var(--rbg);color:var(--red);border:1px solid var(--rbd)}
-.t-ne{background:var(--paper2);color:var(--muted);border:1px solid var(--border)}
-.t-wa{background:var(--abg);color:var(--amber);border:1px solid var(--abd)}
-
-.score{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
-.sc{flex:1;min-width:80px;background:var(--paper);border:1px solid var(--border);border-radius:3px;padding:9px 11px;text-align:center}
-.scv{font-family:var(--fn);font-size:22px}
-.scl{font-size:9px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-top:2px}
-
-.bc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-@media(max-width:520px){.bc-grid{grid-template-columns:1fr}}
-.bc{background:var(--paper);border:1px solid var(--border);border-radius:3px;padding:11px 13px}
-.bc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
-.bc-code{font-family:var(--mo);font-size:12px;color:var(--ink)}
-.bc-badge{font-size:10px;padding:2px 8px;border-radius:2px}
-.bb-long{background:var(--gbg);color:var(--green);border:1px solid var(--gbd)}
-.bb-short{background:var(--rbg);color:var(--red);border:1px solid var(--rbd)}
-.bb-watch{background:var(--abg);color:var(--amber);border:1px solid var(--abd)}
-.bb-neu{background:var(--paper2);color:var(--muted);border:1px solid var(--border)}
-.bc-rows{display:flex;flex-direction:column;gap:3px}
-.bc-row{display:flex;justify-content:space-between;font-size:11px;padding:2px 0;border-bottom:1px solid var(--border)}
-.bc-row:last-child{border:none}
-.bk{color:var(--muted)}.bv{font-family:var(--mo);color:var(--ink)}
-.bc-note{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.6;border-top:1px solid var(--border);padding-top:5px}
-
-.ab{border:1px solid var(--border);border-radius:3px;margin-bottom:8px;overflow:hidden}
-.ab-head{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--paper2);border-bottom:1px solid var(--border)}
-.ab-p{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.ab-v{font-size:10px;padding:2px 8px;border-radius:2px}
-.av-up{background:var(--gbg);color:var(--green);border:1px solid var(--gbd)}
-.av-dn{background:var(--rbg);color:var(--red);border:1px solid var(--rbd)}
-.av-wa{background:var(--abg);color:var(--amber);border:1px solid var(--abd)}
-.av-bl{background:var(--bbg);color:var(--blue);border:1px solid var(--bbd)}
-.ab-body{padding:11px 13px;background:var(--paper)}
-.ab-body p{font-size:12.5px;line-height:1.8;color:var(--ink);margin-bottom:5px}
-.ab-body p:last-child{margin:0}
-
-.wg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px}
-.wi{background:var(--paper);border:1px solid var(--border);border-radius:3px;padding:9px 11px}
-.wt{font-size:10px;color:var(--accent);margin-bottom:2px;font-family:var(--mo)}
-.we{font-size:12px;color:var(--ink);margin-bottom:2px}
-.wn{font-size:10px;color:var(--muted)}
-
-.cg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-@media(max-width:520px){.cg{grid-template-columns:1fr}}
-.ci{background:var(--paper);border:1px solid var(--border);border-radius:3px;padding:10px 12px}
-.cih{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
-.cib{font-size:12px;line-height:1.75;color:var(--ink)}
-.cib strong{font-weight:500}
-
-.risk{background:var(--abg);border:1px solid var(--abd);border-radius:3px;padding:12px 14px}
-.rh{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin-bottom:7px}
-.rl{list-style:none}
-.rl li{font-size:12px;line-height:1.75;display:flex;gap:7px;margin-bottom:3px}
-.rl li::before{content:'→';color:var(--amber);flex-shrink:0}
-.rl li:last-child{margin:0}
-
-.chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
-.chip{font-size:10px;padding:2px 8px;border-radius:99px;border:1px solid var(--border2);color:var(--muted)}
-.chip.on{border-color:var(--accent);color:var(--accent);background:var(--bbg)}
-
-.alert-box{background:var(--ink);color:var(--paper);border-radius:4px;padding:14px 18px;margin-bottom:16px}
-.alert-box h3{font-family:var(--fn);font-size:18px;margin-bottom:6px;color:#fdf3e0}
-.alert-box p{font-size:12.5px;color:rgba(250,247,242,.8);line-height:1.75}
-.alert-box .mono{font-family:var(--mo);color:#c8a97e;font-size:13px}
-
-.footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.fs{font-size:10px;color:var(--dim);line-height:1.6}
-.fs strong{display:block;font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);margin-bottom:2px}
-.fst{font-family:var(--fn);font-size:12px;color:var(--muted)}
-@media print{.nav{display:none}body{background:white}.page{padding:20px}}
+  :root {
+    --brown-dark: #3b2314;
+    --brown: #6f4e37;
+    --brown-light: #a9785a;
+    --cream: #faf3ea;
+    --green: #2f6b3c;
+    --red: #b3261e;
+    --border: #e2d2c0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--cream);
+    color: var(--brown-dark);
+    line-height: 1.5;
+  }
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+  }
+  header {
+    text-align: center;
+    padding: 24px 12px 20px;
+  }
+  header .icon { font-size: 40px; }
+  h1 {
+    font-size: 1.5rem;
+    margin: 8px 0 4px;
+    color: var(--brown-dark);
+  }
+  .subtitle {
+    color: var(--brown-light);
+    font-size: 0.95rem;
+    margin: 0;
+  }
+  .card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+    box-shadow: 0 1px 3px rgba(59,35,20,0.06);
+  }
+  h2 {
+    font-size: 1.1rem;
+    margin: 0 0 12px;
+    color: var(--brown);
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 8px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+  }
+  th, td {
+    padding: 10px 8px;
+    text-align: left;
+    border: 1px solid var(--border);
+  }
+  th {
+    background: var(--brown);
+    color: #fff;
+    font-weight: 600;
+  }
+  tr:nth-child(even) td { background: #fbf6ef; }
+  td.price { font-weight: 700; text-align: right; }
+  td.center { text-align: center; }
+  .tag-high { color: var(--green); font-weight: 600; }
+  .tag-low { color: var(--red); font-weight: 600; }
+  .change-up { color: var(--green); font-weight: 600; }
+  .change-down { color: var(--red); font-weight: 600; }
+  .context {
+    font-size: 0.95rem;
+    color: var(--brown-dark);
+  }
+  .context strong { color: var(--brown); }
+  footer {
+    margin-top: 12px;
+  }
+  footer h2 { font-size: 1rem; }
+  footer ul {
+    padding-left: 18px;
+    margin: 0;
+    font-size: 0.85rem;
+  }
+  footer li { margin-bottom: 6px; }
+  footer a { color: var(--brown); word-break: break-word; }
+  .updated {
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--brown-light);
+    margin-top: 24px;
+  }
+  @media (max-width: 480px) {
+    th, td { padding: 8px 6px; font-size: 0.85rem; }
+    h1 { font-size: 1.25rem; }
+  }
 </style>
 </head>
 <body>
-<div class="nav">
-  <div class="nav-logo">☕ Cà Phê · acaphe</div>
-  <div class="nav-dates" id="navDates"></div>
-  <div class="nav-right"><button class="pb" onclick="window.print()">In PDF</button></div>
+<div class="wrap">
+  <header>
+    <div class="icon">☕</div>
+    <h1>Giá cà phê hôm nay 16/7/2026</h1>
+    <p class="subtitle">Cập nhật thị trường trong nước &amp; thế giới</p>
+  </header>
+
+  <div class="card">
+    <h2>Giá cà phê nhân xô trong nước</h2>
+    <table>
+      <thead>
+        <tr><th>Tỉnh</th><th>Giá thu mua (đồng/kg)</th><th>Ghi chú</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Đắk Nông</td><td class="price">97.300</td><td class="center tag-high">Cao nhất</td></tr>
+        <tr><td>Đắk Lắk</td><td class="price">97.200</td><td class="center">—</td></tr>
+        <tr><td>Gia Lai</td><td class="price">97.200</td><td class="center">—</td></tr>
+        <tr><td>Lâm Đồng</td><td class="price">96.700</td><td class="center tag-low">Thấp nhất</td></tr>
+        <tr><td>Kon Tum</td><td class="price">—</td><td class="center">Chưa có niêm yết riêng, tham chiếu mặt bằng chung Tây Nguyên</td></tr>
+      </tbody>
+    </table>
+    <p class="context" style="margin-top:10px;">Giá trung bình toàn vùng khoảng <strong>97.200 đồng/kg</strong>, tăng khoảng <strong class="change-up">+1.200 đồng/kg</strong> so với phiên hôm qua.</p>
+  </div>
+
+  <div class="card">
+    <h2>Giá cà phê thế giới</h2>
+    <table>
+      <thead>
+        <tr><th>Sàn giao dịch</th><th>Giá (kỳ hạn gần nhất)</th><th>Thay đổi</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Robusta<br>(London ICE)</td>
+          <td class="price">3.961 USD/tấn</td>
+          <td class="center change-up">+90 USD (+2,32%)</td>
+        </tr>
+        <tr>
+          <td>Arabica<br>(New York ICE)</td>
+          <td class="price">334,45 cent/lb</td>
+          <td class="center change-down">-2,75 cent (-0,82%)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Bối cảnh &amp; nguyên nhân biến động</h2>
+    <p class="context">
+      Vụ thu hoạch cà phê 2026/27 của Brazil đang chậm hơn cùng kỳ: tính đến 1/7 mới đạt <strong>52%</strong>, thấp hơn mức 60% của năm ngoái và trung bình 5 năm (55%). Lo ngại thời tiết bất lợi — mưa lớn giữa tháng 7 có thể ảnh hưởng cây trồng — cùng rủi ro El Niño cho vụ mùa tới đang hỗ trợ giá. Tồn kho robusta trên sàn ICE từng chạm đáy 2 năm (3.631 lô ngày 15/5) trước khi phục hồi lên 4.109 lô — mức cao nhất 3 tháng. Tại Việt Nam, sản lượng cà phê được dự báo bước vào giai đoạn cao điểm từ cuối tháng 7 đến đầu tháng 8, thị trường trong nước hiện đi ngang đến tăng nhẹ theo diễn biến hai sàn quốc tế.
+    </p>
+  </div>
+
+  <footer class="card">
+    <h2>Nguồn tham khảo</h2>
+    <ul>
+      <li><a href="http://vov.vn/thi-truong/gia-ca-phe-hom-nay-167-gia-ca-phe-trong-nuoc-tang-1200-dongkg-post1315422.vov" target="_blank" rel="noopener">VOV — Giá cà phê hôm nay 16/7: Giá cà phê trong nước tăng 1.200 đồng/kg</a></li>
+      <li><a href="http://vov.vn/thi-truong/gia-ca-phe-hom-nay-167-gia-ca-phe-tren-2-san-quoc-te-bien-dong-post1315422.vov" target="_blank" rel="noopener">VOV — Giá cà phê trên 2 sàn quốc tế biến động</a></li>
+      <li><a href="https://baovanhoa.vn/kinh-te/gia-ca-phe-ngay-167-di-ngang-cao-nhat-97300-dongkg-246160.html" target="_blank" rel="noopener">Báo Văn hóa — Giá cà phê 16/7/2026 đứng giá, cao nhất 97.300 đồng/kg</a></li>
+      <li><a href="https://vtcnews.vn/gia-ca-phe-hom-nay-16-7-dong-loat-tang-ar1029412.html" target="_blank" rel="noopener">VTC News — Giá cà phê trực tuyến hôm nay 16/7: Đồng loạt tăng trở lại</a></li>
+      <li><a href="https://giacaphe.com/gia-ca-phe-noi-dia/" target="_blank" rel="noopener">Giacaphe.com — Giá cà phê nội địa</a></li>
+      <li><a href="https://giacaphe.com/gia-ca-phe-the-gioi/" target="_blank" rel="noopener">Giacaphe.com — Giá cà phê thế giới (London, New York)</a></li>
+      <li><a href="https://vietnambiz.vn/ico-lo-ngai-el-nino-day-gia-ca-phe-tang-manh-tro-lai-2026715123744231.htm" target="_blank" rel="noopener">Vietnambiz — ICO: Lo ngại El Niño đẩy giá cà phê tăng mạnh trở lại</a></li>
+    </ul>
+  </footer>
+
+  <p class="updated">Báo cáo tạo tự động ngày 16/7/2026. Giá mang tính tham khảo, có thể chênh lệch theo địa điểm và chất lượng hạt.</p>
 </div>
-<div class="page"><div id="rc"></div></div>
-<script>
-const SK='cf_r7';
-const SEED=[
-{
-  id:'2026-06-29',
-  date:'29/6/2026',
-  label:'29 tháng 6, 2026 · acaphe 10:59 GMT+7 · Thứ Hai',
-  sources:['acaphe.com (bảng giá trực tiếp 29/6)','motthegioi.vn','giacaphe.com','doanhnghiephoinhap.vn','NLĐ'],
-  alert:{
-    title:'⚠️ CẢNH BÁO: RMN26 T7 GIÁ KHÔNG PHẢN ÁNH THỊ TRƯỜNG',
-    body:'RMN26 T7 giao 3.817 USD nhưng chỉ 3 lots — FND đã qua (25/6), hầu hết vị thế đã roll sang T9. Giá T7 do 3 lệnh cuối đẩy lên, không có ý nghĩa giao dịch thực tế.',
-    real:'Giá benchmark thực tế = RMU26 T9 = 3.627 USD/tấn (−35, −0,96%)'
-  },
-  prices:[
-    {code:'RMN26',label:'Robusta T7 ⚠ hết hạn',price:'3.817',unit:'USD/tấn',chg:'+61',pct:'+1,62% · 3 lots',dir:'warn'},
-    {code:'RMU26',label:'Robusta T9 · GIÁ THỰC',price:'3.627',unit:'USD/tấn',chg:'−35',pct:'−0,96%',dir:'dn'},
-    {code:'KCN26',label:'Arabica T7',price:'286,75',unit:'cent/lb',chg:'−2,05',pct:'−0,71% · 2 lots',dir:'dn'},
-    {code:'KCU26',label:'Arabica T9 · GIÁ THỰC',price:'273,20',unit:'cent/lb',chg:'−3,20',pct:'−1,16%',dir:'dn'},
-  ],
-  spreads:[
-    {l:'Spread N/U Robusta',v:'190 USD ⚠',n:'Cao nhất chu kỳ · T7 hết hạn làm lệch'},
-    {l:'Basis FOB HCM R2 T9',v:'−120 / −50 ⚠',n:'ĐẢO ÂM từ +40/+120 tuần trước'},
-    {l:'Nội địa BMT (27/6)',v:'90.500–92.000 đ/kg',n:'Tăng mạnh so với tuần trước'},
-    {l:'Arb A/R',v:'2.396 $/Mt · 108,68 c/lb',n:'Arabica premium vs Robusta'},
-  ],
-  highlights:[
-    {type:'r',head:'🔴 RMU26 T9 GIẢM −35 · BASIS FOB ĐẢO ÂM — TÍN HIỆU QUAN TRỌNG NHẤT',body:'RMU26 T9 là giá thực tế thị trường: 3.627 (−35, −0,96%). Basis FOB đảo từ dương (+40) sang âm (−120/−50): flat price vật lý = 3.627 − 120 = 3.507 USD/tấn (bid). Đây là tín hiệu cung vật lý VN đang tăng mạnh — nông dân/thương lái đang xả hàng ra thị trường.'},
-    {type:'a',head:'⚠️ SPREAD N/U = 190 USD — BẤT THƯỜNG DO T7 HẾT HẠN',body:'Spread 190 USD không phản ánh thực tế cung cầu. RMN26 T7 chỉ còn 3 lots giao dịch sau khi FND qua ngày 25/6. Spread thực tế cần đo bằng U/X = 57 USD (T9−T11) — đây mới là spread có ý nghĩa.'},
-    {type:'g',head:'🟢 ARABICA PHỤC HỒI MẠNH TUẦN TRƯỚC — Brazil mưa + tồn kho thấp',body:'Tuần 25/6: KCN26 lên 291,55 (+3,60, +1,25%) · Robusta T7 +127 USD (+3,55%). Catalyst: mưa Brazil trì hoãn harvest, Cooxupe chỉ 20,1% tiến độ, ICE Arabica stocks 388.956 bao đáy 2,25 năm. Hôm nay 29/6 Arabica hạ nhiệt sau đợt tăng mạnh.'},
-    {type:'b',head:'📊 MACRO 27/6 — DXY 101,35 là rủi ro lớn nhất',body:'DXY 101,35 — cao nhất từ đầu tháng 6, USD mạnh = áp lực toàn bộ hàng hóa. BRL/USD 5,172 — BRL tiếp tục yếu, Brazil bán mạnh. Brent 73,19 — dầu giảm, freight có thể giảm nhẹ. S&P +41,25 — risk-on nhưng DXY mạnh lấn át.'},
-  ],
-  fullPriceRo:[
-    {kt:'RN 07/26 ⚠',open:'3.860',hi:'3.860',lo:'3.817',close:'3.817',chg:'+61',vol:'3',oi:'164',cls:'warn'},
-    {kt:'RU 09/26 ✓',open:'3.643',hi:'3.684',lo:'3.613',close:'3.627',chg:'−35',vol:'9.108',oi:'62.005',cls:'hi'},
-    {kt:'RX 11/26',open:'3.576',hi:'3.613',lo:'3.547',close:'3.570',chg:'−23',vol:'4.494',oi:'16.769',cls:''},
-    {kt:'RF 01/27',open:'3.529',hi:'3.560',lo:'3.495',close:'3.521',chg:'−20',vol:'1.664',oi:'8.316',cls:''},
-    {kt:'RH 03/27',open:'3.487',hi:'3.513',lo:'3.454',close:'3.480',chg:'−20',vol:'675',oi:'3.499',cls:''},
-    {kt:'RK 05/27',open:'3.469',hi:'3.472',lo:'3.451',close:'3.451',chg:'−21',vol:'164',oi:'1.376',cls:''},
-    {kt:'RN 07/27',open:'0',hi:'3.432',lo:'3.432',close:'3.432',chg:'−22',vol:'160',oi:'697',cls:''},
-  ],
-  fullPriceA:[
-    {kt:'AN 07/26 ⚠',open:'285,30',hi:'286,75',lo:'285,30',close:'286,75',chg:'−2,05',vol:'2',oi:'891',cls:'warn'},
-    {kt:'AU 09/26 ✓',open:'275,40',hi:'278,35',lo:'269,85',close:'273,20',chg:'−3,20',vol:'13.616',oi:'91.089',cls:'hi'},
-    {kt:'AZ 12/26',open:'262,30',hi:'265,00',lo:'257,45',close:'260,90',chg:'−2,50',vol:'7.586',oi:'50.632',cls:''},
-    {kt:'AH 03/27',open:'257,50',hi:'260,05',lo:'253,30',close:'256,60',chg:'−2,05',vol:'3.201',oi:'19.193',cls:''},
-    {kt:'AK 05/27',open:'257,75',hi:'260,15',lo:'253,50',close:'257,00',chg:'−1,75',vol:'980',oi:'8.348',cls:''},
-    {kt:'AN 07/27',open:'259,40',hi:'260,35',lo:'255,05',close:'258,20',chg:'−1,70',vol:'553',oi:'5.342',cls:''},
-    {kt:'AU 09/27',open:'260,40',hi:'261,45',lo:'256,15',close:'259,30',chg:'−1,75',vol:'418',oi:'3.533',cls:''},
-  ],
-  macro:[
-    {l:'DXY',v:'101,350',c:'↑ USD mạnh nhất T6',cls:'cdn'},
-    {l:'BRL/USD',v:'5,17210',c:'BRL yếu',cls:'cdn'},
-    {l:'Brent',v:'73,19',c:'+0,59',cls:'cup'},
-    {l:'Vàng',v:'4.081,9',c:'−14,4',cls:'cdn'},
-    {l:'USD/VND',v:'26.121',c:'ổn định',cls:'cfl'},
-    {l:'EUR/USD',v:'1,13867',c:'',cls:'cfl'},
-    {l:'S&P e',v:'7.443',c:'+41,25',cls:'cup'},
-    {l:'Nội địa BMT',v:'90.500–92k',c:'Tăng mạnh',cls:'cup'},
-  ],
-  score:{up:3,dn:8,neu:2},
-  signals:[
-    {n:'RMU26 T9 · GIÁ THỰC',src:'acaphe 29/6',v:'3.627 · −35 (−0,96%) · benchmark thực tế',dir:'dn'},
-    {n:'RMN26 T7 · HẾT HẠN',src:'acaphe 29/6',v:'3.817 · 3 lots · FND đã qua · không giao dịch được',dir:'ne'},
-    {n:'KCU26 T9 · GIÁ THỰC',src:'acaphe 29/6',v:'273,20 · −3,20 (−1,16%) · hạ nhiệt sau tăng mạnh',dir:'dn'},
-    {n:'Basis FOB HCM R2 T9',src:'acaphe 27/6',v:'−120/−50 ⚠ ĐẢO ÂM từ +40/+120 tuần trước',dir:'dn'},
-    {n:'Nội địa BMT 27/6',src:'acaphe 27/6',v:'bid 90.500–91.000 / offer 91.500–92.000 đ/kg',dir:'up'},
-    {n:'Spread U/X Robusta',src:'acaphe 29/6',v:'57 USD (T9−T11) · spread thực có ý nghĩa',dir:'ne'},
-    {n:'DXY',src:'Barchart 27/6',v:'101,350 · USD mạnh nhất từ đầu T6 → áp lực hàng hóa',dir:'dn'},
-    {n:'BRL/USD',src:'Barchart',v:'5,1721 · BRL yếu → Brazil tiếp tục bán mạnh',dir:'dn'},
-    {n:'ICE Arabica stocks',src:'25/6',v:'388.956 bao · đáy 2,25 năm · lực đỡ vật lý A',dir:'up'},
-    {n:'Brazil harvest',src:'Cooxupe 19/6',v:'20,1% tiến độ vs 24,3% cùng kỳ · mưa tuần qua',dir:'up'},
-    {n:'Arabica A/R Arb',src:'acaphe 29/6',v:'2.396 $/Mt · 108,68 cent/lb · A premium cao',dir:'up'},
-    {n:'Flat price vật lý VN',src:'Tính toán',v:'3.627 − 120 = 3.507 USD/tấn (bid) · vẫn có margin',dir:'ne'},
-    {n:'VN XK 15/6/2026',src:'Hải quan VN',v:'985.700 tấn lũy kế · +11,8% lượng · −10,7% giá trị',dir:'dn'},
-  ],
-  bias:[
-    {code:'RMU26',name:'Robusta T9 · GIÁ THỰC',verdict:'THẬN TRỌNG BÁN',vcls:'bb-short',
-     e:'3.660–3.690 bounce nếu có',sl:'3.750',t1:'3.570',t2:'3.521',
-     note:'T9 giảm −35. Basis âm = cung vật lý tăng. DXY 101 = USD mạnh áp lực. Nếu bounce lên 3.660–3.690 → SHORT nhẹ'},
-    {code:'RMN26',name:'Robusta T7 · HẾT HẠN',verdict:'KHÔNG GIAO DỊCH',vcls:'bb-neu',
-     e:'N/A',sl:'N/A',t1:'N/A',t2:'N/A',
-     note:'FND đã qua 25/6. Chỉ 3 lots còn lại. Không có ý nghĩa giao dịch. Ignore giá 3.817'},
-    {code:'KCU26',name:'Arabica T9 · GIÁ THỰC',verdict:'CHỜ XÁC NHẬN',vcls:'bb-watch',
-     e:'Chờ London mở 16h',sl:'285,00',t1:'265,00',t2:'260,00',
-     note:'Hạ nhiệt sau tăng mạnh tuần trước. Brazil mưa + ICE stocks đáy vẫn là lực đỡ. Chưa SHORT ở đây'},
-    {code:'Nội địa',name:'Nhân xanh TTD Global',verdict:'CÂN NHẮC BÁN',vcls:'bb-short',
-     e:'90.500–91.000 đ/kg · vùng tốt',sl:'N/A',t1:'N/A',t2:'N/A',
-     note:'Basis âm = người mua nước ngoài trả thấp hơn kỳ hạn. Flat price 3.507 bid. Nội địa 90.500–91.500 là vùng tốt để chốt một phần hàng tồn'},
-  ],
-  short:{v:'T9 GIẢM · BASIS ÂM · CÂN NHẮC BÁN NỘI ĐỊA',cls:'av-dn',p:'Ngắn hạn · 29/6',
-    t:'Giá benchmark thực tế hôm nay là RMU26 T9 = 3.627 (−35). RMN26 T7 = 3.817 là ảo — FND đã qua, chỉ 3 lots cuối còn lại.\n\nBasis FOB đảo âm −120/−50 là tín hiệu quan trọng nhất: cung vật lý VN đang tăng, người mua nước ngoài không còn trả premium. Flat price bid thực tế = 3.627 − 120 = 3.507 USD/tấn.\n\nDXY 101,35 là rủi ro macro lớn nhất — USD mạnh nhất từ đầu tháng 6, áp lực lên toàn bộ hàng hóa tính bằng USD.\n\nNội địa 90.500–91.000 đ/kg (27/6) là vùng cao — nên cân nhắc bán một phần nếu TTD đang giữ hàng.'},
-  mid:{v:'ARABICA PHỤC HỒI — NHƯNG CHỈ NGẮN HẠN',cls:'av-wa',p:'Trung hạn',
-    t:'Arabica tăng mạnh tuần trước (KCN26 lên 291,55) nhờ mưa Brazil + ICE stocks đáy. Hôm nay KCU26 hạ nhiệt về 273,20 (−3,20) — đây là điều chỉnh bình thường sau đợt tăng.\n\nCatalyst trung hạn vẫn còn: ICE Arabica stocks 388.956 bao (đáy 2,25 năm), Brazil harvest chậm tiến độ, tồn kho rang xay thấp. Tuy nhiên dự báo bội thu Brazil 2026/27 (USDA 71,9 triệu bao) vẫn là lực cản dài hạn.\n\nRobusta trung hạn phụ thuộc vào: (1) Tốc độ roll off T7 → T9, (2) Basis FOB có tiếp tục âm không, (3) DXY có tiếp tục tăng không.'},
-  long:{v:'PHÂN HÓA RO/A · BASIS ÂM LÀ CHỈ BÁO MỚI',cls:'av-wa',p:'Dài hạn',
-    t:'Basis FOB đảo âm là thay đổi cấu trúc quan trọng. Trước đây basis dương (+40 đến +120) phản ánh khan hiếm hàng VN. Nay basis âm = cung đang bình thường hóa.\n\nXuất khẩu VN 985.700 tấn 6 tháng (+11,8% lượng, −10,7% giá trị) — khối lượng lớn nhưng giá thấp hơn. Đây là xu hướng đáng lo ngại cho margin xuất khẩu.\n\nDài hạn: Arabica vẫn có lực đỡ từ ICE stocks thấp và Brazil harvest chậm. Robusta phụ thuộc vào Seasonal pattern — vụ mùa VN T10 là catalyst tiếp theo cần theo dõi.'},
-  watch:[
-    {t:'16h hôm nay',e:'London mở · RMU26 T9',n:'3.627 là hỗ trợ hay phá xuống thêm?'},
-    {t:'Hàng ngày',e:'Basis FOB HCM',n:'Âm tiếp hay phục hồi về dương?'},
-    {t:'Tuần này',e:'Brazil harvest tiến độ',n:'Cooxupe cập nhật thứ Tư'},
-    {t:'Tuần này',e:'ICE Arabica stocks',n:'388.956 → tiếp tục giảm?'},
-    {t:'Tuần này',e:'DXY theo dõi',n:'101,35 — nếu về 99 → hàng hóa được lợi'},
-    {t:'Cuối tháng 6',e:'CFTC COT Report',n:'Vị thế quỹ cuối tháng 6'},
-  ],
-  concl:[
-    {h:'RMU26 T9 = 3.627 là giá thực',b:'Bỏ qua RMN26 T7 = 3.817 (FND đã qua, 3 lots). <strong>Benchmark thực tế = T9.</strong>'},
-    {h:'Basis âm − cơ hội bán nội địa',b:'Nội địa 90.500–91.000 đ/kg, basis −120. <strong>Flat price bid 3.507.</strong> Vùng tốt để chốt một phần hàng tồn TTD.'},
-    {h:'Arabica — chờ xác nhận',b:'Hạ nhiệt sau tăng mạnh. ICE stocks thấp vẫn hỗ trợ. <strong>Không SHORT vội.</strong> Chờ London 16h.'},
-    {h:'Rủi ro macro',b:'DXY 101,35 + BRL 5,17 là <strong>hai rủi ro lớn nhất tuần này</strong>. Nếu DXY tiếp tục tăng → toàn bộ hàng hóa áp lực.'},
-  ],
-  risks:[
-    'DXY 101,35 tiếp tục tăng → toàn bộ commodity giảm đồng loạt',
-    'Basis FOB âm tiếp tục sâu hơn → margin xuất khẩu TTD bị ép',
-    'Brazil mưa ngừng sớm hơn dự kiến → harvest tăng tốc → Arabica giảm lại',
-    'RMU26 T9 phá 3.570 → hỗ trợ kỹ thuật tiếp theo 3.521',
-    'Nông dân VN xả hàng đồng loạt → nội địa giảm về 88.000 đ/kg',
-    'Independence Day US 4/7 — thị trường NYSE/ICE đóng cửa sớm hoặc volume thấp',
-  ],
-  footer:'acaphe.com (bảng giá 29/6/2026 · 10:59 GMT+7) · motthegioi.vn · giacaphe.com · NLĐ · Barchart',
-},
-{
-  id:'2026-06-25',
-  date:'25/6/2026',
-  label:'25 tháng 6 · Mưa Brazil bùng nổ tăng',
-  sources:['motthegioi.vn','giacaphe.com','NLĐ','doanhnghiephoinhap.vn','Barchart'],
-  prices:[
-    {code:'RMN26',label:'Robusta T7',price:'3.707',unit:'USD/tấn',chg:'+127',pct:'+3,55%',dir:'up'},
-    {code:'RMU26',label:'Robusta T9',price:'3.605',unit:'USD/tấn',chg:'+49',pct:'+1,38%',dir:'up'},
-    {code:'KCN26',label:'Arabica T7',price:'291,55',unit:'cent/lb',chg:'+3,60',pct:'+1,25%',dir:'up'},
-    {code:'KCU26',label:'Arabica T9',price:'277,20',unit:'cent/lb',chg:'+1,25',pct:'+0,45%',dir:'up'},
-  ],
-  spreads:[
-    {l:'Nội địa TB',v:'88.300–88.800 đ/kg',n:'+100~200đ vs hôm qua'},
-    {l:'ICE Arabica stocks',v:'388.956 bao',n:'Đáy 2,25 năm'},
-    {l:'ICE Robusta stocks',v:'4.032 lô',n:'Tăng từ đáy 3.631'},
-    {l:'Brazil Cooxupe 19/6',v:'20,1% tiến độ',n:'Vs 24,3% cùng kỳ · mưa trì hoãn'},
-  ],
-  highlights:[
-    {type:'g',head:'RMN26 +127 USD (+3,55%) — TĂNG MẠNH NHẤT TUẦN · Brazil mưa',body:'Mưa lớn phía Nam Brazil + Climatempo cảnh báo đợt lạnh mới 50mm. Harvest chậm. ICE stocks đáy. Arabica đạt đỉnh 6 tuần.'},
-    {type:'b',head:'Arabica đỉnh 6 tuần · 291,55 cent · Short squeeze từ vùng oversold',body:'Từ đáy 242,40 (10/6) lên 291,55 (+49,15 cent = +20,3%) trong 2 tuần. Short squeeze mạnh.'},
-  ],
-  score:{up:7,dn:3,neu:1},
-  signals:[
-    {n:'RMN26',src:'motthegioi',v:'3.707 · +127 · mạnh nhất nhiều tuần',dir:'up'},
-    {n:'KCN26',src:'NLĐ',v:'291,55 · +3,60 · đỉnh 6 tuần',dir:'up'},
-    {n:'Brazil mưa',src:'Cooxupe/Climatempo',v:'20,1% harvest · thêm 50mm mưa sắp tới',dir:'up'},
-    {n:'ICE A stocks',src:'Barchart',v:'388.956 bao · đáy 2,25 năm',dir:'up'},
-  ],
-  bias:[
-    {code:'RMN26',name:'Robusta T7',vcls:'bb-long',verdict:'TĂNG MẠNH',e:'Momentum up',sl:'3.500',t1:'3.800',t2:'3.900',note:'Brazil mưa + ICE stocks thấp + short covering'},
-    {code:'KCN26',name:'Arabica T7',vcls:'bb-long',verdict:'TĂNG',e:'Momentum',sl:'270',t1:'300',t2:'310',note:'Đỉnh 6 tuần · short squeeze'},
-    {code:'RMU26',name:'Robusta T9',vcls:'bb-watch',verdict:'THEO DÕI',e:'Chờ pullback',sl:'3.400',t1:'3.700',t2:'3.800',note:'T9 tăng ít hơn T7 · spread nới'},
-    {code:'KCU26',name:'Arabica T9',vcls:'bb-watch',verdict:'THEO DÕI',e:'Chờ',sl:'260',t1:'285',t2:'295',note:''},
-  ],
-  short:{v:'BÙNG NỔ TĂNG',cls:'av-up',p:'25/6',t:'Brazil mưa + tồn kho thấp + short squeeze = tăng mạnh nhất tuần.'},
-  mid:{v:'PHỤC HỒI TỪ ĐÁY',cls:'av-up',p:'Trung hạn',t:'Arabica từ đáy 242 → 291 = +20% trong 2 tuần. Short squeeze dữ dội.'},
-  long:{v:'',cls:'av-wa',p:'',t:''},
-  watch:[{t:'Tuần này',e:'Brazil weather',n:'Mưa tiếp hay khô trở lại?'},{t:'Cuối tuần',e:'Arabica harvest tiến độ',n:'Cooxupe cập nhật'}],
-  concl:[
-    {h:'Ngắn hạn tăng mạnh',b:'Brazil mưa là catalyst trực tiếp.'},
-    {h:'Nội địa 88.300–88.800',b:'Tăng 100–200đ, áp sát 90.000 đ/kg.'},
-    {h:'',b:''},
-    {h:'',b:''},
-  ],
-  risks:['Brazil mưa ngừng → harvest tăng lại → đảo chiều nhanh','Short squeeze kết thúc → bán tháo'],
-  footer:'motthegioi.vn · giacaphe.com · NLĐ · doanhnghiephoinhap.vn · Barchart · 25/6/2026',
-},
-{
-  id:'2026-06-10',
-  date:'10/6/2026',
-  label:'10 tháng 6 · acaphe post 1078–1080',
-  sources:['acaphe.com (post 1078, 1079, 1080)','ICE','Barchart'],
-  prices:[
-    {code:'RMN26',label:'Robusta T7',price:'3.293',unit:'USD/tấn',chg:'−40',pct:'−1,20%',dir:'dn'},
-    {code:'RMU26',label:'Robusta T9',price:'3.230',unit:'USD/tấn',chg:'−30',pct:'−0,92%',dir:'dn'},
-    {code:'KCN26',label:'Arabica T7',price:'244,40',unit:'cent/lb',chg:'−1,50',pct:'−0,61%',dir:'dn'},
-    {code:'KCU26',label:'Arabica T9',price:'240,90',unit:'cent/lb',chg:'−0,75',pct:'−0,31%',dir:'dn'},
-  ],
-  spreads:[
-    {l:'Nội địa BMT',v:'85.000–86.500 đ/kg',n:'Đáy tháng 6 · −2.000đ vs tuần trước'},
-    {l:'SAR T9',v:'SHORT = 3.417',n:'Lần đầu đảo chiều · tín hiệu kỹ thuật'},
-    {l:'ADX KCN26',v:'37,30 tăng',n:'Downtrend tăng tốc'},
-    {l:'ICE A stocks',v:'409.897 bao',n:'Đáy 6 tháng · −16.166 tuần'},
-  ],
-  highlights:[
-    {type:'r',head:'RMU26 SAR đổi LONG → SHORT = 3.417 · Tín hiệu quan trọng nhất',body:'Lần đầu tiên T9 xác nhận downtrend kỹ thuật. Arabica ADX 37,30 tăng — downtrend tăng tốc.'},
-    {type:'r',head:'Spread N/U 63 USD — T7 yếu nhất từ đầu chu kỳ',body:'Từ 142 (27/5) → 63 (10/6) trong 2 tuần. T7 chịu áp lực nặng nhất.'},
-  ],
-  score:{up:2,dn:12,neu:1},
-  signals:[
-    {n:'RMN26',src:'acaphe 1078',v:'3.293 · −40 · SAR SHORT=3.538',dir:'dn'},
-    {n:'RMU26 SAR',src:'acaphe 1078',v:'ĐẢO CHIỀU → SHORT=3.417',dir:'dn'},
-    {n:'KCN26',src:'acaphe 1078',v:'244,40 · RSI 28,61 deep oversold · ADX 37',dir:'dn'},
-  ],
-  bias:[
-    {code:'RMU26',name:'Robusta T9',vcls:'bb-short',verdict:'SHORT',e:'3.239–3.252',sl:'3.329',t1:'3.180',t2:'3.145',note:'SAR SHORT lần đầu'},
-    {code:'KCN26',name:'Arabica T7',vcls:'bb-watch',verdict:'KHÔNG SHORT ĐUỔI',e:'RSI 28 · chờ bounce',sl:'284,70',t1:'248,6',t2:'252,2',note:'ADX 37 nhưng oversold cực đại'},
-    {code:'RMN26',name:'Robusta T7',vcls:'bb-short',verdict:'SHORT',e:'3.305–3.323',sl:'3.399',t1:'3.243',t2:'3.215',note:'72% Sell · ADX 15'},
-    {code:'KCU26',name:'Arabica T9',vcls:'bb-watch',verdict:'KHÔNG SHORT ĐUỔI',e:'Stochastic 1,93',sl:'258,10',t1:'237,5',t2:'234,6',note:'Gần 0 tuyệt đối'},
-  ],
-  short:{v:'ĐÁY 2 THÁNG · OVERSOLD',cls:'av-dn',p:'Đáy chu kỳ giảm',t:'SAR T9 đảo chiều. ADX 37. Arabica oversold RSI 28. Đây là đáy của chu kỳ giảm từ 27/5.'},
-  mid:{v:'',cls:'av-wa',p:'',t:''},long:{v:'',cls:'av-wa',p:'',t:''},
-  watch:[],
-  concl:[
-    {h:'Đáy chu kỳ giảm',b:'Từ đây KCU26 240,90 → 277,20 (25/6) = <strong>+36,30 cent (+15%)</strong>'},
-    {h:'Robusta từ đáy',b:'RMU26 3.230 → 3.627 (29/6) = <strong>+397 USD (+12,3%)</strong>'},
-    {h:'',b:''},
-    {h:'',b:''},
-  ],
-  risks:['Tham chiếu lịch sử — đáy của chu kỳ'],
-  footer:'acaphe.com (post 1078, 1079, 1080 · 10/06/2026)',
-}
-];
-
-let reports=[],cur=null;
-function load(){
-  try{const r=localStorage.getItem(SK);if(r)reports=JSON.parse(r);}catch(e){}
-  if(!reports.length){reports=JSON.parse(JSON.stringify(SEED));save();}
-  reports.sort((a,b)=>b.id.localeCompare(a.id));
-  cur=reports[0].id;
-}
-function save(){try{localStorage.setItem(SK,JSON.stringify(reports));}catch(e){}}
-function renderNav(){
-  document.getElementById('navDates').innerHTML=reports.map(r=>
-    `<button class="nd${r.id===cur?' active':''}" onclick="sw('${r.id}')">${r.date}</button>`
-  ).join('');
-}
-function sw(id){cur=id;renderNav();render();}
-function esc(s){return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-
-function render(){
-  const r=reports.find(x=>x.id===cur);
-  const el=document.getElementById('rc');
-  if(!r){el.innerHTML='<div style="text-align:center;padding:60px;color:var(--dim)">Chưa có dữ liệu</div>';return;}
-
-  const alertH=r.alert?`<div class="alert-box">
-    <h3>${r.alert.title}</h3>
-    <p>${r.alert.body}</p>
-    <div class="mono" style="margin-top:8px">→ ${r.alert.real}</div>
-  </div>`:'';
-
-  const prH=`<div class="pr-row">${r.prices.map(p=>{
-    const c=p.dir==='up'?'cup':p.dir==='dn'?'cdn':p.dir==='warn'?'cfl':'cfl';
-    const bg=p.dir==='warn'?'background:var(--abg)':'';
-    return `<div class="pr-i" style="${bg}"><div class="pr-l">${p.code} · ${p.label}</div><div class="pr-p">${p.price}</div><div class="pr-c ${c}">${p.chg} (${p.pct})</div><div class="pr-u">${p.unit}</div></div>`;
-  }).join('')}</div>`;
-
-  const sprH=`<div class="spr">${r.spreads.map(s=>`<div class="si"><div><div class="sil">${s.l}</div><div class="sin">${s.n}</div></div><div class="siv">${s.v}</div></div>`).join('')}</div>`;
-  const hlH=(r.highlights||[]).map(h=>`<div class="hl hl-${h.type}"><div class="hh">${h.head}</div><div class="hb">${h.body}</div></div>`).join('');
-
-  function priceTable(data,title){
-    if(!data) return '';
-    return `<div style="overflow-x:auto;margin-bottom:8px"><div class="sl" style="margin-bottom:6px">${title}</div>
-    <table class="ftbl"><thead><tr><th>Kỳ hạn</th><th>Open</th><th>High</th><th>Low</th><th>Close</th><th>Change</th><th>Volume</th><th>OI</th></tr></thead>
-    <tbody>${data.map(d=>`<tr${d.cls?' class="'+d.cls+'"':''}>
-      <td style="color:var(--ink);font-weight:500">${d.kt}</td>
-      <td>${d.open}</td><td>${d.hi}</td><td>${d.lo}</td>
-      <td style="font-weight:500">${d.close}</td>
-      <td class="${parseFloat(d.chg)>0?'up':parseFloat(d.chg)<0?'dn':''}">${d.chg}</td>
-      <td>${d.vol}</td><td>${d.oi||'—'}</td>
-    </tr>`).join('')}</tbody></table></div>`;
-  }
-
-  const fullH=(r.fullPriceRo||r.fullPriceA)?`<div class="sec">
-    ${priceTable(r.fullPriceRo,'Robusta ICE · 28/6/2026 · ⚠ T7 hết hạn · T9 là benchmark')}
-    ${priceTable(r.fullPriceA,'Arabica ICE · 28/6/2026')}
-  </div>`:'';
-
-  const macroH=r.macro?`<div class="sec"><div class="sl">Macro · 27/6/2026</div>
-    <div class="macro-row">${r.macro.map(m=>`<div class="macro-item"><div class="macro-l">${m.l}</div><div class="macro-v">${m.v}</div><div class="macro-c ${m.cls}">${m.c}</div></div>`).join('')}</div>
-  </div>`:'';
-
-  const scH=r.score?`<div class="score">
-    <div class="sc"><div class="scv" style="color:var(--green)">${r.score.up}</div><div class="scl">▲ Hỗ trợ</div></div>
-    <div class="sc"><div class="scv" style="color:var(--red)">${r.score.dn}</div><div class="scl">▼ Áp lực</div></div>
-    <div class="sc"><div class="scv" style="color:var(--muted)">${r.score.neu}</div><div class="scl">— Trung lập</div></div>
-    <div class="sc" style="flex:2"><div class="scv" style="font-size:15px;color:${r.score.up>r.score.dn?'var(--green)':'var(--red)'}">${r.score.up>r.score.dn?'BIAS TĂNG':'BIAS GIẢM'}</div><div class="scl">${r.score.up} vs ${r.score.dn} tín hiệu</div></div>
-  </div>`:'';
-
-  const sigH=`<table class="stbl"><thead><tr><th>Tín hiệu</th><th>Nguồn</th><th>Chi tiết</th><th style="text-align:right">Chiều</th></tr></thead>
-    <tbody>${r.signals.map(s=>{
-      const c=s.dir==='up'?'t-up':s.dir==='dn'?'t-dn':s.dir==='wa'?'t-wa':'t-ne';
-      const l=s.dir==='up'?'▲ Hỗ trợ':s.dir==='dn'?'▼ Áp lực':'— Trung lập';
-      return `<tr><td>${s.n}</td><td class="src">${s.src}</td><td>${s.v}</td><td style="text-align:right"><span class="tag ${c}">${l}</span></td></tr>`;
-    }).join('')}</tbody></table>`;
-
-  const biasH=`<div class="bc-grid">${r.bias.filter(b=>b.code).map(b=>`<div class="bc">
-    <div class="bc-top"><span class="bc-code">${b.code}${b.name?' · '+b.name:''}</span><span class="bc-badge ${b.vcls}">${b.verdict}</span></div>
-    ${b.e&&b.e!=='N/A'?`<div class="bc-rows">
-      <div class="bc-row"><span class="bk">Entry</span><span class="bv">${b.e}</span></div>
-      <div class="bc-row"><span class="bk">Stop</span><span class="bv">${b.sl}</span></div>
-      <div class="bc-row"><span class="bk">T1</span><span class="bv">${b.t1||'—'}</span></div>
-      <div class="bc-row"><span class="bk">T2</span><span class="bv">${b.t2||'—'}</span></div>
-    </div>`:'<div style="font-size:11px;color:var(--dim);padding:4px 0">Không có lệnh giao dịch</div>'}
-    ${b.note?`<div class="bc-note">${b.note}</div>`:''}
-  </div>`).join('')}`;
-
-  function ab(d){
-    if(!d||!d.v) return '';
-    const ps=d.t.split('\n').filter(l=>l.trim()).map(l=>`<p>${esc(l)}</p>`).join('');
-    return `<div class="ab"><div class="ab-head"><span class="ab-p">${d.p}</span><span class="ab-v ${d.cls}">${d.v}</span></div><div class="ab-body">${ps}</div></div>`;
-  }
-
-  const wtH=r.watch&&r.watch.length?`<div class="sec"><div class="sl">Theo dõi tuần này</div><div class="wg">${r.watch.map(w=>`<div class="wi"><div class="wt">${w.t}</div><div class="we">${w.e}</div><div class="wn">${w.n}</div></div>`).join('')}</div></div>`:'';
-  const cnH=`<div class="cg">${r.concl.filter(c=>c.h).map(c=>`<div class="ci"><div class="cih">${c.h}</div><div class="cib">${c.b}</div></div>`).join('')}</div>`;
-  const rkH=`<div class="risk"><div class="rh">⚠ Rủi ro & Cảnh báo</div><ul class="rl">${r.risks.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`;
-
-  el.innerHTML=`
-    <div class="mast">
-      <div class="mast-top">
-        <div><div class="mast-ey">Phân tích kỹ thuật & cơ bản · acaphe.com</div>
-          <div class="mast-h">Nhận định Cà phê · 4 hợp đồng</div>
-          <div class="mast-s">RMU26 · KCU26 · Basis FOB · Nội địa · ICE Stocks · Macro</div>
-        </div>
-        <div class="mast-dr"><div class="mast-db">${r.date}</div><div class="mast-ds">${r.label}</div></div>
-      </div>
-    </div>
-    <div class="sec">
-      <div class="sl">Nguồn</div>
-      <div class="chips">${(r.sources||[]).map(s=>`<span class="chip on">${s}</span>`).join('')}</div>
-    </div>
-    ${alertH}
-    <div class="sec">
-      <div class="sl">Giá · acaphe 29/6 10:59 GMT+7</div>
-      ${prH}${sprH}${hlH}
-    </div>
-    ${fullH}
-    ${macroH}
-    ${scH?`<div class="sec"><div class="sl">Tổng điểm tín hiệu</div>${scH}</div>`:''}
-    <div class="sec"><div class="sl">Tổng hợp tín hiệu</div>${sigH}</div>
-    <div class="sec"><div class="sl">Bias & thực chiến</div>${biasH}</div>
-    <div class="sec"><div class="sl">Nhận định chính</div>${ab(r.short)}${ab(r.mid)}${ab(r.long)}</div>
-    ${wtH}
-    <div class="sec"><div class="sl">Kết luận</div>${cnH}</div>
-    <div class="sec"><div class="sl">Rủi ro</div>${rkH}</div>
-    <div class="footer"><div class="fs"><strong>Nguồn</strong>${r.footer}</div><div class="fst">${r.label}</div></div>`;
-}
-
-window.addReport=function(o){
-  const i=reports.findIndex(r=>r.id===o.id);
-  if(i>=0)reports[i]=o;else reports.unshift(o);
-  reports.sort((a,b)=>b.id.localeCompare(a.id));
-  save();cur=o.id;renderNav();render();
-};
-load();renderNav();render();
-</script>
 </body>
 </html>
