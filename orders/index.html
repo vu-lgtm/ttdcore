@@ -215,14 +215,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 <div class="container" id="loginScreen">
   <div class="login-box">
     <h1>📦 Quản lý đơn hàng</h1>
-    <p>Đăng nhập bằng tài khoản được công ty cấp</p>
-    <div class="login-form">
-      <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="email@congty.vn" autocomplete="email"></div>
-      <div class="form-group"><label>Mật khẩu</label><input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password"></div>
-      <div id="loginError" style="color:#c0392b;font-size:13px;margin-bottom:12px;display:none;"></div>
-      <button class="btn btn-primary" style="width:100%;padding:12px;" onclick="login()" id="loginBtn">Đăng nhập →</button>
-    </div>
-    <p style="margin-top:16px;font-size:12px;color:#aaa;">Chưa có tài khoản? Liên hệ Admin để được cấp.</p>
+    <p>Đăng nhập bằng tài khoản Google công ty</p>
+    <div id="loginError" style="color:#c0392b;font-size:13px;margin-bottom:16px;display:none;"></div>
+    <button class="btn btn-primary" style="width:100%;padding:14px;font-size:15px;display:flex;align-items:center;justify-content:center;gap:10px;" onclick="loginWithGoogle()" id="loginBtn">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 33.1 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.3-.1-2.7-.1-4z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.1 18.9 12 24 12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5l-6.2-5.2C29.4 35.5 26.8 36 24 36c-5.2 0-9.6-2.9-11.3-7.1l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.5-2.6 4.6-4.8 6l6.2 5.2C40.5 36.2 44 30.5 44 24c0-1.3-.1-2.7-.4-4z"/></svg>
+      Đăng nhập với Google
+    </button>
+    <p style="margin-top:16px;font-size:12px;color:#aaa;">Chỉ tài khoản <strong>@ttdglobal.vn</strong> được phép truy cập.</p>
   </div>
 </div>
 
@@ -406,20 +405,42 @@ function getStatus(o){
 }
 
 // ─── AUTH ───
-async function login(){
-  const email=document.getElementById('loginEmail').value.trim();
-  const password=document.getElementById('loginPassword').value;
+async function loginWithGoogle(){
   const errEl=document.getElementById('loginError'),btn=document.getElementById('loginBtn');
   errEl.style.display='none';
-  if(!email||!password){errEl.textContent='Vui lòng nhập email và mật khẩu';errEl.style.display='block';return;}
-  btn.disabled=true;btn.textContent='Đang đăng nhập...';showLoading('Đang đăng nhập...');
-  try{const{data,error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;await loadCurrentUser(data.user);}
-  catch(e){errEl.textContent='Email hoặc mật khẩu không đúng.';errEl.style.display='block';}
-  finally{btn.disabled=false;btn.textContent='Đăng nhập →';hideLoading();}
+  btn.disabled=true;
+  showLoading('Đang chuyển hướng...');
+  try{
+    const{error}=await sb.auth.signInWithOAuth({
+      provider:'google',
+      options:{
+        redirectTo:window.location.href,
+        queryParams:{hd:'ttdglobal.vn'}
+      }
+    });
+    if(error)throw error;
+  }catch(e){
+    errEl.textContent='Lỗi đăng nhập: '+e.message;
+    errEl.style.display='block';
+    btn.disabled=false;
+    hideLoading();
+  }
 }
 async function loadCurrentUser(authUser){
-  const{data:profile}=await sb.from('profiles').select('*').eq('id',authUser.id).single();
-  if(!profile){await sb.auth.signOut();alert('Tài khoản chưa được cấu hình.');return;}
+  // Thử lookup bằng id trước (email/password users cũ)
+  let profile=null;
+  const{data:byId}=await sb.from('profiles').select('*').eq('id',authUser.id).single();
+  if(byId){profile=byId;}
+  else{
+    // Google OAuth users: lookup bằng email
+    const{data:byEmail}=await sb.from('profiles').select('*').eq('email',authUser.email).maybeSingle();
+    if(byEmail){
+      // Cập nhật id mới cho profile này
+      await sb.from('profiles').update({id:authUser.id}).eq('email',authUser.email);
+      profile=byEmail;
+    }
+  }
+  if(!profile){await sb.auth.signOut();alert('Tài khoản chưa được cấu hình. Liên hệ Admin.');return;}
   currentUser={id:authUser.id,email:authUser.email,name:profile.name,role:profile.role};
   showMainApp();
 }
@@ -427,7 +448,6 @@ async function logout(){
   await sb.auth.signOut();currentUser=null;currentOrderId=null;currentOrder=null;
   document.getElementById('mainApp').classList.add('hidden');
   document.getElementById('loginScreen').classList.remove('hidden');
-  document.getElementById('loginPassword').value='';
 }
 function showMainApp(){
   document.getElementById('loginScreen').classList.add('hidden');
@@ -1390,8 +1410,14 @@ function switchTab(tab){
   showLoading('Đang khởi động...');
   try{const{data:{session}}=await sb.auth.getSession();if(session?.user)await loadCurrentUser(session.user);}
   catch(e){console.error(e);}finally{hideLoading();}
-  sb.auth.onAuthStateChange(async(event,session)=>{if(event==='SIGNED_OUT'){document.getElementById('mainApp').classList.add('hidden');document.getElementById('loginScreen').classList.remove('hidden');}});
-  document.getElementById('loginPassword').addEventListener('keypress',e=>{if(e.key==='Enter')login();});
+  sb.auth.onAuthStateChange(async(event,session)=>{
+    if(event==='SIGNED_IN'&&session?.user&&!currentUser){await loadCurrentUser(session.user);}
+    if(event==='SIGNED_OUT'){
+      currentUser=null;
+      document.getElementById('mainApp').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+    }
+  });
 })();
 </script>
 </body>
