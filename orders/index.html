@@ -814,12 +814,7 @@ function renderDetail(){
   const cancelBtn=document.getElementById('cancelBtn');
   if(cancelBtn){if(['admin','sale_admin','sale'].includes(currentUser.role)){cancelBtn.classList.remove('hidden');updateCancelBtn();}else cancelBtn.classList.add('hidden');}
   const addShipBtn=document.getElementById('addShipmentBtn');
-  if(addShipBtn){
-    // Hiện cho admin, đơn không phải đơn CON (không có parent_order_id), chưa hủy
-    if(currentUser.role==='admin'&&!currentOrder.parent_order_id&&!currentOrder.cancelled)
-      addShipBtn.classList.remove('hidden');
-    else addShipBtn.classList.add('hidden');
-  }
+  if(addShipBtn){if(currentUser.role==='admin'&&!currentOrder.parent_order_id&&!currentOrder.cancelled)addShipBtn.classList.remove('hidden');else addShipBtn.classList.add('hidden');}
   const dfs=[{k:'all',label:'Tất cả'},{k:'sale',label:'Sale'},{k:'sale_admin',label:'Sale Admin'},{k:'ketoan',label:'Kế toán'},{k:'thumua',label:'Thu mua'},{k:'logistics',label:'Logistics'},{k:'admin',label:'Ban GĐ'},{k:'mine',label:'👤 Của tôi'}];
   document.getElementById('deptFilters').innerHTML=dfs.map(d=>`<button class="filter-btn ${deptFilter===d.k?'active':''}" onclick="setDeptFilter('${d.k}')">${d.label}</button>`).join('');
   renderWorkflow();
@@ -1427,33 +1422,45 @@ function switchTab(tab){
     }
   });
 })();
-// ============ THÊM LẦN GIAO ============
+</script>
+
+<!-- MODAL THÊM LẦN GIAO -->
+<div class="modal-backdrop hidden" id="addShipmentModal">
+  <div class="modal">
+    <h2>📦 Thêm lần giao</h2>
+    <div id="addShipmentInfo" style="background:#f0f4ff;border-left:3px solid #667eea;padding:10px 14px;border-radius:6px;font-size:13px;color:#555;margin-bottom:16px;"></div>
+    <div class="form-group"><label>Tháng giao hàng *</label><input type="month" id="newShipMonth" style="background:white;"></div>
+    <div class="form-group"><label>Số lượng (MT)</label><input type="text" id="newShipQty" placeholder="VD: 38.4"></div>
+    <div class="form-group"><label>Ghi chú (tùy chọn)</label><input type="text" id="newShipNote" placeholder="VD: Container TCKU1234567"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('addShipmentModal')">Hủy</button>
+      <button class="btn btn-primary" onclick="addShipment()" id="addShipmentConfirmBtn">＋ Thêm lần giao</button>
+    </div>
+  </div>
+</div>
+<script>
 function openAddShipmentModal(){
   if(!currentOrder)return;
   const kids=allOrders.filter(o=>o.parent_order_id===currentOrderId);
-  const isFirstShipment=!currentOrder.is_parent;
-  const nextNo=isFirstShipment?2:kids.length+1;
-  const currentCount=isFirstShipment?1:kids.length;
-  const infoHtml=isFirstShipment
-    ?`<strong>Đơn lẻ → Chuyển thành đơn nhiều lần giao</strong><br>Đơn hiện tại sẽ trở thành <strong>L01</strong>, lần giao mới sẽ là <strong>L02</strong>`
-    :`Đơn <strong>${currentOrder.code}</strong> · Hiện có <strong>${currentCount}</strong> lần giao · Sẽ thêm <strong>L${String(nextNo).padStart(2,'0')}</strong>`;
-  document.getElementById('addShipmentInfo').innerHTML=infoHtml;
+  const isFirst=!currentOrder.is_parent;
+  const nextNo=isFirst?2:kids.length+1;
+  document.getElementById('addShipmentInfo').innerHTML=isFirst
+    ?`<strong>Đơn lẻ → Chuyển thành đơn nhiều lần giao</strong><br>Đơn hiện tại → <strong>L01</strong>, lần mới → <strong>L02</strong>`
+    :`Đơn <strong>${currentOrder.code}</strong> · ${kids.length} lần giao · Thêm <strong>L${String(nextNo).padStart(2,'0')}</strong>`;
   document.getElementById('newShipMonth').value='';
   document.getElementById('newShipQty').value='';
   document.getElementById('newShipNote').value='';
   document.getElementById('addShipmentModal').classList.remove('hidden');
 }
-
 async function addShipment(){
   if(!currentOrder)return;
   const month=document.getElementById('newShipMonth').value;
   const qty=document.getElementById('newShipQty').value.trim();
   const note=document.getElementById('newShipNote').value.trim();
   if(!month){alert('Vui lòng chọn tháng giao hàng!');return;}
-  const isFirstShipment=!currentOrder.is_parent;
+  const isFirst=!currentOrder.is_parent;
   const kids=allOrders.filter(o=>o.parent_order_id===currentOrderId);
-  const nextNo=isFirstShipment?2:kids.length+1;
-  const newTotal=nextNo;
+  const nextNo=isFirst?2:kids.length+1;
   const baseCode=currentOrder.code;
   const newCode=`${baseCode}-L${String(nextNo).padStart(2,'0')}`;
   const newId='ord_'+Date.now()+'_'+Math.floor(Math.random()*1000);
@@ -1461,64 +1468,34 @@ async function addShipment(){
   btn.disabled=true;btn.textContent='Đang thêm...';
   showLoading('Đang tạo lần giao...');
   try{
-    if(isFirstShipment){
-      // Nâng cấp đơn lẻ → parent
+    if(isFirst){
       const{error:e0}=await sb.from('orders').update({is_parent:true,total_shipments:2}).eq('id',currentOrderId);
       if(e0)throw e0;
-      const l01Id='ord_'+Date.now()+'_l01';
-      const l01={id:l01Id,code:`${baseCode}-L01`,customer:currentOrder.customer,supplier:currentOrder.supplier,note:currentOrder.note,parent_order_id:currentOrderId,is_parent:false,shipment_no:1,total_shipments:2,shipment_month:currentOrder.shipment_month||'',shipment_qty:currentOrder.shipment_qty||'',completed:currentOrder.completed||{},tick_info:currentOrder.tick_info||{},attachments:currentOrder.attachments||{},payment:currentOrder.payment||{},folder_url:currentOrder.folder_url||null,created_at:currentOrder.created_at,created_by:currentOrder.created_by,history:[{action:'create',user:currentUser.name,role:currentUser.role,time:Date.now(),note:'Chuyển từ đơn lẻ sang L01'}]};
-      const{error:e1}=await sb.from('orders').insert(l01);
-      if(e1)throw e1;
-      const l02={id:newId,code:newCode,customer:currentOrder.customer,supplier:currentOrder.supplier,note:note||currentOrder.note,parent_order_id:currentOrderId,is_parent:false,shipment_no:2,total_shipments:2,shipment_month:month,shipment_qty:qty||null,created_at:Date.now(),created_by:currentUser.name,completed:{},tick_info:{},attachments:{},history:[{action:'create',user:currentUser.name,role:currentUser.role,time:Date.now(),note:'Lần giao L02 mới'}]};
-      const{error:e2}=await sb.from('orders').insert(l02);
-      if(e2)throw e2;
+      const l01={id:'ord_'+Date.now()+'_l01',code:`${baseCode}-L01`,customer:currentOrder.customer,supplier:currentOrder.supplier,note:currentOrder.note,parent_order_id:currentOrderId,is_parent:false,shipment_no:1,total_shipments:2,shipment_month:currentOrder.shipment_month||'',shipment_qty:currentOrder.shipment_qty||'',completed:currentOrder.completed||{},tick_info:currentOrder.tick_info||{},attachments:currentOrder.attachments||{},payment:currentOrder.payment||{},folder_url:currentOrder.folder_url||null,created_at:currentOrder.created_at,created_by:currentOrder.created_by,history:[{action:'create',user:currentUser.name,role:currentUser.role,time:Date.now(),note:'Chuyển từ đơn lẻ sang L01'}]};
+      const{error:e1}=await sb.from('orders').insert(l01);if(e1)throw e1;
+      const l02={id:newId,code:newCode,customer:currentOrder.customer,supplier:currentOrder.supplier,note:note||currentOrder.note,parent_order_id:currentOrderId,is_parent:false,shipment_no:2,total_shipments:2,shipment_month:month,shipment_qty:qty||null,created_at:Date.now(),created_by:currentUser.name,completed:{},tick_info:{},attachments:{},history:[{action:'create',user:currentUser.name,role:currentUser.role,time:Date.now()}]};
+      const{error:e2}=await sb.from('orders').insert(l02);if(e2)throw e2;
       currentOrder.is_parent=true;currentOrder.total_shipments=2;
       const idx=allOrders.findIndex(o=>o.id===currentOrderId);
       if(idx>=0){allOrders[idx].is_parent=true;allOrders[idx].total_shipments=2;}
       allOrders.push(l01);allOrders.push(l02);
     }else{
-      const childOrder={id:newId,code:newCode,customer:currentOrder.customer,supplier:currentOrder.supplier,note:note||currentOrder.note,parent_order_id:currentOrderId,is_parent:false,shipment_no:nextNo,total_shipments:newTotal,shipment_month:month,shipment_qty:qty||null,created_at:Date.now(),created_by:currentUser.name,completed:{},tick_info:{},attachments:{},history:[{action:'create',user:currentUser.name,role:currentUser.role,time:Date.now(),note:`Lần giao L${String(nextNo).padStart(2,'0')} thêm vào đơn ${baseCode}`}]};
-      const{error:e1}=await sb.from('orders').insert(childOrder);
-      if(e1)throw e1;
-      const{error:e2}=await sb.from('orders').update({total_shipments:newTotal}).eq('id',currentOrderId);
-      if(e2)throw e2;
-      currentOrder.total_shipments=newTotal;
-      const pidx=allOrders.findIndex(o=>o.id===currentOrderId);
-      if(pidx>=0)allOrders[pidx].total_shipments=newTotal;
-      allOrders.push(childOrder);
+      const child={id:newId,code:newCode,customer:currentOrder.customer,supplier:currentOrder.supplier,note:note||currentOrder.note,parent_order_id:currentOrderId,is_parent:false,shipment_no:nextNo,total_shipments:nextNo,shipment_month:month,shipment_qty:qty||null,created_at:Date.now(),created_by:currentUser.name,completed:{},tick_info:{},attachments:{},history:[{action:'create',user:currentUser.name,role:currentUser.role,time:Date.now()}]};
+      const{error:e1}=await sb.from('orders').insert(child);if(e1)throw e1;
+      const{error:e2}=await sb.from('orders').update({total_shipments:nextNo}).eq('id',currentOrderId);if(e2)throw e2;
+      currentOrder.total_shipments=nextNo;
+      const pi=allOrders.findIndex(o=>o.id===currentOrderId);
+      if(pi>=0)allOrders[pi].total_shipments=nextNo;
+      allOrders.push(child);
     }
     closeModal('addShipmentModal');
     await loadOrderList();
     openOrder(currentOrderId);
-    alert(isFirstShipment?`✅ Đã nâng cấp thành đơn ${baseCode} với 2 lần giao`:`✅ Đã thêm lần giao ${newCode}`);
+    alert(isFirst?`✅ Đã nâng cấp thành ${baseCode} với 2 lần giao`:`✅ Đã thêm ${newCode}`);
   }catch(e){alert('Lỗi: '+e.message);}
   finally{btn.disabled=false;btn.textContent='＋ Thêm lần giao';hideLoading();}
 }
-
-
-<!-- MODAL THÊM LẦN GIAO -->
-<div class="modal-backdrop hidden" id="addShipmentModal">
-  <div class="modal">
-    <h2>📦 Thêm lần giao</h2>
-    <div id="addShipmentInfo" style="background:#f0f4ff;border-left:3px solid #667eea;padding:10px 14px;border-radius:6px;font-size:13px;color:#555;margin-bottom:16px;"></div>
-    <div class="form-group">
-      <label>Tháng giao hàng</label>
-      <input type="month" id="newShipMonth" style="background:white;">
-    </div>
-    <div class="form-group">
-      <label>Số lượng (MT)</label>
-      <input type="text" id="newShipQty" placeholder="VD: 38.4">
-    </div>
-    <div class="form-group">
-      <label>Ghi chú (tùy chọn)</label>
-      <input type="text" id="newShipNote" placeholder="VD: Container TCKU1234567">
-    </div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal('addShipmentModal')">Hủy</button>
-      <button class="btn btn-primary" onclick="addShipment()" id="addShipmentConfirmBtn">＋ Thêm lần giao</button>
-    </div>
-  </div>
-</div>
+</script>
 
 </body>
 </html>
