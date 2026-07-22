@@ -906,9 +906,8 @@ function renderLeaves(){
 }
 
 async function approveLeave(idx,status){
-  const l=_leaves[idx];
-  if(!canApproveLeaveFor(l?.ma)){alert('Không có quyền!');return;}
   const l=_leaves[idx];if(!l)return;
+  if(!canApproveLeaveFor(l.ma)){alert('Không có quyền!');return;}
   try{
     await sbPatch('leaves',{status,action_by:_email,action_at:new Date().toISOString()},{id:l._id});
     l.status=status;l.actionBy=_email;l.actionAt=new Date().toLocaleString('vi-VN');
@@ -947,9 +946,8 @@ async function submitCancelReq(){
   }catch(e){alert('Lỗi: '+e.message);}
 }
 async function handleCancelReq(idx,decision){
-  const lcr=_leaves[idx];
-  if(!canApproveLeaveFor(lcr?.ma))return;
   const l=_leaves[idx];if(!l)return;
+  if(!canApproveLeaveFor(l.ma))return;
   if(decision==='approved'){
     try{
       await sbPatch('leaves',{status:'cancelled',cancel_requested:false,action_by:_email,action_at:new Date().toISOString()},{id:l._id});
