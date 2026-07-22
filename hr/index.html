@@ -81,10 +81,10 @@ header{background:var(--dark2);border-bottom:2px solid var(--teal2);padding:14px
 .s-late{background:rgba(240,165,0,.12);color:#f0a500;}
 .s-absent{background:rgba(239,83,80,.12);color:#ef5350;}
 .s-leave{background:rgba(171,71,188,.12);color:#ab47bc;}
-.leave-item{background:var(--dark2);border:1px solid var(--border2);border-radius:8px;padding:14px 18px;display:flex;align-items:flex-start;gap:14px;}
+.leave-item{background:var(--dark2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:12px;}
 .leave-item:hover{border-color:rgba(0,191,165,.3);}
 .leave-info{flex:1;}
-.leave-name{font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;color:var(--white);}
+.leave-name{font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;color:var(--white);white-space:nowrap;}
 .leave-meta{font-size:12px;color:var(--muted);margin-top:3px;}
 .leave-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
 .btn-approve{background:rgba(0,191,165,.12);border:1px solid rgba(0,191,165,.3);color:var(--teal);border-radius:5px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;}
@@ -857,8 +857,8 @@ function renderLeaves(){
   if(!_leaves.length){pel.innerHTML='<div style="text-align:center;color:var(--muted);padding:32px;">Chưa có đơn nghỉ phép nào</div>';return;}
 
   pel.innerHTML=`<div style="font-family:Montserrat;font-size:11px;font-weight:700;color:var(--teal);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">Tất cả đơn nghỉ phép</div>
-  <div style="display:flex;flex-direction:column;gap:8px;">
-  ${[..._leaves].reverse().map((l,ri)=>{
+  <div style="display:flex;flex-direction:column;gap:4px;">
+  ${_leaves.map((l,ri)=>{
     const idx=_leaves.length-1-ri;
     const days=Math.round((new Date(l.to)-new Date(l.from))/86400000)+1;
     const icon=l.type==='unpaid'?'💸':l.type==='late'?'⚠️':'🏖️';
@@ -893,7 +893,7 @@ function renderLeaves(){
     }
 
     return`<div class="leave-item">
-      <div style="font-size:22px;">${icon}</div>
+      <div style="font-size:18px;flex-shrink:0;">${icon}</div>
       <div class="leave-info">
         <div class="leave-name">${l.empName}</div>
         <div class="leave-meta">${TYPE_LABEL[l.type]||l.type} · ${l.from} → ${l.to} · <strong style="color:var(--white);">${days} ngày</strong>${l.reason?' · '+l.reason:''}</div>
