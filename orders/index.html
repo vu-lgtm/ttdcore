@@ -272,6 +272,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
       <button class="btn" onclick="window.print()">🖨️ In</button>
       <button class="btn btn-danger hidden" onclick="deleteCurrentOrder()" id="deleteBtn">🗑️ Xóa đơn</button>
       <button class="btn hidden" onclick="toggleCancelOrder()" id="cancelBtn" style="background:#dc3545;color:white;border:none;">🚫 Hủy đơn</button>
+      <button class="btn btn-primary hidden" onclick="openAddShipmentModal()" id="addShipmentBtn" style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;">＋ Thêm lần giao</button>
     </div>
   </div>
 
@@ -812,6 +813,8 @@ function renderDetail(){
   if(currentUser.role==='admin')deleteBtn.classList.remove('hidden');else deleteBtn.classList.add('hidden');
   const cancelBtn=document.getElementById('cancelBtn');
   if(cancelBtn){if(['admin','sale_admin','sale'].includes(currentUser.role)){cancelBtn.classList.remove('hidden');updateCancelBtn();}else cancelBtn.classList.add('hidden');}
+  const addShipBtn=document.getElementById('addShipmentBtn');
+  if(addShipBtn){if(currentUser.role==='admin'&&currentOrder.is_parent&&!currentOrder.cancelled)addShipBtn.classList.remove('hidden');else addShipBtn.classList.add('hidden');}
   const dfs=[{k:'all',label:'Tất cả'},{k:'sale',label:'Sale'},{k:'sale_admin',label:'Sale Admin'},{k:'ketoan',label:'Kế toán'},{k:'thumua',label:'Thu mua'},{k:'logistics',label:'Logistics'},{k:'admin',label:'Ban GĐ'},{k:'mine',label:'👤 Của tôi'}];
   document.getElementById('deptFilters').innerHTML=dfs.map(d=>`<button class="filter-btn ${deptFilter===d.k?'active':''}" onclick="setDeptFilter('${d.k}')">${d.label}</button>`).join('');
   renderWorkflow();
@@ -1420,5 +1423,30 @@ function switchTab(tab){
   });
 })();
 </script>
+
+<!-- MODAL THÊM LẦN GIAO -->
+<div class="modal-backdrop hidden" id="addShipmentModal">
+  <div class="modal">
+    <h2>📦 Thêm lần giao</h2>
+    <div id="addShipmentInfo" style="background:#f0f4ff;border-left:3px solid #667eea;padding:10px 14px;border-radius:6px;font-size:13px;color:#555;margin-bottom:16px;"></div>
+    <div class="form-group">
+      <label>Tháng giao hàng</label>
+      <input type="month" id="newShipMonth" style="background:white;">
+    </div>
+    <div class="form-group">
+      <label>Số lượng (MT)</label>
+      <input type="text" id="newShipQty" placeholder="VD: 38.4">
+    </div>
+    <div class="form-group">
+      <label>Ghi chú (tùy chọn)</label>
+      <input type="text" id="newShipNote" placeholder="VD: Container TCKU1234567">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('addShipmentModal')">Hủy</button>
+      <button class="btn btn-primary" onclick="addShipment()" id="addShipmentConfirmBtn">＋ Thêm lần giao</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
