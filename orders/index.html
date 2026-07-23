@@ -374,6 +374,8 @@ const workflows=[
 const TOTAL=30;
 const DEPTS={sale:"Sale",ketoan:"Kế toán",thumua:"Thu mua",logistics:"Logistics",admin:"Ban Giám Đốc",sale_admin:"Sale Admin"};
 const SALE_ADMIN_STEPS=[3,4,6,8,13,20,30];
+const GRACE_EMAIL='grace@ttdglobal.vn';
+function isAdmin(){return currentUser&&(currentUser.role==='admin'||currentUser.email===GRACE_EMAIL);}
 
 let currentUser=null,currentOrderId=null,currentOrder=null,allOrders=[];
 let deptFilter='all',expandedNotes={},currentListView='list',allUsers=[];
@@ -453,9 +455,9 @@ async function logout(){
 function showMainApp(){
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('mainApp').classList.remove('hidden');
-  const roleLabel=currentUser.role==='admin'?'👑 Admin':DEPTS[currentUser.role];
+  const roleLabel=isAdmin()?'👑 Admin':DEPTS[currentUser.role];
   document.getElementById('userBadge').textContent=`${currentUser.name} · ${roleLabel}`;
-  if(currentUser.role==='admin')document.getElementById('tabAdmin').classList.remove('hidden');
+  if(isAdmin())document.getElementById('tabAdmin').classList.remove('hidden');
   loadOrderList();
 }
 
@@ -761,16 +763,16 @@ async function saveOrder(){
 }
 
 function canTick(step){
-  if(currentUser.role==='admin')return true;
+  if(isAdmin())return true;
   if(currentUser.role==='sale_admin')return SALE_ADMIN_STEPS.includes(step.stt);
   if(step.hasMultiCheck)return step.teams.includes(currentUser.role);
   return step.dept===currentUser.role;
 }
-const canEditPayment=()=>currentUser.role==='admin'||currentUser.role==='ketoan';
+const canEditPayment=()=>isAdmin()||currentUser.role==='ketoan';
 
 function renderDetail(){
   const o=currentOrder;
-  const canEditFolder=currentUser.role==='admin'||currentUser.role==='sale_admin'||currentUser.role==='sale';
+  const canEditFolder=isAdmin()||currentUser.role==='sale_admin'||currentUser.role==='sale';
   const subBadge=o.parent_order_id
     ?`<div class="sub-order-badge">📦 Lần giao L${String(o.shipment_no||'').padStart(2,'0')} / ${o.total_shipments||'?'} lần</div>`
     :(o.is_parent?`<div class="sub-order-badge" style="background:#fff3cd;border-color:#ffc107;color:#856404;">📋 Đơn tổng hợp · ${o.total_shipments} lần giao</div>`:'');
@@ -808,9 +810,9 @@ function renderDetail(){
     ${folderSection}${renderChecklistSection()}${renderPaymentSection()}`;
 
   const noticeEl=document.getElementById('roleNotice');
-  noticeEl.innerHTML=currentUser.role==='admin'?`<div class="notice info">👑 <strong>Admin</strong> — tick mọi bước và xóa đơn.</div>`:`<div class="notice">ℹ️ Bạn là <strong>${DEPTS[currentUser.role]}</strong> — chỉ tick được bước của bộ phận mình.</div>`;
+  noticeEl.innerHTML=isAdmin()?`<div class="notice info">👑 <strong>Admin</strong> — tick mọi bước và xóa đơn.</div>`:`<div class="notice">ℹ️ Bạn là <strong>${DEPTS[currentUser.role]}</strong> — chỉ tick được bước của bộ phận mình.</div>`;
   const deleteBtn=document.getElementById('deleteBtn');
-  if(currentUser.role==='admin')deleteBtn.classList.remove('hidden');else deleteBtn.classList.add('hidden');
+  if(isAdmin())deleteBtn.classList.remove('hidden');else deleteBtn.classList.add('hidden');
   const cancelBtn=document.getElementById('cancelBtn');
   if(cancelBtn){if(['admin','sale_admin','sale'].includes(currentUser.role)){cancelBtn.classList.remove('hidden');updateCancelBtn();}else cancelBtn.classList.add('hidden');}
   const addShipBtn=document.getElementById('addShipmentBtn');
@@ -845,7 +847,7 @@ function renderWorkflow(){
   const o=currentOrder;
   let filtered=workflows.filter(s=>{
     if(deptFilter==='all')return true;
-    if(deptFilter==='mine'){if(currentUser.role==='admin')return true;if(currentUser.role==='sale_admin')return SALE_ADMIN_STEPS.includes(s.stt);return s.dept===currentUser.role||(s.hasMultiCheck&&s.teams.includes(currentUser.role));}
+    if(deptFilter==='mine'){if(isAdmin())return true;if(currentUser.role==='sale_admin')return SALE_ADMIN_STEPS.includes(s.stt);return s.dept===currentUser.role||(s.hasMultiCheck&&s.teams.includes(currentUser.role));}
     if(deptFilter==='sale_admin')return SALE_ADMIN_STEPS.includes(s.stt);
     return s.dept===deptFilter||(s.hasMultiCheck&&s.teams.includes(deptFilter));
   });
@@ -853,7 +855,7 @@ function renderWorkflow(){
   filtered.forEach(step=>{
     const el=document.createElement('div');
     if(step.hasMultiCheck){
-      const teamsHtml=step.teams.map(t=>{const key=`${step.stt}_${t}`,checked=!!o.completed[key],canT=currentUser.role==='admin'||currentUser.role===t;const ti=o.tick_info[key]?`<div class="step-tick-info">✓ ${esc(o.tick_info[key].user)} · ${new Date(o.tick_info[key].time).toLocaleString('vi-VN')}</div>`:'';return`<div style="display:flex;flex-direction:column;margin-right:18px;margin-bottom:6px;"><label style="display:flex;align-items:center;gap:7px;cursor:${canT?'pointer':'not-allowed'};"><input type="checkbox" ${checked?'checked':''} ${canT?'':'disabled'} onchange="toggleMulti(${step.stt},'${t}')" style="accent-color:#667eea;"><span style="font-size:12px;color:#667eea;font-weight:500;">${DEPTS[t]}</span>${!canT?'<span class="lock-badge">🔒</span>':''}</label>${ti}</div>`;}).join('');
+      const teamsHtml=step.teams.map(t=>{const key=`${step.stt}_${t}`,checked=!!o.completed[key],canT=isAdmin()||currentUser.role===t;const ti=o.tick_info[key]?`<div class="step-tick-info">✓ ${esc(o.tick_info[key].user)} · ${new Date(o.tick_info[key].time).toLocaleString('vi-VN')}</div>`:'';return`<div style="display:flex;flex-direction:column;margin-right:18px;margin-bottom:6px;"><label style="display:flex;align-items:center;gap:7px;cursor:${canT?'pointer':'not-allowed'};"><input type="checkbox" ${checked?'checked':''} ${canT?'':'disabled'} onchange="toggleMulti(${step.stt},'${t}')" style="accent-color:#667eea;"><span style="font-size:12px;color:#667eea;font-weight:500;">${DEPTS[t]}</span>${!canT?'<span class="lock-badge">🔒</span>':''}</label>${ti}</div>`;}).join('');
       el.className='workflow-step';
       el.innerHTML=`<div class="step-number">${step.stt}</div><div class="step-content"><div class="step-title-row"><span class="step-title">${step.job}</span></div><div class="step-desc">${step.content}</div><div style="margin-top:8px;display:flex;flex-wrap:wrap;">${teamsHtml}</div>${renderStepNote(step.stt)}</div>`;
     }else{
@@ -876,7 +878,7 @@ async function toggleStep(stt){
   await saveOrder();renderWorkflow();
 }
 async function toggleMulti(stt,team){
-  if(currentUser.role!=='admin'&&currentUser.role!==team){alert('Bạn không có quyền');return;}
+  if(!isAdmin()&&currentUser.role!==team){alert('Bạn không có quyền');return;}
   const step=workflows.find(w=>w.stt===stt),key=`${stt}_${team}`,newVal=!currentOrder.completed[key];
   currentOrder.completed[key]=newVal;
   if(newVal)currentOrder.tick_info[key]={user:currentUser.name,role:currentUser.role,time:Date.now()};else delete currentOrder.tick_info[key];
@@ -902,7 +904,7 @@ async function addAttach(stt){
 }
 async function removeAttach(stt,idx){
   const key=String(stt),a=(currentOrder.attachments[key]||[])[idx];if(!a)return;
-  if(currentUser.role!=='admin'&&a.user!==currentUser.name){alert('Chỉ người đăng hoặc Admin mới xóa được');return;}
+  if(!isAdmin()&&a.user!==currentUser.name){alert('Chỉ người đăng hoặc Admin mới xóa được');return;}
   if(!confirm(`Xóa "${a.title}"?`))return;
   showLoading('Đang xóa...');
   try{if(a.type==='storage'&&a.path)await sb.storage.from('order-files').remove([a.path]);currentOrder.attachments[key].splice(idx,1);const step=workflows.find(w=>w.stt===stt);currentOrder.history.push({action:'detach',stepNum:stt,stepName:step.job,attachTitle:a.title,user:currentUser.name,role:currentUser.role,time:Date.now()});await saveOrder();renderWorkflow();}
@@ -924,7 +926,7 @@ async function toggleCancelOrder(){
 }
 function updateCancelBtn(){const btn=document.getElementById('cancelBtn');if(!btn||!currentOrder)return;if(currentOrder.cancelled){btn.textContent='↩ Khôi phục đơn';btn.style.background='#28a745';}else{btn.textContent='🚫 Hủy đơn';btn.style.background='#dc3545';}}
 async function deleteCurrentOrder(){
-  if(currentUser.role!=='admin'){alert('Chỉ Admin được xóa');return;}
+  if(!isAdmin()){alert('Chỉ Admin được xóa');return;}
   const isParent=currentOrder.is_parent;
   const msg=isParent?`Xóa đơn tổng hợp "${currentOrder.code}" và TẤT CẢ ${currentOrder.total_shipments} lần giao con?`:`Xóa đơn ${currentOrder.code}? Không thể hoàn tác.`;
   if(!confirm(msg))return;showLoading('Đang xóa...');
