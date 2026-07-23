@@ -814,7 +814,7 @@ function renderDetail(){
   const cancelBtn=document.getElementById('cancelBtn');
   if(cancelBtn){if(['admin','sale_admin','sale'].includes(currentUser.role)){cancelBtn.classList.remove('hidden');updateCancelBtn();}else cancelBtn.classList.add('hidden');}
   const addShipBtn=document.getElementById('addShipmentBtn');
-  if(addShipBtn){if(currentUser.role==='admin'&&!currentOrder.parent_order_id&&!currentOrder.cancelled)addShipBtn.classList.remove('hidden');else addShipBtn.classList.add('hidden');}
+  if(addShipBtn){if(['admin','sale','ketoan'].includes(currentUser.role)&&!currentOrder.parent_order_id&&!currentOrder.cancelled)addShipBtn.classList.remove('hidden');else addShipBtn.classList.add('hidden');}
   const dfs=[{k:'all',label:'Tất cả'},{k:'sale',label:'Sale'},{k:'sale_admin',label:'Sale Admin'},{k:'ketoan',label:'Kế toán'},{k:'thumua',label:'Thu mua'},{k:'logistics',label:'Logistics'},{k:'admin',label:'Ban GĐ'},{k:'mine',label:'👤 Của tôi'}];
   document.getElementById('deptFilters').innerHTML=dfs.map(d=>`<button class="filter-btn ${deptFilter===d.k?'active':''}" onclick="setDeptFilter('${d.k}')">${d.label}</button>`).join('');
   renderWorkflow();
