@@ -67,7 +67,7 @@ header { background: var(--dark2); border-bottom: 2px solid var(--teal2); paddin
 /* MODULE GRID - ô vuông */
 .modules {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
   margin-bottom: 56px;
 }
@@ -141,6 +141,9 @@ footer { background: var(--dark2); border-top: 2px solid var(--teal2); padding: 
   .hero-inner { grid-template-columns: 1fr; }
   .hero-stats { flex-direction: row; }
   .modules { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 420px) {
+    .modules { grid-template-columns: 1fr; }
+  }
   .topbar-left { display: none; }
 }
 /* NOTIFICATIONS */
@@ -343,6 +346,12 @@ footer { background: var(--dark2); border-top: 2px solid var(--teal2); padding: 
     <a href="./regulations/" class="mod-card" style="--mod-color:#4fc3f7;">
       <div class="mod-icon-wrap">📚</div>
       <div class="mod-name">Nội quy<br>& Tài liệu</div>
+    </a>
+
+    <a href="./market-data/" class="mod-card" style="--mod-color:#7c4d1e;">
+      <div class="mod-icon-wrap">📊</div>
+      <div class="mod-name">ICE Certified<br>Stock</div>
+      <div class="mod-badge">● Live</div>
     </a>
 
   </div>
@@ -551,5 +560,3 @@ renderNotifs();
 </script>
 </body>
 </html>
-<!-- checking structure -->
-<a href="/market-data/">📊 ICE Certified Stock</a>
