@@ -858,8 +858,7 @@ function renderLeaves(){
 
   pel.innerHTML=`<div style="font-family:Montserrat;font-size:11px;font-weight:700;color:var(--teal);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">Tất cả đơn nghỉ phép</div>
   <div style="display:flex;flex-direction:column;gap:4px;">
-  ${_leaves.map((l,ri)=>{
-    const idx=_leaves.length-1-ri;
+  ${_leaves.map((l,idx)=>{
     const days=Math.round((new Date(l.to)-new Date(l.from))/86400000)+1;
     const icon=l.type==='unpaid'?'💸':l.type==='late'?'⚠️':'🏖️';
     let btns='';
