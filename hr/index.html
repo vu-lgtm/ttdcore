@@ -901,7 +901,7 @@ function renderLeaves(){
       <div style="font-size:18px;flex-shrink:0;">${icon}</div>
       <div class="leave-info">
         <div class="leave-name">${l.empName}</div>
-        <div class="leave-meta">${TYPE_LABEL[l.type]||l.type} · ${l.from} → ${l.to} · <strong style="color:var(--white);">${days} ngày</strong>${l.reason?' · '+l.reason:''}</div>
+        <div class="leave-meta">${TYPE_LABEL[l.type]||l.type} · ${l.from} → ${l.to} · <strong style="color:var(--white);">${isHalf?'Nửa ngày':days+' ngày'}</strong>${l.reason?' · '+l.reason.replace(/\s*\(Nửa ngày\)/gi,''):''}</div>
         <div class="leave-meta" style="margin-top:2px;">Gửi: ${l.sentAt}${l.actionBy?` · <span style="color:${l.status==='approved'?'var(--teal)':'#ef5350'}">${STATUS_LABEL[l.status]||l.status} bởi ${l.actionBy}</span>`:''}</div>
       </div>
       <div class="leave-actions">${btns}</div>
