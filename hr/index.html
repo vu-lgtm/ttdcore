@@ -465,7 +465,11 @@ function getLeaveBalance(ma){
   const usedInSystem=_leaves.filter(l=>
     l.ma===ma&&l.status==='approved'&&l.type!=='unpaid'&&
     new Date(l.from).getFullYear()===year
-  ).reduce((s,l)=>s+Math.round((new Date(l.to)-new Date(l.from))/86400000)+1,0);
+  ).reduce((s,l)=>{
+    const calDays=Math.round((new Date(l.to)-new Date(l.from))/86400000)+1;
+    const isHalf=(l.reason||'').includes('Nửa ngày')||(l.reason||'').includes('nửa ngày');
+    return s+(isHalf?0.5:calDays);
+  },0);
   const totalUsed=usedBefore+usedInSystem;
   const remaining=parseFloat((accrued-totalUsed).toFixed(1));
   return{accrued,usedBefore,usedInSystem,totalUsed:parseFloat(totalUsed.toFixed(1)),remaining,maxYear:TOTAL_ANNUAL};
@@ -859,7 +863,9 @@ function renderLeaves(){
   pel.innerHTML=`<div style="font-family:Montserrat;font-size:11px;font-weight:700;color:var(--teal);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">Tất cả đơn nghỉ phép</div>
   <div style="display:flex;flex-direction:column;gap:4px;">
   ${_leaves.map((l,idx)=>{
-    const days=Math.round((new Date(l.to)-new Date(l.from))/86400000)+1;
+    const calDays=Math.round((new Date(l.to)-new Date(l.from))/86400000)+1;
+    const isHalf=(l.reason||'').includes('Nửa ngày')||(l.reason||'').includes('nửa ngày');
+    const days=isHalf?0.5:calDays;
     const icon=l.type==='unpaid'?'💸':l.type==='late'?'⚠️':'🏖️';
     let btns='';
     const isMine=_emps.find(e=>e.ma===l.ma)?.email===_email;
