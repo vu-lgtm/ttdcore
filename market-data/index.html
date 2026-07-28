@@ -253,43 +253,52 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
   <!-- ══ DAILY SNAPSHOT ══ -->
   <div id="panel-daily" class="panel">
-    <div id="daily-loading" class="loading"><div class="spinner"></div>Đang tải...</div>
-    <div id="daily-content" style="display:none">
+
+    <!-- Upload zone -->
+    <div id="daily-upload-zone" style="border:1.5px dashed var(--border);border-radius:10px;padding:32px 24px;text-align:center;cursor:pointer;transition:border-color .15s;margin-bottom:20px" onclick="document.getElementById('daily-file-input').click()" ondragover="event.preventDefault();this.style.borderColor='#2d6a4f'" ondragleave="this.style.borderColor=''" ondrop="handleDrop(event)">
+      <input type="file" id="daily-file-input" accept=".xls,.xlsx" style="display:none" onchange="handleFile(this.files[0])">
+      <div style="font-size:28px;margin-bottom:8px">📂</div>
+      <div style="font-size:13px;font-weight:500;color:var(--text)">Kéo thả hoặc click để upload file ICE</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">coffee_cert_stock_YYYYMMDD.xls — download từ ice.com/report/42</div>
+    </div>
+
+    <!-- Result area -->
+    <div id="daily-result" style="display:none">
 
       <!-- Header -->
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
         <div>
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">ICE Futures U.S.</div>
-          <div style="font-size:16px;font-weight:700;margin:2px 0">Coffee "C" Certified Warehouse Stock Report</div>
-          <div style="font-size:12px;color:var(--muted)">As of: <span id="daily-date" style="color:var(--ara);font-weight:600"></span></div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">ICE Futures U.S.</div>
+          <div style="font-size:15px;font-weight:500;color:var(--text)">Coffee "C" Certified Warehouse Stock Report</div>
+          <div style="font-size:12px;color:var(--muted)" id="dr-asof"></div>
         </div>
-        <div style="margin-left:auto;display:flex;gap:10px;flex-wrap:wrap" id="grading-chips"></div>
+        <button onclick="resetDaily()" style="font-size:11px;padding:5px 12px;border:0.5px solid var(--border);border-radius:6px;background:none;cursor:pointer;color:var(--muted)">↩ Upload file khác</button>
       </div>
 
-      <!-- TOTAL BAGS CERTIFIED -->
-      <div class="section-title">☕ Total Bags Certified</div>
-      <div class="chart-card" style="padding:0;overflow-x:auto">
-        <table class="pivot-table" id="tbl-total"></table>
+      <!-- KPI row -->
+      <div id="dr-kpi" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px"></div>
+
+      <!-- Total Bags -->
+      <div style="font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding-bottom:4px;border-bottom:0.5px solid var(--border)">☕ Total Bags Certified</div>
+      <div style="overflow-x:auto;border:0.5px solid var(--border);border-radius:8px;margin-bottom:20px">
+        <table id="dr-total" style="width:100%;border-collapse:collapse;font-size:12px"></table>
       </div>
 
-      <!-- TRANSITION BAGS CERTIFIED -->
-      <div class="section-title" style="margin-top:24px">🔄 Transition Bags Certified
-        <span style="font-size:10px;font-weight:400;color:var(--muted);text-transform:none;margin-left:8px">B/L từ 29/6/23, graded trước 31/12/2026 — sẽ có Transition Discount từ 2027</span>
-      </div>
-      <div class="chart-card" style="padding:0;overflow-x:auto">
-        <table class="pivot-table" id="tbl-transition"></table>
+      <!-- Transition Bags -->
+      <div style="font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;padding-bottom:4px;border-bottom:0.5px solid var(--border)">🔄 Transition Bags Certified</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">B/L từ 29/6/2023, graded trước 31/12/2026 — sẽ có Transition Discount từ 2027. Đã tính vào Total ở trên.</div>
+      <div style="overflow-x:auto;border:0.5px solid var(--border);border-radius:8px;margin-bottom:20px">
+        <table id="dr-trans" style="width:100%;border-collapse:collapse;font-size:12px"></table>
       </div>
 
-      <!-- % Transition / Total -->
-      <div class="chart-card" style="margin-top:16px;padding:14px 20px">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:600">Tỷ lệ Transition / Total — theo origin</div>
-        <div id="transition-bars"></div>
-      </div>
+      <!-- Grading -->
+      <div style="font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding-bottom:4px;border-bottom:0.5px solid var(--border)">📋 Today's Grading Summary</div>
+      <div id="dr-grading" style="display:flex;gap:8px;flex-wrap:wrap"></div>
 
     </div>
-  </div>
 
-</div>
+    <div id="daily-error" style="display:none;color:var(--red);font-size:13px;padding:12px;background:#fdf0ec;border-radius:8px;margin-top:12px"></div>
+  </div>
 
 <style>
 /* Pivot table */
@@ -892,6 +901,166 @@ function initDashboard() {
 }
 
 document.addEventListener('DOMContentLoaded', checkAuth);
+
+// ── DAILY XLS UPLOAD ──────────────────────────────────────────
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('daily-upload-zone').style.borderColor = '';
+  const f = e.dataTransfer.files[0];
+  if (f) handleFile(f);
+}
+
+function handleFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      parseICEFile(e.target.result);
+    } catch(err) {
+      showDailyError('Lỗi đọc file: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseICEFile(buffer) {
+  const wb = XLSX.read(buffer, {type:'array'});
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const data = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+
+  // Date
+  const asof = String(data[2]?.[0] || '').trim();
+
+  // Find header rows (row containing 'ANT')
+  const headerRows = [];
+  for (let i=0; i<data.length; i++) {
+    if (data[i] && data[i].some && data[i].some(c => String(c).trim() === 'ANT')) {
+      headerRows.push(i);
+    }
+  }
+  if (!headerRows.length) { showDailyError('Không tìm thấy cấu trúc ICE report trong file.'); return; }
+
+  function parseSection(headerRow) {
+    const rawPorts = data[headerRow].slice(1).map(p => String(p).trim()).filter(p => p);
+    const rows = [];
+    for (let i = headerRow+1; i < data.length; i++) {
+      const row = data[i];
+      if (!row || !row[0]) continue;
+      const country = String(row[0]).trim();
+      if (!country || country === '') continue;
+      if (country.toLowerCase().includes('transition bags') || country.toLowerCase().includes('today') || country.toLowerCase().includes('pending') || country.toLowerCase().includes('click on')) break;
+      const vals = rawPorts.map((p,j) => {
+        const v = row[j+1];
+        return v === '' || v === null || v === undefined ? 0 : Number(v) || 0;
+      });
+      const isTotal = country.toLowerCase().includes('total in bags');
+      rows.push({ country, vals, isTotal });
+    }
+    return { ports: rawPorts, rows };
+  }
+
+  const sec1 = parseSection(headerRows[0]);
+  const sec2 = headerRows.length > 1 ? parseSection(headerRows[1]) : null;
+
+  // Grading
+  const grading = [];
+  for (let i = 0; i < data.length; i++) {
+    const cell = String(data[i]?.[0] || '').trim();
+    if (cell.includes("TODAY'S GRADING") || cell.includes("Passed") || cell.includes("Failed") || cell.includes("Pending Grading") || cell.includes("No Grading") || cell.includes("Flagged")) {
+      if (cell && !grading.includes(cell)) grading.push(cell);
+    }
+  }
+
+  renderICEReport(asof, sec1, sec2, grading);
+}
+
+function renderICEReport(asof, sec1, sec2, grading) {
+  el('daily-upload-zone').style.display = 'none';
+  el('daily-error').style.display = 'none';
+  el('daily-result').style.display = 'block';
+  el('dr-asof').textContent = asof;
+
+  // Grand total
+  const totalRow = sec1.rows.find(r => r.isTotal);
+  const grandTotal = totalRow ? totalRow.vals[totalRow.vals.length-1] : 0;
+  const transTotal = sec2 ? (sec2.rows.find(r=>r.isTotal)?.vals?.slice(-1)[0] || 0) : 0;
+
+  // Port totals (from total row, excluding 'Total' col)
+  const activePorts = sec1.ports.filter(p => p !== 'Total');
+
+  // KPI
+  const topCountry = sec1.rows.filter(r=>!r.isTotal).sort((a,b)=>{
+    const aT = a.vals[a.vals.length-1]; const bT = b.vals[b.vals.length-1]; return bT-aT;
+  })[0];
+  el('dr-kpi').innerHTML = [
+    {label:'Total Bags', value: fmt(grandTotal), sub: 'As of report date', cls:'ara'},
+    {label:'Transition Bags', value: fmt(transTotal), sub: (grandTotal?(transTotal/grandTotal*100).toFixed(1):0)+'% of total — discount 2027', cls:''},
+    {label:'Top Origin', value: topCountry?.country||'—', sub: fmt(topCountry?.vals?.slice(-1)[0]||0)+' bags', cls:''},
+    {label:'Active Ports', value: activePorts.filter(p => totalRow && totalRow.vals[sec1.ports.indexOf(p)] > 0).length, sub: 'cảng có tồn kho', cls:''},
+  ].map(k=>`<div class="kpi ${k.cls||''}"><div class="kpi-label">${k.label}</div><div class="kpi-value" style="${k.cls==='ara'?'color:var(--ara)':''}">${k.value}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
+
+  renderPivotHTML('dr-total', sec1, grandTotal, true);
+  if (sec2) renderPivotHTML('dr-trans', sec2, grandTotal, false);
+
+  // Grading chips
+  const icons = {'Passed':'✅','Failed':'❌','Pending':'⏳','No Grading':'⏳','Flagged':'🚩'};
+  el('dr-grading').innerHTML = grading.filter(g=>!g.includes("TODAY'S GRADING")).map(g => {
+    const icon = Object.entries(icons).find(([k])=>g.includes(k))?.[1]||'📋';
+    return `<div style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:11px;border:0.5px solid var(--border);color:var(--muted);background:var(--surface)">${icon} ${g}</div>`;
+  }).join('');
+}
+
+function renderPivotHTML(tableId, sec, grandTotal, showPct) {
+  const activePorts = sec.ports.filter(p => p !== 'Total');
+  const totalRowData = sec.rows.find(r => r.isTotal);
+
+  // Header
+  let html = `<thead><tr style="background:var(--bg)">
+    <th style="text-align:left;padding:7px 12px;font-size:10px;font-weight:500;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap">Origin</th>
+    ${activePorts.map(p=>`<th style="padding:7px 10px;font-size:10px;font-weight:500;color:var(--muted);border-bottom:1px solid var(--border);text-align:right;white-space:nowrap">${p}</th>`).join('')}
+    <th style="padding:7px 10px;font-size:10px;font-weight:500;color:#2d6a4f;border-bottom:1px solid var(--border);text-align:right">Total</th>
+    ${showPct?'<th style="padding:7px 10px;font-size:10px;font-weight:500;color:var(--muted);border-bottom:1px solid var(--border);text-align:right">%</th>':''}
+  </tr></thead><tbody>`;
+
+  sec.rows.forEach(row => {
+    const total = row.vals[sec.ports.indexOf('Total')] || row.vals[row.vals.length-1] || 0;
+    const pct = grandTotal ? (total/grandTotal*100).toFixed(1) : '0';
+    const isTotal = row.isTotal;
+
+    const style = isTotal
+      ? 'background:var(--bg);border-top:1px solid var(--border);font-weight:500'
+      : '';
+    const tdStyle = `padding:7px 10px;border-bottom:0.5px solid var(--border);text-align:right;font-size:12px`;
+    const firstTdStyle = `padding:7px 12px;border-bottom:0.5px solid var(--border);text-align:left;font-size:12px;font-weight:${isTotal?'500':'400'}`;
+
+    html += `<tr style="${style}" ${!isTotal?'onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''"':''}>
+      <td style="${firstTdStyle};color:var(--text)">${row.country}</td>
+      ${activePorts.map(p => {
+        const idx = sec.ports.indexOf(p);
+        const v = idx>=0 ? (row.vals[idx]||0) : 0;
+        return `<td style="${tdStyle};color:${v===0?'var(--border)':'var(--text)'}">${v===0?'—':fmt(v)}</td>`;
+      }).join('')}
+      <td style="${tdStyle};font-weight:500;color:#2d6a4f">${fmt(total)}</td>
+      ${showPct?`<td style="${tdStyle};color:var(--muted)">${isTotal?'100%':pct+'%'}</td>`:''}
+    </tr>`;
+  });
+
+  html += '</tbody>';
+  document.getElementById(tableId).innerHTML = html;
+}
+
+function resetDaily() {
+  el('daily-upload-zone').style.display = '';
+  el('daily-result').style.display = 'none';
+  el('daily-error').style.display = 'none';
+  el('daily-file-input').value = '';
+}
+
+function showDailyError(msg) {
+  el('daily-error').textContent = msg;
+  el('daily-error').style.display = 'block';
+}
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
 </html>
