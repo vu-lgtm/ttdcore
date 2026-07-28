@@ -12,21 +12,18 @@
   --bg:#f5f5f3;--surface:#fff;--border:#e2e2dd;
   --text:#1a1a18;--muted:#6b6b66;
   --rob:#7c4d1e;--ara:#2d6a4f;
-  --red:#c0392b;--green:#27ae60;
-  --radius:8px;
-  --teal:#00BFA5;--teal2:#00897B;--blue:#1565C0;
-  --dark:#04111f;--dark2:#071828;--border2:rgba(255,255,255,0.07);
+  --red:#c0392b;--green:#27ae60;--radius:8px;
+  --dark:#04111f;--dark2:#071828;
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
-/* LOGIN — same as TTDCore */
+/* LOGIN */
 .login-screen{position:fixed;inset:0;z-index:999;background:linear-gradient(160deg,var(--dark) 0%,var(--dark2) 50%,#0a3880 100%);display:flex;align-items:center;justify-content:center;padding:20px}
 .login-screen.hidden{display:none}
 .login-box{background:var(--dark2);border:1px solid rgba(0,191,165,0.15);border-radius:14px;padding:48px 40px;width:100%;max-width:420px;text-align:center}
-.login-title{font-family:'Montserrat',sans-serif;font-size:22px;font-weight:700;color:#fff;margin-bottom:8px}
+.login-title{font-size:22px;font-weight:700;color:#fff;margin-bottom:8px}
 .login-sub{font-size:13px;color:#7aafc0;margin-bottom:32px;line-height:1.6}
-.btn-google{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:13px 20px;background:#fff;color:#333;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:sans-serif}
-.btn-google:hover{transform:translateY(-2px)}
+.btn-google{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:13px 20px;background:#fff;color:#333;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
 .btn-google img{width:20px;height:20px}
 .login-error{font-size:13px;color:#ef5350;margin-top:14px;display:none}
 
@@ -36,7 +33,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .topbar a:hover{color:var(--text)}
 .topbar .sep{color:var(--border)}
 .topbar .current{font-size:13px;font-weight:500;color:var(--text)}
-.topbar-right{margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
 .user-chip{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:3px 12px;font-size:12px;cursor:pointer}
 .user-chip:hover{color:var(--red)}
 
@@ -66,14 +63,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .kpi-delta.up{color:var(--green);font-weight:500}
 .kpi-delta.down{color:var(--red);font-weight:500}
 
-/* SECTION */
-.section-title{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:24px 0 12px}
-
 /* CHART CARD */
 .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
-.chart-card h3{font-size:13px;font-weight:600;margin-bottom:4px}
+.chart-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;gap:12px;flex-wrap:wrap}
+.chart-card-header h3{font-size:13px;font-weight:600}
 .chart-sub{font-size:11px;color:var(--muted);margin-bottom:16px}
 .chart-wrap{position:relative;width:100%}
+
+/* TIMEFRAME BUTTONS */
+.tf-btns{display:flex;gap:4px;flex-shrink:0}
+.tf-btn{padding:3px 10px;font-size:11px;font-weight:600;border:1px solid var(--border);background:none;border-radius:4px;cursor:pointer;color:var(--muted);font-family:inherit;transition:all .15s}
+.tf-btn:hover{border-color:var(--text);color:var(--text)}
+.tf-btn.active{background:var(--text);border-color:var(--text);color:#fff}
+.tf-btn.active.rob{background:var(--rob);border-color:var(--rob);color:#fff}
+.tf-btn.active.ara{background:var(--ara);border-color:var(--ara);color:#fff}
+
+/* SECTION TITLE */
+.section-title{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:24px 0 12px}
 
 /* LEGEND */
 .legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px}
@@ -107,23 +113,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
+<!-- LOGIN -->
 <div class="login-screen" id="loginScreen">
   <div class="login-box">
     <div class="login-title">🔐 TTDCore</div>
-    <div class="login-sub">Đăng nhập để xem dữ liệu<br>ICE Certified Stock</div>
+    <div class="login-sub">Đăng nhập để xem dữ liệu ICE Certified Stock</div>
     <button class="btn-google" onclick="loginWithGoogle()">
-      <img src="https://www.google.com/favicon.ico" alt="Google">
-      Đăng nhập bằng Google
+      <img src="https://www.google.com/favicon.ico">Đăng nhập bằng Google
     </button>
-    <div class="login-error" id="loginError">Đăng nhập thất bại. Chỉ @ttdglobal.vn.</div>
+    <div class="login-error" id="loginError">Chỉ tài khoản @ttdglobal.vn được phép truy cập.</div>
   </div>
 </div>
 
 <!-- TOPBAR -->
 <div class="topbar">
-  <a href="/">TTDCore</a>
-  <span class="sep">›</span>
+  <a href="/">TTDCore</a><span class="sep">›</span>
   <span class="current">📊 ICE Certified Stock</span>
   <div class="topbar-right">
     <span class="user-chip" id="userChip" onclick="logout()">👤 ...</span>
@@ -132,31 +136,45 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <!-- PAGE HEADER -->
 <div class="page-header">
-  <h1>ICE Certified Stock <span class="updated-badge"><span class="dot-live"></span><span id="last-updated">Đang tải...</span></span></h1>
+  <h1>ICE Certified Stock
+    <span class="updated-badge"><span class="dot-live"></span><span id="last-updated">Đang tải...</span></span>
+  </h1>
   <p>Tồn kho cà phê được chứng nhận trên sàn ICE — Robusta (London) & Arabica (New York)</p>
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('rob')">🟤 Robusta</button>
     <button class="tab-btn" onclick="switchTab('ara-port')">🟢 Arabica — Theo cảng</button>
     <button class="tab-btn" onclick="switchTab('ara-ctry')">🟢 Arabica — Theo origin</button>
+    <button class="tab-btn" onclick="switchTab('daily')">📋 Ngày mới nhất</button>
   </div>
 </div>
 
 <div class="content">
 
-  <!-- ROBUSTA -->
+  <!-- ══ ROBUSTA ══ -->
   <div id="panel-rob" class="panel active">
     <div class="kpi-row" id="kpi-rob"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
-    <div class="section-title">Xu hướng tổng tồn kho (90 ngày gần nhất)</div>
     <div class="chart-card">
-      <h3>Robusta Certified Stock — ICE London</h3>
-      <p class="chart-sub">Đơn vị: Lots (1 lot = 10 metric tấn)</p>
-      <div class="legend" id="leg-rob"></div>
-      <div class="chart-wrap" style="height:260px"><canvas id="chart-rob" role="img" aria-label="Robusta stock trend"></canvas></div>
+      <div class="chart-card-header">
+        <div>
+          <h3>Robusta Certified Stock — ICE London</h3>
+          <p class="chart-sub" style="margin-bottom:0">Đơn vị: Lots (1 lot = 10 metric tấn)</p>
+        </div>
+        <div class="tf-btns" id="tf-rob">
+          <button class="tf-btn" onclick="setTF('rob',30)">1T</button>
+          <button class="tf-btn" onclick="setTF('rob',90)">3T</button>
+          <button class="tf-btn active rob" onclick="setTF('rob',180)">6T</button>
+          <button class="tf-btn" onclick="setTF('rob',365)">1N</button>
+          <button class="tf-btn" onclick="setTF('rob',730)">2N</button>
+          <button class="tf-btn" onclick="setTF('rob',9999)">Tất cả</button>
+        </div>
+      </div>
+      <div style="margin-top:16px;margin-bottom:8px" class="legend" id="leg-rob"></div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-rob" role="img" aria-label="Robusta stock trend"></canvas></div>
     </div>
     <div class="section-title">Breakdown theo cảng — ngày mới nhất</div>
     <div class="two-col">
       <div class="chart-card">
-        <div class="chart-wrap" style="height:200px"><canvas id="chart-rob-doughnut" role="img" aria-label="Robusta port breakdown"></canvas></div>
+        <div class="chart-wrap" style="height:200px"><canvas id="chart-rob-doughnut" role="img" aria-label="Robusta port doughnut"></canvas></div>
       </div>
       <div class="chart-card" style="padding:0">
         <table class="port-table" id="table-rob">
@@ -167,15 +185,26 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </div>
   </div>
 
-  <!-- ARABICA PORT -->
+  <!-- ══ ARABICA PORT ══ -->
   <div id="panel-ara-port" class="panel">
     <div class="kpi-row" id="kpi-ara-port"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
-    <div class="section-title">Xu hướng tổng tồn kho (60 ngày gần nhất)</div>
     <div class="chart-card">
-      <h3>Arabica Certified Stock — ICE New York (theo cảng)</h3>
-      <p class="chart-sub">Đơn vị: Bags (1 bag ≈ 60kg)</p>
-      <div class="legend" id="leg-ara-port"></div>
-      <div class="chart-wrap" style="height:260px"><canvas id="chart-ara-port" role="img" aria-label="Arabica port trend"></canvas></div>
+      <div class="chart-card-header">
+        <div>
+          <h3>Arabica Certified Stock — ICE New York (theo cảng)</h3>
+          <p class="chart-sub" style="margin-bottom:0">Đơn vị: Bags (1 bag ≈ 60kg)</p>
+        </div>
+        <div class="tf-btns" id="tf-ara-port">
+          <button class="tf-btn" onclick="setTF('ara-port',30)">1T</button>
+          <button class="tf-btn" onclick="setTF('ara-port',90)">3T</button>
+          <button class="tf-btn active ara" onclick="setTF('ara-port',180)">6T</button>
+          <button class="tf-btn" onclick="setTF('ara-port',365)">1N</button>
+          <button class="tf-btn" onclick="setTF('ara-port',730)">2N</button>
+          <button class="tf-btn" onclick="setTF('ara-port',9999)">Tất cả</button>
+        </div>
+      </div>
+      <div style="margin-top:16px;margin-bottom:8px" class="legend" id="leg-ara-port"></div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-ara-port" role="img" aria-label="Arabica port trend"></canvas></div>
     </div>
     <div class="section-title">Breakdown theo cảng — ngày mới nhất</div>
     <div class="two-col">
@@ -191,15 +220,26 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </div>
   </div>
 
-  <!-- ARABICA COUNTRY -->
+  <!-- ══ ARABICA COUNTRY ══ -->
   <div id="panel-ara-ctry" class="panel">
-    <div class="note" id="note-ctry">⚠️ Đang tải thông tin...</div>
+    <div class="note" id="note-ctry">⚠️ Đang tải...</div>
     <div class="kpi-row" id="kpi-ara-ctry"><div class="loading"><div class="spinner"></div>Đang tải...</div></div>
-    <div class="section-title">Stacked breakdown theo origin (30 điểm gần nhất)</div>
     <div class="chart-card">
-      <h3>Arabica Certified Stock — theo nước xuất xứ</h3>
-      <p class="chart-sub">Đơn vị: Bags. Top 8 nước chiếm tỷ trọng lớn nhất.</p>
-      <div class="legend" id="leg-ara-ctry"></div>
+      <div class="chart-card-header">
+        <div>
+          <h3>Arabica Certified Stock — theo nước xuất xứ</h3>
+          <p class="chart-sub" style="margin-bottom:0">Đơn vị: Bags — Top 8 origins</p>
+        </div>
+        <div class="tf-btns" id="tf-ara-ctry">
+          <button class="tf-btn" onclick="setTF('ara-ctry',30)">1T</button>
+          <button class="tf-btn" onclick="setTF('ara-ctry',90)">3T</button>
+          <button class="tf-btn active ara" onclick="setTF('ara-ctry',180)">6T</button>
+          <button class="tf-btn" onclick="setTF('ara-ctry',365)">1N</button>
+          <button class="tf-btn" onclick="setTF('ara-ctry',730)">2N</button>
+          <button class="tf-btn" onclick="setTF('ara-ctry',9999)">Tất cả</button>
+        </div>
+      </div>
+      <div style="margin-top:16px;margin-bottom:8px" class="legend" id="leg-ara-ctry"></div>
       <div class="chart-wrap" style="height:300px"><canvas id="chart-ara-ctry" role="img" aria-label="Arabica country stacked"></canvas></div>
     </div>
     <div class="section-title">Top origins — ngày mới nhất</div>
@@ -211,7 +251,87 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </div>
   </div>
 
+  <!-- ══ DAILY SNAPSHOT ══ -->
+  <div id="panel-daily" class="panel">
+    <div id="daily-loading" class="loading"><div class="spinner"></div>Đang tải...</div>
+    <div id="daily-content" style="display:none">
+
+      <!-- Header -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">ICE Futures U.S.</div>
+          <div style="font-size:16px;font-weight:700;margin:2px 0">Coffee "C" Certified Warehouse Stock Report</div>
+          <div style="font-size:12px;color:var(--muted)">As of: <span id="daily-date" style="color:var(--ara);font-weight:600"></span></div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:10px;flex-wrap:wrap" id="grading-chips"></div>
+      </div>
+
+      <!-- TOTAL BAGS CERTIFIED -->
+      <div class="section-title">☕ Total Bags Certified</div>
+      <div class="chart-card" style="padding:0;overflow-x:auto">
+        <table class="pivot-table" id="tbl-total"></table>
+      </div>
+
+      <!-- TRANSITION BAGS CERTIFIED -->
+      <div class="section-title" style="margin-top:24px">🔄 Transition Bags Certified
+        <span style="font-size:10px;font-weight:400;color:var(--muted);text-transform:none;margin-left:8px">B/L từ 29/6/23, graded trước 31/12/2026 — sẽ có Transition Discount từ 2027</span>
+      </div>
+      <div class="chart-card" style="padding:0;overflow-x:auto">
+        <table class="pivot-table" id="tbl-transition"></table>
+      </div>
+
+      <!-- % Transition / Total -->
+      <div class="chart-card" style="margin-top:16px;padding:14px 20px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:600">Tỷ lệ Transition / Total — theo origin</div>
+        <div id="transition-bars"></div>
+      </div>
+
+    </div>
+  </div>
+
 </div>
+
+<style>
+/* Pivot table */
+.pivot-table { width:100%; border-collapse:collapse; font-size:12px; min-width:500px }
+.pivot-table th {
+  background:var(--bg); padding:8px 12px;
+  text-align:right; font-size:10px; font-weight:700;
+  color:var(--muted); text-transform:uppercase; letter-spacing:.04em;
+  border-bottom:2px solid var(--border); white-space:nowrap;
+}
+.pivot-table th:first-child { text-align:left }
+.pivot-table td {
+  padding:8px 12px; border-bottom:1px solid var(--border);
+  text-align:right; color:var(--text);
+}
+.pivot-table td:first-child { text-align:left; font-weight:500 }
+.pivot-table td.zero { color:var(--border) }
+.pivot-table tr.total-row td {
+  font-weight:700; background:var(--bg);
+  border-top:2px solid var(--border); border-bottom:none;
+  color:var(--ara);
+}
+.pivot-table tr.total-row td:first-child { color:var(--text) }
+.pivot-table tr:hover:not(.total-row) td { background:#f9f9f8 }
+
+/* Grading chips */
+.grading-chip {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:5px 12px; border-radius:20px; font-size:11px; font-weight:500;
+  border:1px solid var(--border); background:var(--surface);
+}
+.grading-chip.pass { border-color:#52b788; color:#2d6a4f; background:#eaf4ef }
+.grading-chip.fail { border-color:#e76f51; color:#c0392b; background:#fdf0ec }
+.grading-chip.pending { border-color:#e9c46a; color:#7c5a00; background:#fffbe6 }
+
+/* Transition mini bars */
+.trans-bar-row { display:flex; align-items:center; gap:10px; margin-bottom:6px; font-size:11px }
+.trans-bar-row .ctry { width:130px; flex-shrink:0; color:var(--text) }
+.trans-bar-wrap { flex:1; height:8px; background:var(--border); border-radius:4px; overflow:hidden }
+.trans-bar-fill { height:100%; border-radius:4px; background:var(--ara); opacity:0.7 }
+.trans-bar-pct { width:38px; text-align:right; color:var(--muted); flex-shrink:0 }
+</style>
 
 <script>
 const SUPABASE_URL = 'https://fyjinbtabsentsvnkqzg.supabase.co';
@@ -220,115 +340,105 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ── AUTH ──────────────────────────────────────────────────────
 async function loginWithGoogle() {
-  const { error } = await sb.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: window.location.href, queryParams: { hd: 'ttdglobal.vn' } }
-  });
-  if (error) {
-    document.getElementById('loginError').style.display = 'block';
-  }
+  await sb.auth.signInWithOAuth({ provider:'google', options:{ redirectTo:window.location.href, queryParams:{hd:'ttdglobal.vn'} } });
 }
-
-async function logout() {
-  await sb.auth.signOut();
-  document.getElementById('loginScreen').classList.remove('hidden');
-}
-
+async function logout() { await sb.auth.signOut(); location.reload(); }
 async function checkAuth() {
-  const { data: { session } } = await sb.auth.getSession();
-  if (session?.user) {
-    const email = session.user.email || '';
-    if (!email.endsWith('@ttdglobal.vn')) {
-      await sb.auth.signOut();
-      document.getElementById('loginError').style.display = 'block';
-      return;
-    }
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('userChip').textContent = '👤 ' + email.split('@')[0];
+  const { data:{ session } } = await sb.auth.getSession();
+  if (session?.user?.email?.endsWith('@ttdglobal.vn')) {
+    el('loginScreen').classList.add('hidden');
+    el('userChip').textContent = '👤 ' + session.user.email.split('@')[0];
     initDashboard();
   }
 }
-
 sb.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_IN' && session?.user) {
-    const email = session.user.email || '';
-    if (!email.endsWith('@ttdglobal.vn')) { sb.auth.signOut(); return; }
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('userChip').textContent = '👤 ' + email.split('@')[0];
+  if (event==='SIGNED_IN' && session?.user?.email?.endsWith('@ttdglobal.vn')) {
+    el('loginScreen').classList.add('hidden');
+    el('userChip').textContent = '👤 ' + session.user.email.split('@')[0];
     initDashboard();
-  }
-  if (event === 'SIGNED_OUT') {
-    document.getElementById('loginScreen').classList.remove('hidden');
   }
 });
 
 // ── CONSTANTS ─────────────────────────────────────────────────
-const ROB_COLORS  = ['#7c4d1e','#b5651d','#d4895a','#e8b48a','#f5d5b8','#8B6914','#5c3a10','#a0522d'];
-const ARA_COLORS  = ['#2d6a4f','#40916c','#52b788','#74c69d','#95d5b2','#1b4332','#081c15','#d8f3dc'];
+const ROB_COLORS  = ['#7c4d1e','#b5651d','#d4895a','#e8b48a','#8B6914','#5c3a10','#a0522d','#f5d5b8'];
+const ARA_COLORS  = ['#2d6a4f','#40916c','#52b788','#74c69d','#1b4332','#081c15','#95d5b2','#d8f3dc'];
 const CTRY_COLORS = ['#264653','#2a9d8f','#e9c46a','#f4a261','#e76f51','#6a994e','#a7c957','#bc4749','#457b9d','#1d3557'];
-
 const PORT_LABELS = {ANT:'Antwerp',LON:'London',AMS:'Amsterdam',HAM:'Hamburg',HOU:'Houston',NOR:'New Orleans',MIA:'Miami',NEW:'New York',BAR:'Barcelona',FEL:'Felixstowe',GEN:'Genoa',LEH:'Le Havre',MAR:'Marseille',NYK:'New York',ROT:'Rotterdam',TRI:'Trieste',VIR:'Virginia'};
 const CTRY_LABELS = {BRA:'Brazil',MEX:'Mexico',HND:'Honduras',NIC:'Nicaragua',TZA:'Tanzania',PER:'Peru',IND:'India',KEN:'Kenya',UGA:'Uganda',PNG:'PNG',COL:'Colombia',SLV:'El Salvador',GTM:'Guatemala',CRI:'Costa Rica',ECU:'Ecuador',RWA:'Rwanda',DOM:'Dominican Rep.',BDI:'Burundi',PAN:'Panama',VEN:'Venezuela'};
 
+// ── STATE ─────────────────────────────────────────────────────
+const state = {
+  rob:     { allDates:[], dateMap:{}, activePorts:[], chart:null, tf:180 },
+  'ara-port': { allDates:[], dateMap:{}, activePorts:[], chart:null, tf:180 },
+  'ara-ctry': { allDates:[], dateMap:{}, top8:[], chart:null, tf:180 },
+};
 const chartsBuilt = {};
 
 // ── HELPERS ───────────────────────────────────────────────────
+const el = id => document.getElementById(id);
 const fmt = n => Math.round(n).toLocaleString('vi-VN');
-const fmtDate = d => d ? d.slice(0, 10) : '—';
-const deltaStr = (a, b) => (a >= b ? '+' : '') + fmt(a - b);
-const deltaClass = (a, b) => a >= b ? 'up' : 'down';
+const fmtD = d => d ? d.slice(0,10) : '—';
+const deltaStr = (a,b) => (a>=b?'+':'')+fmt(a-b);
+const deltaClass = (a,b) => a>=b?'up':'down';
 
-function el(id) { return document.getElementById(id); }
-
-function buildKPI(containerId, items) {
-  el(containerId).innerHTML = items.map(i =>
-    `<div class="kpi ${i.cls||''}">
-      <div class="kpi-label">${i.label}</div>
-      <div class="kpi-value">${i.value}</div>
-      <div class="kpi-sub">${i.sub||''}</div>
-    </div>`
-  ).join('');
-}
-
-function buildLegend(id, labels, colors) {
-  el(id).innerHTML = labels.map((l, i) =>
-    `<div class="legend-item"><span class="legend-dot" style="background:${colors[i % colors.length]}"></span>${l}</div>`
-  ).join('');
-}
-
-function buildTable(tableId, rows, maxVal, fillCls) {
-  document.querySelector(`#${tableId} tbody`).innerHTML = rows.map(r =>
-    `<tr>
-      <td>${PORT_LABELS[r.code] || CTRY_LABELS[r.code] || r.code}
-        <small style="color:var(--muted)"> ${r.code}</small></td>
-      <td class="val">${fmt(r.val)}</td>
-      <td class="pct">${r.pct.toFixed(1)}%</td>
-      <td><div class="bar-bg"><div class="bar-fill ${fillCls}" style="width:${Math.min(100,(r.val/maxVal*100)).toFixed(1)}%"></div></div></td>
-    </tr>`
-  ).join('');
+function filterByTF(dates, tf) {
+  if (tf >= 9999) return dates;
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - tf);
+  const cut = cutoff.toISOString().slice(0,10);
+  return dates.filter(d => d >= cut);
 }
 
 function groupByDate(rows, keyField, valField) {
   const map = {};
   rows.forEach(r => {
     if (!map[r.report_date]) map[r.report_date] = {};
-    map[r.report_date][r[keyField]] = (map[r.report_date][r[keyField]] || 0) + r[valField];
+    map[r.report_date][r[keyField]] = (map[r.report_date][r[keyField]]||0) + r[valField];
   });
   return map;
 }
 
-// ── TAB SWITCH ────────────────────────────────────────────────
-function switchTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach((b, i) =>
-    b.classList.toggle('active', ['rob','ara-port','ara-ctry'][i] === tab));
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  el('panel-' + tab).classList.add('active');
-  if (!chartsBuilt[tab]) {
-    chartsBuilt[tab] = true;
-    if (tab === 'rob') buildRob();
-    if (tab === 'ara-port') buildAraPort();
-    if (tab === 'ara-ctry') buildAraCtry();
-  }
+function buildKPI(id, items) {
+  el(id).innerHTML = items.map(i =>
+    `<div class="kpi ${i.cls||''}">
+      <div class="kpi-label">${i.label}</div>
+      <div class="kpi-value">${i.value}</div>
+      <div class="kpi-sub">${i.sub||''}</div>
+    </div>`).join('');
+}
+
+function buildLegend(id, labels, colors) {
+  el(id).innerHTML = labels.map((l,i) =>
+    `<div class="legend-item"><span class="legend-dot" style="background:${colors[i%colors.length]}"></span>${l}</div>`
+  ).join('');
+}
+
+function buildTable(tableId, rows, maxVal, fillCls) {
+  document.querySelector(`#${tableId} tbody`).innerHTML = rows.map(r =>
+    `<tr>
+      <td>${PORT_LABELS[r.code]||CTRY_LABELS[r.code]||r.code} <small style="color:var(--muted)">${r.code}</small></td>
+      <td class="val">${fmt(r.val)}</td>
+      <td class="pct">${r.pct.toFixed(1)}%</td>
+      <td><div class="bar-bg"><div class="bar-fill ${fillCls}" style="width:${Math.min(100,(r.val/maxVal*100)).toFixed(1)}%"></div></div></td>
+    </tr>`).join('');
+}
+
+// ── TIMEFRAME SWITCH ──────────────────────────────────────────
+function setTF(panel, days) {
+  state[panel].tf = days;
+  // Update button styles
+  const tfId = 'tf-' + panel;
+  const tfs = [30,90,180,365,730,9999];
+  document.querySelectorAll(`#${tfId} .tf-btn`).forEach((btn, i) => {
+    const isActive = tfs[i] === days;
+    btn.classList.toggle('active', isActive);
+    const cls = panel === 'rob' ? 'rob' : 'ara';
+    btn.classList.toggle(cls, isActive);
+  });
+  // Redraw chart với TF mới
+  if (panel === 'rob') redrawRobChart();
+  if (panel === 'ara-port') redrawAraPortChart();
+  if (panel === 'ara-ctry') redrawAraCtryChart();
 }
 
 // ── ROBUSTA ───────────────────────────────────────────────────
@@ -336,70 +446,90 @@ async function buildRob() {
   const { data, error } = await sb
     .from('certified_stock_robusta')
     .select('report_date,port_code,lots')
-    .order('report_date', { ascending: false })
-    .limit(1400);
+    .order('report_date', { ascending: true });
 
-  if (error || !data || !data.length) {
-    el('kpi-rob').innerHTML = '<p style="color:var(--muted);padding:20px">Chưa có dữ liệu Robusta</p>';
+  if (error || !data?.length) {
+    el('kpi-rob').innerHTML = '<p style="color:var(--muted);padding:20px">Chưa có dữ liệu</p>';
     return;
   }
 
   const dateMap = groupByDate(data, 'port_code', 'lots');
-  const dates = Object.keys(dateMap).sort();
-  const latestDate = dates[dates.length - 1];
-  const prevDate   = dates.length > 7 ? dates[dates.length - 8] : dates[0];
-  const latest = dateMap[latestDate] || {};
-  const prev   = dateMap[prevDate]   || {};
-  const latestTotal = Object.values(latest).reduce((a, b) => a + b, 0);
-  const prevTotal   = Object.values(prev).reduce((a, b) => a + b, 0);
+  const allDates = Object.keys(dateMap).sort();
+  state.rob.dateMap = dateMap;
+  state.rob.allDates = allDates;
 
-  el('last-updated').textContent = fmtDate(latestDate);
+  const latestDate = allDates[allDates.length-1];
+  const latest = dateMap[latestDate]||{};
+  const latestTotal = Object.values(latest).reduce((a,b)=>a+b,0);
 
-  buildKPI('kpi-rob', [
-    { label:'Tổng tồn kho', value: fmt(latestTotal)+' lots', sub: fmtDate(latestDate), cls:'rob' },
-    { label:'ANT — Antwerp', value: fmt(latest['ANT']||0), sub: latestTotal ? ((latest['ANT']||0)/latestTotal*100).toFixed(1)+'% tổng' : '' },
-    { label:'LON — London',  value: fmt(latest['LON']||0), sub: latestTotal ? ((latest['LON']||0)/latestTotal*100).toFixed(1)+'% tổng' : '' },
-    { label:'7 ngày trước',  value: `<span class="kpi-delta ${deltaClass(latestTotal,prevTotal)}">${deltaStr(latestTotal,prevTotal)} lots</span>`, sub: 'so '+fmtDate(prevDate) }
+  // Prev 7 ngày
+  const prev7Date = allDates.length>7 ? allDates[allDates.length-8] : allDates[0];
+  const prev7 = dateMap[prev7Date]||{};
+  const prev7Total = Object.values(prev7).reduce((a,b)=>a+b,0);
+
+  el('last-updated').textContent = fmtD(latestDate);
+
+  buildKPI('kpi-rob',[
+    {label:'Tổng tồn kho', value:fmt(latestTotal)+' lots', sub:fmtD(latestDate), cls:'rob'},
+    {label:'ANT — Antwerp', value:fmt(latest.ANT||0), sub:latestTotal?((latest.ANT||0)/latestTotal*100).toFixed(1)+'% tổng':''},
+    {label:'LON — London',  value:fmt(latest.LON||0), sub:latestTotal?((latest.LON||0)/latestTotal*100).toFixed(1)+'% tổng':''},
+    {label:'7 ngày trước',  value:`<span class="kpi-delta ${deltaClass(latestTotal,prev7Total)}">${deltaStr(latestTotal,prev7Total)} lots</span>`, sub:'so '+fmtD(prev7Date)}
   ]);
 
-  // Line chart — total by date (last 60 points)
-  const chartDates = dates.slice(-60);
-  new Chart(el('chart-rob'), {
-    type: 'line',
-    data: {
-      labels: chartDates.map(d => d.slice(5)),
-      datasets: [{
-        label: 'Total lots',
-        data: chartDates.map(d => Object.values(dateMap[d]).reduce((a,b)=>a+b,0)),
-        borderColor: '#7c4d1e', backgroundColor: 'rgba(124,77,30,0.08)',
-        borderWidth: 2, fill: true, tension: 0.3, pointRadius: 2
+  state.rob.activePorts = Object.keys(latest).filter(p=>latest[p]>0).sort((a,b)=>latest[b]-latest[a]);
+
+  // Doughnut (static, không đổi theo TF)
+  new Chart(el('chart-rob-doughnut'),{
+    type:'doughnut',
+    data:{
+      labels:state.rob.activePorts.map(p=>PORT_LABELS[p]||p),
+      datasets:[{data:state.rob.activePorts.map(p=>latest[p]||0),backgroundColor:ROB_COLORS,borderWidth:2,borderColor:'#fff'}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,cutout:'58%',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fmt(ctx.raw)} lots (${(ctx.raw/latestTotal*100).toFixed(1)}%)`}}}}
+  });
+
+  const tableRows = state.rob.activePorts.map(p=>({code:p,val:latest[p]||0,pct:latestTotal?latest[p]/latestTotal*100:0}));
+  buildTable('table-rob', tableRows, latest[state.rob.activePorts[0]]||1, '');
+
+  redrawRobChart();
+}
+
+function redrawRobChart() {
+  const {dateMap, allDates, activePorts, tf} = state.rob;
+  const filtered = filterByTF(allDates, tf);
+
+  const labels = filtered.map(d=>d.slice(5));
+  const totals = filtered.map(d=>Object.values(dateMap[d]||{}).reduce((a,b)=>a+b,0));
+
+  if (state.rob.chart) {
+    state.rob.chart.data.labels = labels;
+    state.rob.chart.data.datasets[0].data = totals;
+    state.rob.chart.update('none');
+    return;
+  }
+
+  state.rob.chart = new Chart(el('chart-rob'),{
+    type:'line',
+    data:{
+      labels,
+      datasets:[{
+        label:'Total lots', data:totals,
+        borderColor:'#7c4d1e', backgroundColor:'rgba(124,77,30,0.08)',
+        borderWidth:2, fill:true, tension:0.3, pointRadius:filtered.length>60?0:2,
+        pointHoverRadius:4,
       }]
     },
-    options: {
+    options:{
       responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>fmt(ctx.raw)+' lots'}} },
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fmt(ctx.raw)+' lots'}}},
       scales:{
-        x:{grid:{color:'#e2e2dd'},ticks:{color:'#6b6b66',font:{size:10},maxTicksLimit:10,maxRotation:35}},
+        x:{grid:{color:'#e2e2dd'},ticks:{color:'#6b6b66',font:{size:10},maxTicksLimit:12,maxRotation:35}},
         y:{grid:{color:'#e2e2dd'},ticks:{color:'#6b6b66',font:{size:10},callback:v=>fmt(v)}}
       }
     }
   });
-
-  // Doughnut
-  const activePorts = Object.keys(latest).filter(p => latest[p] > 0).sort((a,b) => latest[b]-latest[a]);
-  new Chart(el('chart-rob-doughnut'), {
-    type: 'doughnut',
-    data: {
-      labels: activePorts.map(p => PORT_LABELS[p]||p),
-      datasets: [{ data: activePorts.map(p=>latest[p]), backgroundColor: ROB_COLORS, borderWidth:2, borderColor:'#fff' }]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false, cutout:'58%',
-      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fmt(ctx.raw)} lots (${(ctx.raw/latestTotal*100).toFixed(1)}%)`}} }
-    }
-  });
-
-  buildTable('table-rob', activePorts.map(p=>({code:p,val:latest[p],pct:latestTotal?latest[p]/latestTotal*100:0})), latest[activePorts[0]]||1, '');
 }
 
 // ── ARABICA PORT ──────────────────────────────────────────────
@@ -407,66 +537,83 @@ async function buildAraPort() {
   const { data, error } = await sb
     .from('certified_stock_arabica_port')
     .select('report_date,port_code,bags')
-    .order('report_date', { ascending: false })
-    .limit(480);
+    .order('report_date', { ascending: true });
 
-  if (error || !data || !data.length) {
+  if (error || !data?.length) {
     el('kpi-ara-port').innerHTML = '<p style="color:var(--muted);padding:20px">Chưa có dữ liệu</p>';
     return;
   }
 
   const dateMap = groupByDate(data, 'port_code', 'bags');
-  const dates = Object.keys(dateMap).sort();
-  const latestDate = dates[dates.length - 1];
-  const prevDate   = dates.length > 7 ? dates[dates.length - 8] : dates[0];
-  const latest = dateMap[latestDate] || {};
-  const prev   = dateMap[prevDate]   || {};
-  const latestTotal = Object.values(latest).reduce((a,b)=>a+b,0);
-  const prevTotal   = Object.values(prev).reduce((a,b)=>a+b,0);
+  const allDates = Object.keys(dateMap).sort();
+  state['ara-port'].dateMap = dateMap;
+  state['ara-port'].allDates = allDates;
 
-  buildKPI('kpi-ara-port', [
-    { label:'Tổng tồn kho', value: fmt(latestTotal)+' bags', sub: fmtDate(latestDate), cls:'ara' },
-    { label:'ANT — Antwerp', value: fmt(latest['ANT']||0), sub: latestTotal?((latest['ANT']||0)/latestTotal*100).toFixed(1)+'% tổng':'' },
-    { label:'HOU — Houston', value: fmt(latest['HOU']||0), sub: latestTotal?((latest['HOU']||0)/latestTotal*100).toFixed(1)+'% tổng':'' },
-    { label:'7 ngày trước',  value: `<span class="kpi-delta ${deltaClass(latestTotal,prevTotal)}">${deltaStr(latestTotal,prevTotal)}</span>`, sub: 'so '+fmtDate(prevDate) }
+  const latestDate = allDates[allDates.length-1];
+  const latest = dateMap[latestDate]||{};
+  const latestTotal = Object.values(latest).reduce((a,b)=>a+b,0);
+  const prev7Date = allDates.length>7?allDates[allDates.length-8]:allDates[0];
+  const prev7Total = Object.values(dateMap[prev7Date]||{}).reduce((a,b)=>a+b,0);
+
+  buildKPI('kpi-ara-port',[
+    {label:'Tổng tồn kho', value:fmt(latestTotal)+' bags', sub:fmtD(latestDate), cls:'ara'},
+    {label:'ANT — Antwerp', value:fmt(latest.ANT||0), sub:latestTotal?((latest.ANT||0)/latestTotal*100).toFixed(1)+'% tổng':''},
+    {label:'HOU — Houston', value:fmt(latest.HOU||0), sub:latestTotal?((latest.HOU||0)/latestTotal*100).toFixed(1)+'% tổng':''},
+    {label:'7 ngày trước', value:`<span class="kpi-delta ${deltaClass(latestTotal,prev7Total)}">${deltaStr(latestTotal,prev7Total)}</span>`, sub:'so '+fmtD(prev7Date)}
   ]);
 
   const activePorts = Object.keys(latest).filter(p=>latest[p]>0).sort((a,b)=>latest[b]-latest[a]);
+  state['ara-port'].activePorts = activePorts;
   buildLegend('leg-ara-port', activePorts.map(p=>PORT_LABELS[p]||p), ARA_COLORS);
 
-  const chartDates = dates.slice(-60);
-  new Chart(el('chart-ara-port'), {
-    type: 'line',
-    data: {
-      labels: chartDates.map(d=>d.slice(5)),
-      datasets: activePorts.map((p,i)=>({
-        label: PORT_LABELS[p]||p,
-        data: chartDates.map(d=>dateMap[d]?.[p]||0),
-        borderColor: ARA_COLORS[i%ARA_COLORS.length],
-        backgroundColor:'transparent', borderWidth:2, tension:0.3, pointRadius:2
-      }))
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{mode:'index',intersect:false,callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmt(ctx.raw)}`}} },
-      scales:{
-        x:{grid:{color:'#e2e2dd'},ticks:{color:'#6b6b66',font:{size:10},maxTicksLimit:10,maxRotation:35}},
-        y:{grid:{color:'#e2e2dd'},ticks:{color:'#6b6b66',font:{size:10},callback:v=>Math.round(v/1000)+'k'}}
-      }
-    }
-  });
-
-  new Chart(el('chart-ara-port-doughnut'), {
-    type: 'doughnut',
-    data: {
-      labels: activePorts.map(p=>PORT_LABELS[p]||p),
-      datasets:[{data:activePorts.map(p=>latest[p]),backgroundColor:ARA_COLORS,borderWidth:2,borderColor:'#fff'}]
-    },
+  new Chart(el('chart-ara-port-doughnut'),{
+    type:'doughnut',
+    data:{labels:activePorts.map(p=>PORT_LABELS[p]||p),datasets:[{data:activePorts.map(p=>latest[p]||0),backgroundColor:ARA_COLORS,borderWidth:2,borderColor:'#fff'}]},
     options:{responsive:true,maintainAspectRatio:false,cutout:'58%',
       plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fmt(ctx.raw)} bags (${(ctx.raw/latestTotal*100).toFixed(1)}%)`}}}}
   });
 
-  buildTable('table-ara-port', activePorts.map(p=>({code:p,val:latest[p],pct:latestTotal?latest[p]/latestTotal*100:0})), latest[activePorts[0]]||1, 'ara');
+  buildTable('table-ara-port', activePorts.map(p=>({code:p,val:latest[p]||0,pct:latestTotal?latest[p]/latestTotal*100:0})), latest[activePorts[0]]||1, 'ara');
+  redrawAraPortChart();
+}
+
+function redrawAraPortChart() {
+  const {dateMap, allDates, activePorts, tf} = state['ara-port'];
+  const filtered = filterByTF(allDates, tf);
+  const labels = filtered.map(d=>d.slice(5));
+
+  if (state['ara-port'].chart) {
+    state['ara-port'].chart.data.labels = labels;
+    state['ara-port'].chart.data.datasets.forEach((ds,i) => {
+      ds.data = filtered.map(d=>dateMap[d]?.[activePorts[i]]||0);
+    });
+    state['ara-port'].chart.update('none');
+    return;
+  }
+
+  state['ara-port'].chart = new Chart(el('chart-ara-port'),{
+    type:'line',
+    data:{
+      labels,
+      datasets: activePorts.map((p,i)=>({
+        label:PORT_LABELS[p]||p,
+        data:filtered.map(d=>dateMap[d]?.[p]||0),
+        borderColor:ARA_COLORS[i%ARA_COLORS.length],
+        backgroundColor:'transparent',
+        borderWidth:2, tension:0.3,
+        pointRadius:filtered.length>60?0:2, pointHoverRadius:4,
+      }))
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmt(ctx.raw)}`}}},
+      scales:{
+        x:{grid:{color:'#e2e2dd'},ticks:{color:'#6b6b66',font:{size:10},maxTicksLimit:12,maxRotation:35}},
+        y:{grid:{color:'#e2e2dd'},ticks:{color:'#6b6b66',font:{size:10},callback:v=>Math.round(v/1000)+'k'}}
+      }
+    }
+  });
 }
 
 // ── ARABICA COUNTRY ───────────────────────────────────────────
@@ -474,73 +621,272 @@ async function buildAraCtry() {
   const { data, error } = await sb
     .from('certified_stock_arabica_country')
     .select('report_date,country_code,bags')
-    .order('report_date', { ascending: false })
-    .limit(600);
+    .order('report_date', { ascending: true });
 
-  if (error || !data || !data.length) {
+  if (error || !data?.length) {
     el('kpi-ara-ctry').innerHTML = '<p style="color:var(--muted);padding:20px">Chưa có dữ liệu</p>';
     return;
   }
 
   const dateMap = groupByDate(data, 'country_code', 'bags');
-  const dates = Object.keys(dateMap).sort();
-  const latestDate = dates[dates.length - 1];
-  const latest = dateMap[latestDate] || {};
+  const allDates = Object.keys(dateMap).sort();
+  state['ara-ctry'].dateMap = dateMap;
+  state['ara-ctry'].allDates = allDates;
+
+  const latestDate = allDates[allDates.length-1];
+  const latest = dateMap[latestDate]||{};
   const latestTotal = Object.values(latest).reduce((a,b)=>a+b,0);
 
-  el('note-ctry').innerHTML = `⚠️ Dữ liệu by Country bị giới hạn 150,000 rows bởi ICE khi export — latest trong DB: <strong>${fmtDate(latestDate)}</strong>. Cần download file mới từ ICE để cập nhật.`;
+  el('note-ctry').innerHTML = `⚠️ Dữ liệu by Country bị giới hạn 150,000 rows bởi ICE khi export — latest trong DB: <strong>${fmtD(latestDate)}</strong>. Cần download file mới từ ICE để cập nhật.`;
 
-  const allCtries = Object.entries(latest).sort((a,b)=>b[1]-a[1]).map(e=>e[0]);
-  const top8 = allCtries.slice(0, 8);
+  const top8 = Object.entries(latest).sort((a,b)=>b[1]-a[1]).slice(0,8).map(e=>e[0]);
+  state['ara-ctry'].top8 = top8;
 
-  buildKPI('kpi-ara-ctry', [
-    { label:'Tổng tồn kho', value: fmt(latestTotal)+' bags', sub: fmtDate(latestDate), cls:'ara' },
-    { label:'BRA — Brazil',   value: fmt(latest['BRA']||0), sub: latestTotal?((latest['BRA']||0)/latestTotal*100).toFixed(1)+'% tổng':'' },
-    { label:'MEX — Mexico',   value: fmt(latest['MEX']||0), sub: latestTotal?((latest['MEX']||0)/latestTotal*100).toFixed(1)+'% tổng':'' },
-    { label:'HND — Honduras', value: fmt(latest['HND']||0), sub: latestTotal?((latest['HND']||0)/latestTotal*100).toFixed(1)+'% tổng':'' }
+  buildKPI('kpi-ara-ctry',[
+    {label:'Tổng tồn kho', value:fmt(latestTotal)+' bags', sub:fmtD(latestDate), cls:'ara'},
+    {label:'BRA — Brazil',   value:fmt(latest.BRA||0), sub:latestTotal?((latest.BRA||0)/latestTotal*100).toFixed(1)+'% tổng':''},
+    {label:'MEX — Mexico',   value:fmt(latest.MEX||0), sub:latestTotal?((latest.MEX||0)/latestTotal*100).toFixed(1)+'% tổng':''},
+    {label:'HND — Honduras', value:fmt(latest.HND||0), sub:latestTotal?((latest.HND||0)/latestTotal*100).toFixed(1)+'% tổng':''}
   ]);
 
   buildLegend('leg-ara-ctry', top8.map(c=>CTRY_LABELS[c]||c), CTRY_COLORS);
 
-  // Filter out partial last day (total suspiciously low)
-  const validDates = dates.filter(d => Object.values(dateMap[d]).reduce((a,b)=>a+b,0) > 100000).slice(-30);
+  const allCtries = Object.entries(latest).sort((a,b)=>b[1]-a[1]).map(e=>e[0]).filter(c=>latest[c]>0);
+  buildTable('table-ara-ctry', allCtries.map(c=>({code:c,val:latest[c]||0,pct:latestTotal?latest[c]/latestTotal*100:0})), latest[allCtries[0]]||1, 'ara');
 
-  new Chart(el('chart-ara-ctry'), {
-    type: 'bar',
-    data: {
-      labels: validDates.map(d=>d.slice(5)),
-      datasets: top8.map((c,i)=>({
-        label: CTRY_LABELS[c]||c,
-        data: validDates.map(d=>dateMap[d]?.[c]||0),
-        backgroundColor: CTRY_COLORS[i%CTRY_COLORS.length],
+  redrawAraCtryChart();
+}
+
+function redrawAraCtryChart() {
+  const {dateMap, allDates, top8, tf} = state['ara-ctry'];
+  const filtered = filterByTF(allDates, tf).filter(d=>Object.values(dateMap[d]||{}).reduce((a,b)=>a+b,0)>100000);
+  const labels = filtered.map(d=>d.slice(5));
+
+  if (state['ara-ctry'].chart) {
+    state['ara-ctry'].chart.data.labels = labels;
+    state['ara-ctry'].chart.data.datasets.forEach((ds,i)=>{
+      ds.data = filtered.map(d=>dateMap[d]?.[top8[i]]||0);
+    });
+    state['ara-ctry'].chart.update('none');
+    return;
+  }
+
+  state['ara-ctry'].chart = new Chart(el('chart-ara-ctry'),{
+    type:'bar',
+    data:{
+      labels,
+      datasets:top8.map((c,i)=>({
+        label:CTRY_LABELS[c]||c,
+        data:filtered.map(d=>dateMap[d]?.[c]||0),
+        backgroundColor:CTRY_COLORS[i%CTRY_COLORS.length],
         stack:'s'
       }))
     },
     options:{
       responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{mode:'index',callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmt(ctx.raw)} bags`}}},
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmt(ctx.raw)} bags`}}},
       scales:{
-        x:{stacked:true,grid:{color:'#e2e2dd'},ticks:{color:'#6b6b66',font:{size:10},maxTicksLimit:10,maxRotation:35}},
+        x:{stacked:true,grid:{color:'#e2e2dd'},ticks:{color:'#6b6b66',font:{size:10},maxTicksLimit:12,maxRotation:35}},
         y:{stacked:true,grid:{color:'#e2e2dd'},ticks:{color:'#6b6b66',font:{size:10},callback:v=>Math.round(v/1000)+'k'}}
       }
     }
   });
+}
 
-  const tableRows = allCtries.filter(c=>latest[c]>0).map(c=>({code:c,val:latest[c],pct:latestTotal?latest[c]/latestTotal*100:0}));
-  buildTable('table-ara-ctry', tableRows, latest[allCtries[0]]||1, 'ara');
+// ── TAB SWITCH ────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>
+    b.classList.toggle('active', ['rob','ara-port','ara-ctry','daily'][i]===tab));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  el('panel-'+tab).classList.add('active');
+  if (!chartsBuilt[tab]) {
+    chartsBuilt[tab] = true;
+    if (tab==='rob') buildRob();
+    if (tab==='ara-port') buildAraPort();
+    if (tab==='ara-ctry') buildAraCtry();
+    if (tab==='daily') buildDaily();
+  }
+}
+
+// ── PORT LABELS SHORT ─────────────────────────────────────────
+const PORT_SHORT = {ANT:'Antwerp',BAR:'Barcelona',HAM:'Hamburg',HOU:'Houston',MIA:'Miami',NOR:'New Orleans',NEW:'New York',VIR:'Virginia'};
+
+// ── DAILY SNAPSHOT ────────────────────────────────────────────
+async function buildDaily() {
+  const [resMatrix, resTrans, resPort] = await Promise.all([
+    sb.from('certified_stock_arabica_matrix').select('report_date,country_code,port_code,bags')
+      .order('report_date',{ascending:false}).limit(300),
+    sb.from('certified_stock_arabica_transition').select('report_date,country_code,port_code,bags')
+      .order('report_date',{ascending:false}).limit(200),
+    sb.from('certified_stock_arabica_port').select('report_date,port_code,bags')
+      .order('report_date',{ascending:false}).limit(20),
+  ]);
+
+  // Fallback nếu matrix chưa có data (chưa chạy daily_update v3)
+  const hasMatrix = resMatrix.data?.length > 0;
+  if (!hasMatrix) {
+    // Dùng country + port tables sẵn có
+    const [resCtry] = await Promise.all([
+      sb.from('certified_stock_arabica_country').select('report_date,country_code,bags')
+        .order('report_date',{ascending:false}).limit(30),
+    ]);
+    await buildDailyFallback(resCtry.data, resPort.data);
+    return;
+  }
+
+  const latestDate = resMatrix.data[0].report_date;
+  const matrixRows = resMatrix.data.filter(r=>r.report_date===latestDate);
+  const transRows  = resTrans.data?.filter(r=>r.report_date===latestDate) || [];
+  const portRows   = resPort.data?.filter(r=>r.report_date===resPort.data[0]?.report_date) || [];
+
+  el('daily-date').textContent = latestDate;
+  el('daily-loading').style.display = 'none';
+  el('daily-content').style.display = 'block';
+  el('grading-chips').innerHTML = `<span class="grading-chip pass">📅 ${latestDate}</span>`;
+
+  renderPivot('tbl-total', matrixRows, portRows, 'Total Bags Certified');
+  renderPivot('tbl-transition', transRows, [], 'Transition Bags');
+  renderTransBars(matrixRows, transRows);
+}
+
+async function buildDailyFallback(ctryData, portData) {
+  if (!ctryData?.length) {
+    el('daily-loading').innerHTML = '<p style="color:var(--muted);padding:20px">Chưa có dữ liệu — chạy daily_update.py để cập nhật</p>';
+    return;
+  }
+  const latestDate = ctryData[0].report_date;
+  const ctryRows = ctryData.filter(r=>r.report_date===latestDate);
+  const portRows = portData?.filter(r=>r.report_date===portData[0]?.report_date)||[];
+
+  el('daily-date').textContent = latestDate;
+  el('daily-loading').style.display = 'none';
+  el('daily-content').style.display = 'block';
+
+  const ctryMap = {};
+  ctryRows.forEach(r=>ctryMap[r.country_code]=r.bags);
+  const portMap = {};
+  portRows.forEach(r=>portMap[r.port_code]=r.bags);
+  const countries = Object.keys(ctryMap).sort((a,b)=>ctryMap[b]-ctryMap[a]);
+  const ports = Object.keys(portMap).filter(p=>portMap[p]>0).sort((a,b)=>portMap[b]-portMap[a]);
+  const grandTotal = Object.values(ctryMap).reduce((a,b)=>a+b,0);
+
+  // Simple table: country | total — no matrix yet
+  let html = `<thead><tr>
+    <th style="text-align:left">Origin</th>
+    ${ports.map(p=>`<th>${PORT_SHORT[p]||p} <small>${p}</small></th>`).join('')}
+    <th>Total Bags</th><th style="text-align:right">%</th>
+  </tr></thead><tbody>`;
+
+  countries.forEach(c=>{
+    const total = ctryMap[c]||0;
+    html += `<tr>
+      <td>${c}</td>
+      ${ports.map(()=>'<td class="zero">—</td>').join('')}
+      <td style="font-weight:600;color:var(--ara)">${fmt(total)}</td>
+      <td style="color:var(--muted)">${grandTotal?(total/grandTotal*100).toFixed(1):0}%</td>
+    </tr>`;
+  });
+  html += `<tr class="total-row">
+    <td>TOTAL</td>
+    ${ports.map(p=>`<td>${fmt(portMap[p]||0)}</td>`).join('')}
+    <td>${fmt(grandTotal)}</td><td>100%</td>
+  </tr></tbody>`;
+  el('tbl-total').innerHTML = html;
+  el('tbl-transition').innerHTML = `<tbody><tr><td style="padding:16px;color:var(--muted);font-size:12px">Chạy <code>daily_update.py</code> phiên bản mới để có Transition data chi tiết.</td></tr></tbody>`;
+  el('transition-bars').innerHTML = '';
+}
+
+function renderPivot(tableId, matrixRows, portRows, label) {
+  if (!matrixRows.length) {
+    el(tableId).innerHTML = `<tbody><tr><td style="padding:12px;color:var(--muted)">Không có dữ liệu ${label}</td></tr></tbody>`;
+    return;
+  }
+
+  // Build lookup: {country: {port: bags}}
+  const lookup = {};
+  matrixRows.forEach(r=>{
+    if(!lookup[r.country_code]) lookup[r.country_code]={};
+    lookup[r.country_code][r.port_code]=(lookup[r.country_code][r.port_code]||0)+r.bags;
+  });
+
+  // Active ports (sorted by total)
+  const portTotals = {};
+  matrixRows.forEach(r=>{ portTotals[r.port_code]=(portTotals[r.port_code]||0)+r.bags; });
+  const ports = Object.keys(portTotals).filter(p=>portTotals[p]>0).sort((a,b)=>portTotals[b]-portTotals[a]);
+
+  // Countries sorted by total
+  const ctryTotals = {};
+  matrixRows.forEach(r=>{ ctryTotals[r.country_code]=(ctryTotals[r.country_code]||0)+r.bags; });
+  const countries = Object.keys(ctryTotals).sort((a,b)=>ctryTotals[b]-ctryTotals[a]);
+  const grandTotal = Object.values(ctryTotals).reduce((a,b)=>a+b,0);
+
+  let html = `<thead><tr>
+    <th style="text-align:left">Origin</th>
+    ${ports.map(p=>`<th>${PORT_SHORT[p]||p}<br><small style="font-weight:400;text-transform:none">${p}</small></th>`).join('')}
+    <th>Total</th><th style="text-align:right">%</th>
+  </tr></thead><tbody>`;
+
+  countries.forEach(c=>{
+    const total = ctryTotals[c]||0;
+    const pct = grandTotal?(total/grandTotal*100).toFixed(1):'0';
+    html += `<tr>
+      <td>${c}</td>
+      ${ports.map(p=>{ const v=(lookup[c]||{})[p]||0; return `<td class="${v===0?'zero':''}">${v===0?'—':fmt(v)}</td>`; }).join('')}
+      <td style="font-weight:600;color:var(--ara)">${fmt(total)}</td>
+      <td style="color:var(--muted)">${pct}%</td>
+    </tr>`;
+  });
+
+  html += `<tr class="total-row">
+    <td>TOTAL IN BAGS</td>
+    ${ports.map(p=>`<td>${fmt(portTotals[p]||0)}</td>`).join('')}
+    <td>${fmt(grandTotal)}</td><td>100%</td>
+  </tr></tbody>`;
+  el(tableId).innerHTML = html;
+}
+
+function renderTransBars(matrixRows, transRows) {
+  if (!matrixRows.length || !transRows.length) {
+    el('transition-bars').innerHTML = '<p style="color:var(--muted);font-size:12px">Chưa có Transition data — chạy daily_update.py v3</p>';
+    return;
+  }
+  const totalByCtry = {}, transByCtry = {};
+  matrixRows.forEach(r=>{ totalByCtry[r.country_code]=(totalByCtry[r.country_code]||0)+r.bags; });
+  transRows.forEach(r=>{ transByCtry[r.country_code]=(transByCtry[r.country_code]||0)+r.bags; });
+
+  const countries = Object.keys(totalByCtry).sort((a,b)=>totalByCtry[b]-totalByCtry[a]);
+  const grandTotal = Object.values(totalByCtry).reduce((a,b)=>a+b,0);
+  const grandTrans = Object.values(transByCtry).reduce((a,b)=>a+b,0);
+
+  let html = `<div style="font-size:11px;color:var(--muted);margin-bottom:10px">
+    Transition tổng: <strong>${fmt(grandTrans)}</strong> / ${fmt(grandTotal)} bags
+    (<strong style="color:var(--ara)">${grandTotal?(grandTrans/grandTotal*100).toFixed(1):0}%</strong>)
+    — subject to discount từ 2027
+  </div>`;
+
+  html += countries.map(c=>{
+    const total = totalByCtry[c]||0;
+    const trans = transByCtry[c]||0;
+    const pct = total?(trans/total*100):0;
+    return `<div class="trans-bar-row">
+      <div class="ctry">${c}</div>
+      <div class="trans-bar-wrap"><div class="trans-bar-fill" style="width:${Math.min(100,pct).toFixed(1)}%"></div></div>
+      <div class="trans-bar-pct">${pct.toFixed(0)}%</div>
+      <div style="font-size:10px;color:var(--muted);width:90px">${fmt(trans)} / ${fmt(total)}</div>
+    </div>`;
+  }).join('');
+  el('transition-bars').innerHTML = html;
 }
 
 // ── INIT ──────────────────────────────────────────────────────
 function initDashboard() {
-  if (chartsBuilt['rob']) return; // đã init rồi
+  if (chartsBuilt['rob']) return;
   chartsBuilt['rob'] = true;
   buildRob();
 }
 
-// Start
-document.addEventListener('DOMContentLoaded', () => {
-  checkAuth();
-});
+document.addEventListener('DOMContentLoaded', checkAuth);
 </script>
 </body>
 </html>
