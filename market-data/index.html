@@ -446,7 +446,9 @@ async function buildRob() {
   const { data, error } = await sb
     .from('certified_stock_robusta')
     .select('report_date,port_code,lots')
-    .order('report_date', { ascending: true });
+    .gte('report_date', new Date(Date.now()-2*365*86400000).toISOString().slice(0,10))
+    .order('report_date', { ascending: true })
+    .limit(10000);
 
   if (error || !data?.length) {
     el('kpi-rob').innerHTML = '<p style="color:var(--muted);padding:20px">Chưa có dữ liệu</p>';
@@ -537,7 +539,9 @@ async function buildAraPort() {
   const { data, error } = await sb
     .from('certified_stock_arabica_port')
     .select('report_date,port_code,bags')
-    .order('report_date', { ascending: true });
+    .gte('report_date', new Date(Date.now()-2*365*86400000).toISOString().slice(0,10))
+    .order('report_date', { ascending: true })
+    .limit(10000);
 
   if (error || !data?.length) {
     el('kpi-ara-port').innerHTML = '<p style="color:var(--muted);padding:20px">Chưa có dữ liệu</p>';
@@ -621,7 +625,9 @@ async function buildAraCtry() {
   const { data, error } = await sb
     .from('certified_stock_arabica_country')
     .select('report_date,country_code,bags')
-    .order('report_date', { ascending: true });
+    .gte('report_date', new Date(Date.now()-2*365*86400000).toISOString().slice(0,10))
+    .order('report_date', { ascending: true })
+    .limit(10000);
 
   if (error || !data?.length) {
     el('kpi-ara-ctry').innerHTML = '<p style="color:var(--muted);padding:20px">Chưa có dữ liệu</p>';
