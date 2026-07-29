@@ -1,0 +1,36 @@
+-- Tạo bảng coffee_samples cho module Quản lý mẫu cà phê
+CREATE TABLE IF NOT EXISTS coffee_samples (
+  id TEXT PRIMARY KEY,
+  lot_code TEXT NOT NULL,
+  contract_code TEXT,
+  coffee_type TEXT NOT NULL DEFAULT 'robusta_r2',
+  customer TEXT,
+  supplier TEXT,
+  sample_date DATE NOT NULL,
+  export_date DATE,
+  lot_qty NUMERIC,
+  location TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'stored',
+  cupping_score NUMERIC,
+  moisture NUMERIC,
+  quality_notes TEXT,
+  photos JSONB DEFAULT '[]'::jsonb,
+  notes TEXT,
+  created_by TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_by TEXT,
+  updated_at TIMESTAMPTZ
+);
+
+-- RLS: cho phép tất cả authenticated users đọc/ghi (giống bảng leaves)
+ALTER TABLE coffee_samples ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "allow all coffee_samples" ON coffee_samples
+  FOR ALL
+  USING (true)
+  WITH CHECK (true);
+
+-- Index cho tìm kiếm nhanh
+CREATE INDEX IF NOT EXISTS idx_samples_lot ON coffee_samples(lot_code);
+CREATE INDEX IF NOT EXISTS idx_samples_status ON coffee_samples(status);
+CREATE INDEX IF NOT EXISTS idx_samples_date ON coffee_samples(sample_date DESC);
