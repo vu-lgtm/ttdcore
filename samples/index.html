@@ -1,36 +1,592 @@
--- Tạo bảng coffee_samples cho module Quản lý mẫu cà phê
-CREATE TABLE IF NOT EXISTS coffee_samples (
-  id TEXT PRIMARY KEY,
-  lot_code TEXT NOT NULL,
-  contract_code TEXT,
-  coffee_type TEXT NOT NULL DEFAULT 'robusta_r2',
-  customer TEXT,
-  supplier TEXT,
-  sample_date DATE NOT NULL,
-  export_date DATE,
-  lot_qty NUMERIC,
-  location TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'stored',
-  cupping_score NUMERIC,
-  moisture NUMERIC,
-  quality_notes TEXT,
-  photos JSONB DEFAULT '[]'::jsonb,
-  notes TEXT,
-  created_by TEXT,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_by TEXT,
-  updated_at TIMESTAMPTZ
-);
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản lý mẫu cà phê — TTDCore</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; color: #333; }
+.container { max-width: 1280px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); padding: 30px; }
+.hidden { display: none !important; }
 
--- RLS: cho phép tất cả authenticated users đọc/ghi (giống bảng leaves)
-ALTER TABLE coffee_samples ENABLE ROW LEVEL SECURITY;
+/* Login */
+.login-box { max-width: 480px; margin: 40px auto; text-align: center; }
+.login-box h1 { font-size: 28px; margin-bottom: 8px; color: #333; }
+.login-box p { color: #666; margin-bottom: 28px; font-size: 14px; }
 
-CREATE POLICY "allow all coffee_samples" ON coffee_samples
-  FOR ALL
-  USING (true)
-  WITH CHECK (true);
+/* Top bar */
+.top-bar { display: flex; justify-content: space-between; align-items: center; padding-bottom: 18px; border-bottom: 1px solid #eee; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+.top-bar-title h1 { font-size: 22px; color: #333; }
+.top-bar-title p { color: #888; font-size: 13px; margin-top: 2px; }
+.user-info { display: flex; align-items: center; gap: 12px; }
+.user-badge { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; }
 
--- Index cho tìm kiếm nhanh
-CREATE INDEX IF NOT EXISTS idx_samples_lot ON coffee_samples(lot_code);
-CREATE INDEX IF NOT EXISTS idx_samples_status ON coffee_samples(status);
-CREATE INDEX IF NOT EXISTS idx_samples_date ON coffee_samples(sample_date DESC);
+/* Buttons */
+.btn { padding: 9px 18px; border: 2px solid #e0e0e0; background: white; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 500; transition: all 0.2s; color: #555; }
+.btn:hover { border-color: #667eea; color: #667eea; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); border-color: transparent; color: white; }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102,126,234,0.3); color: white; }
+.btn-danger { color: #c0392b; }
+.btn-danger:hover { border-color: #c0392b; color: #c0392b; }
+.btn-mini { padding: 4px 10px; font-size: 11px; border: 1px solid #e0e0e0; background: white; border-radius: 5px; cursor: pointer; color: #667eea; font-weight: 500; transition: all 0.15s; }
+.btn-mini:hover { background: #667eea; color: white; border-color: #667eea; }
+
+/* Form */
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 13px; font-weight: 500; color: #555; margin-bottom: 6px; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 11px 14px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: border-color 0.3s; background: white; font-family: inherit; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #667eea; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+/* Toolbar */
+.list-toolbar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+.search-box { flex: 1; min-width: 200px; position: relative; }
+.search-box input { width: 100%; padding: 10px 14px 10px 38px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
+.search-box input:focus { outline: none; border-color: #667eea; }
+.search-box::before { content: "🔍"; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; }
+
+/* Stats */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 22px; }
+.stat-card { background: linear-gradient(135deg, #667eea, #764ba2); padding: 18px; border-radius: 10px; color: white; }
+.stat-card.green { background: linear-gradient(135deg, #43a047, #2e7d32); }
+.stat-card.orange { background: linear-gradient(135deg, #ef6c00, #e65100); }
+.stat-card.teal { background: linear-gradient(135deg, #00897b, #00695c); }
+.stat-label { font-size: 12px; opacity: 0.9; margin-bottom: 6px; }
+.stat-value { font-size: 26px; font-weight: 700; }
+
+/* Table */
+.sample-table { width: 100%; border-collapse: collapse; background: white; border: 2px solid #eee; border-radius: 10px; overflow: hidden; }
+.sample-table th { background: #f8f9fc; padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 600; color: #888; border-bottom: 2px solid #eee; white-space: nowrap; }
+.sample-table td { padding: 11px 14px; border-bottom: 1px solid #f0f0f0; font-size: 13px; vertical-align: middle; }
+.sample-table tr:last-child td { border-bottom: none; }
+.sample-table tr:hover td { background: #fafafa; cursor: pointer; }
+
+/* Status pills */
+.status-pill { font-size: 11px; padding: 4px 10px; border-radius: 12px; font-weight: 600; white-space: nowrap; }
+.status-luu { background: #d4edda; color: #155724; }
+.status-dung { background: #fff3cd; color: #856404; }
+.status-huy { background: #f8d7da; color: #721c24; }
+
+/* Coffee type badges */
+.type-badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; }
+.type-robusta { background: #4e342e; color: white; }
+.type-arabica { background: #2e7d32; color: white; }
+.type-other { background: #5c6bc0; color: white; }
+
+/* Modal */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.modal { background: white; border-radius: 12px; padding: 28px; max-width: 640px; width: 100%; max-height: 90vh; overflow-y: auto; }
+.modal h2 { font-size: 20px; margin-bottom: 18px; color: #333; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+/* Detail view */
+.detail-card { background: #f8f9fc; border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.detail-item { }
+.detail-item .d-label { font-size: 11px; color: #888; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
+.detail-item .d-value { font-size: 14px; color: #333; font-weight: 500; }
+
+/* Photo grid */
+.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 10px; }
+.photo-item { position: relative; border-radius: 8px; overflow: hidden; border: 2px solid #eee; aspect-ratio: 1; }
+.photo-item img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
+.photo-item .photo-del { position: absolute; top: 4px; right: 4px; background: rgba(192,57,43,0.85); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; cursor: pointer; display: none; }
+.photo-item:hover .photo-del { display: block; }
+
+/* Cupping score */
+.cupping-score { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: 16px; }
+.cupping-score.high { color: #2e7d32; }
+.cupping-score.mid { color: #ef6c00; }
+.cupping-score.low { color: #c0392b; }
+
+/* Loading */
+.loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.85); z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+.spinner { width: 40px; height: 40px; border: 4px solid #e0e0e0; border-top-color: #667eea; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 14px; color: #666; }
+
+.empty-state { text-align: center; padding: 60px 20px; color: #999; }
+.empty-state .ico { font-size: 48px; margin-bottom: 12px; }
+
+.notice { background: #fff8e1; border-left: 3px solid #ffc107; padding: 10px 14px; border-radius: 6px; font-size: 13px; color: #856404; margin-bottom: 16px; }
+.notice.info { background: #eef0fc; border-color: #667eea; color: #3f3f8c; }
+
+@media (max-width: 768px) {
+  .container { padding: 16px; }
+  .stats { grid-template-columns: 1fr 1fr; }
+  .detail-grid { grid-template-columns: 1fr 1fr; }
+  .form-row, .form-row-3 { grid-template-columns: 1fr; }
+}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: #c5c5e6; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #667eea; }
+</style>
+</head>
+<body>
+<div class="loading-overlay hidden" id="loadingOverlay"><div class="spinner"></div><div class="loading-text" id="loadingText">Đang tải...</div></div>
+
+<!-- LOGIN -->
+<div class="container" id="loginScreen">
+  <div class="login-box">
+    <h1>☕ Quản lý mẫu cà phê</h1>
+    <p>Mẫu đối chứng các lô hàng đã xuất</p>
+    <div id="loginError" style="color:#c0392b;font-size:13px;margin-bottom:16px;display:none;"></div>
+    <button class="btn btn-primary" style="width:100%;padding:14px;font-size:15px;display:flex;align-items:center;justify-content:center;gap:10px;" onclick="loginWithGoogle()" id="loginBtn">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 33.1 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.3-.1-2.7-.1-4z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.1 18.9 12 24 12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5l-6.2-5.2C29.4 35.5 26.8 36 24 36c-5.2 0-9.6-2.9-11.3-7.1l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.5-2.6 4.6-4.8 6l6.2 5.2C40.5 36.2 44 30.5 44 24c0-1.3-.1-2.7-.4-4z"/></svg>
+      Đăng nhập với Google
+    </button>
+    <p style="margin-top:16px;font-size:12px;color:#aaa;">Chỉ tài khoản <strong>@ttdglobal.vn</strong></p>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="container hidden" id="mainApp">
+  <div class="top-bar">
+    <div class="top-bar-title">
+      <h1>☕ Quản lý mẫu cà phê</h1>
+      <p>Mẫu đối chứng · Lưu trữ theo lô hàng xuất khẩu</p>
+    </div>
+    <div class="user-info">
+      <span class="user-badge" id="userBadge"></span>
+      <button class="btn" onclick="logout()">Đăng xuất</button>
+    </div>
+  </div>
+
+  <!-- LIST VIEW -->
+  <div id="viewList">
+    <div class="stats" id="statsBar"></div>
+    <div class="list-toolbar">
+      <div class="search-box"><input type="text" id="searchInput" placeholder="Tìm mã lô, hợp đồng, loại cà phê..." oninput="renderList()"></div>
+      <select style="padding:10px 14px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;background:white;" id="filterType" onchange="renderList()">
+        <option value="all">Tất cả loại</option>
+        <option value="robusta">Robusta</option>
+        <option value="arabica">Arabica</option>
+        <option value="other">Khác</option>
+      </select>
+      <select style="padding:10px 14px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;background:white;" id="filterStatus" onchange="renderList()">
+        <option value="all">Tất cả trạng thái</option>
+        <option value="stored">Đang lưu</option>
+        <option value="in_use">Đang dùng</option>
+        <option value="disposed">Đã hủy</option>
+      </select>
+      <select style="padding:10px 14px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;background:white;" id="sortOrder" onchange="renderList()">
+        <option value="desc">Mới nhất</option>
+        <option value="asc">Cũ nhất</option>
+      </select>
+      <button class="btn btn-primary" onclick="openNewModal()" id="btnAdd">+ Thêm mẫu</button>
+      <button class="btn" onclick="loadSamples()" title="Tải lại">🔄</button>
+    </div>
+    <div id="listContainer"></div>
+  </div>
+
+  <!-- DETAIL VIEW -->
+  <div id="viewDetail" class="hidden">
+    <div style="margin-bottom:16px;display:flex;gap:8px;align-items:center;">
+      <button class="btn" onclick="showList()">← Danh sách</button>
+      <span style="font-size:13px;color:#888;" id="detailBreadcrumb"></span>
+    </div>
+    <div id="detailContent"></div>
+  </div>
+</div>
+
+<!-- MODAL: Thêm/Sửa mẫu -->
+<div class="modal-backdrop hidden" id="sampleModal">
+  <div class="modal">
+    <h2 id="modalTitle">Thêm mẫu đối chứng</h2>
+    <input type="hidden" id="editId">
+
+    <div class="form-row">
+      <div class="form-group"><label>Mã lô hàng *</label><input type="text" id="fLotCode" placeholder="VD: LOT-2607-R2"></div>
+      <div class="form-group"><label>Mã hợp đồng</label><input type="text" id="fContract" placeholder="VD: S-26012E.BR"></div>
+    </div>
+
+    <div class="form-row-3">
+      <div class="form-group"><label>Loại cà phê *</label>
+        <select id="fCoffeeType">
+          <option value="robusta_r2">Robusta R2</option>
+          <option value="robusta_r1">Robusta R1</option>
+          <option value="arabica_cau_dat">Arabica Cầu Đất</option>
+          <option value="arabica_other">Arabica khác</option>
+          <option value="other">Khác</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Khách hàng</label><input type="text" id="fCustomer" placeholder="VD: BEST RETURNS FZCO"></div>
+      <div class="form-group"><label>NCC / Mua từ</label><input type="text" id="fSupplier" placeholder="VD: Tín Thành Đạt"></div>
+    </div>
+
+    <div class="form-row-3">
+      <div class="form-group"><label>Ngày lấy mẫu *</label><input type="date" id="fSampleDate"></div>
+      <div class="form-group"><label>Ngày xuất hàng</label><input type="date" id="fExportDate"></div>
+      <div class="form-group"><label>Số lượng lô (MT)</label><input type="number" id="fLotQty" placeholder="VD: 38.4" step="0.001"></div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group"><label>Vị trí lưu mẫu *</label><input type="text" id="fLocation" placeholder="VD: Kho A — Kệ 3 — Hộp 12"></div>
+      <div class="form-group"><label>Trạng thái</label>
+        <select id="fStatus">
+          <option value="stored">Đang lưu trữ</option>
+          <option value="in_use">Đang sử dụng</option>
+          <option value="disposed">Đã hủy</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group"><label>Điểm cupping</label><input type="number" id="fCuppingScore" placeholder="VD: 82.5" step="0.25" min="0" max="100"></div>
+      <div class="form-group"><label>Độ ẩm (%)</label><input type="number" id="fMoisture" placeholder="VD: 12.5" step="0.1"></div>
+    </div>
+
+    <div class="form-group"><label>Kết quả chất lượng / Cupping notes</label><textarea id="fQualityNotes" rows="3" placeholder="VD: Sàng 16+, đen/vỡ 2%, mùi sạch, vị đắng nhẹ..."></textarea></div>
+
+    <div class="form-group"><label>Ảnh mẫu (URL)</label>
+      <div id="photoInputs">
+        <div style="display:flex;gap:6px;margin-bottom:6px;"><input type="url" class="photo-url" placeholder="Dán link ảnh..."><button class="btn-mini" onclick="addPhotoInput()" type="button">+</button></div>
+      </div>
+    </div>
+
+    <div class="form-group"><label>Ghi chú</label><textarea id="fNotes" rows="2" placeholder="Ghi chú thêm..."></textarea></div>
+
+    <div id="modalError" style="color:#c0392b;font-size:13px;margin-top:10px;display:none;"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Hủy</button>
+      <button class="btn btn-primary" onclick="saveSample()" id="saveBtn">Lưu mẫu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL='https://fyjinbtabsentsvnkqzg.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5amluYnRhYnNlbnRzdm5rcXpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MTAxNTUsImV4cCI6MjA5NDI4NjE1NX0.m1H8bOT7gUXJxPoQT6bDqtRUjo4nCSxb4A1rth7Eols';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const GRACE_EMAIL='grace@ttdglobal.vn';
+const ALLOWED_ROLES=['admin','sale','sale_admin','thumua'];
+const DEPTS={sale:'Sale',ketoan:'Kế toán',thumua:'Thu mua',logistics:'Logistics',admin:'Ban Giám Đốc',sale_admin:'Sale Admin'};
+const TYPE_LABELS={robusta_r2:'Robusta R2',robusta_r1:'Robusta R1',arabica_cau_dat:'Arabica Cầu Đất',arabica_other:'Arabica khác',other:'Khác'};
+const TYPE_CLASS={robusta_r2:'robusta',robusta_r1:'robusta',arabica_cau_dat:'arabica',arabica_other:'arabica',other:'other'};
+const STATUS_LABELS={stored:'Đang lưu',in_use:'Đang dùng',disposed:'Đã hủy'};
+const STATUS_CLASS={stored:'luu',in_use:'dung',disposed:'huy'};
+
+let currentUser=null, allSamples=[], currentSampleId=null;
+
+function esc(s){if(s==null)return'';return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function showLoading(t='Đang tải...'){document.getElementById('loadingText').textContent=t;document.getElementById('loadingOverlay').classList.remove('hidden');}
+function hideLoading(){document.getElementById('loadingOverlay').classList.add('hidden');}
+function isAdmin(){return currentUser&&(currentUser.role==='admin'||currentUser.email===GRACE_EMAIL);}
+function canManage(){return currentUser&&(isAdmin()||ALLOWED_ROLES.includes(currentUser.role));}
+
+// ─── AUTH ───
+async function loginWithGoogle(){
+  const errEl=document.getElementById('loginError'),btn=document.getElementById('loginBtn');
+  errEl.style.display='none';btn.disabled=true;
+  showLoading('Đang chuyển hướng...');
+  try{
+    const{error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.href,queryParams:{hd:'ttdglobal.vn'}}});
+    if(error)throw error;
+  }catch(e){errEl.textContent='Lỗi: '+e.message;errEl.style.display='block';btn.disabled=false;hideLoading();}
+}
+async function loadCurrentUser(authUser){
+  let profile=null;
+  const{data:byId}=await sb.from('profiles').select('*').eq('id',authUser.id).single();
+  if(byId){profile=byId;}
+  else{
+    const{data:byEmail}=await sb.from('profiles').select('*').eq('email',authUser.email).maybeSingle();
+    if(byEmail){await sb.from('profiles').update({id:authUser.id}).eq('email',authUser.email);profile=byEmail;}
+  }
+  if(!profile){await sb.auth.signOut();alert('Tài khoản chưa được cấu hình.');return;}
+  currentUser={id:authUser.id,email:authUser.email,name:profile.name,role:profile.role};
+  showMainApp();
+}
+async function logout(){await sb.auth.signOut();currentUser=null;document.getElementById('mainApp').classList.add('hidden');document.getElementById('loginScreen').classList.remove('hidden');}
+function showMainApp(){
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('mainApp').classList.remove('hidden');
+  const roleLabel=isAdmin()?'👑 Admin':DEPTS[currentUser.role]||currentUser.role;
+  document.getElementById('userBadge').textContent=`${currentUser.name} · ${roleLabel}`;
+  if(!canManage())document.getElementById('btnAdd').classList.add('hidden');
+  loadSamples();
+}
+
+// ─── DATA ───
+async function loadSamples(){
+  showLoading('Đang tải mẫu...');
+  try{
+    const{data,error}=await sb.from('coffee_samples').select('*').order('created_at',{ascending:false});
+    if(error)throw error;
+    allSamples=data||[];renderStats();renderList();
+  }catch(e){
+    document.getElementById('listContainer').innerHTML=`<div class="empty-state"><p>Lỗi: ${e.message}</p><p style="font-size:12px;color:#aaa;margin-top:8px;">Nếu bảng chưa tồn tại, chạy SQL tạo bảng (xem hướng dẫn).</p></div>`;
+  }finally{hideLoading();}
+}
+
+function renderStats(){
+  const total=allSamples.length;
+  const stored=allSamples.filter(s=>s.status==='stored').length;
+  const inUse=allSamples.filter(s=>s.status==='in_use').length;
+  const disposed=allSamples.filter(s=>s.status==='disposed').length;
+  document.getElementById('statsBar').innerHTML=`
+    <div class="stat-card"><div class="stat-label">Tổng mẫu</div><div class="stat-value">${total}</div></div>
+    <div class="stat-card green"><div class="stat-label">Đang lưu trữ</div><div class="stat-value">${stored}</div></div>
+    <div class="stat-card orange"><div class="stat-label">Đang sử dụng</div><div class="stat-value">${inUse}</div></div>
+    <div class="stat-card teal"><div class="stat-label">Đã hủy</div><div class="stat-value">${disposed}</div></div>`;
+}
+
+function renderList(){
+  const container=document.getElementById('listContainer');
+  const search=(document.getElementById('searchInput').value||'').toLowerCase();
+  const fType=document.getElementById('filterType').value;
+  const fStatus=document.getElementById('filterStatus').value;
+  const sort=document.getElementById('sortOrder').value;
+
+  let filtered=allSamples.filter(s=>{
+    const ms=!search||(s.lot_code||'').toLowerCase().includes(search)||(s.contract_code||'').toLowerCase().includes(search)||(s.customer||'').toLowerCase().includes(search)||(TYPE_LABELS[s.coffee_type]||'').toLowerCase().includes(search);
+    const mt=fType==='all'||(s.coffee_type||'').startsWith(fType==='robusta'?'robusta':fType==='arabica'?'arabica':fType)||s.coffee_type===fType;
+    const mst=fStatus==='all'||s.status===fStatus;
+    return ms&&mt&&mst;
+  });
+  filtered.sort((a,b)=>sort==='desc'?new Date(b.created_at)-new Date(a.created_at):new Date(a.created_at)-new Date(b.created_at));
+
+  if(!filtered.length){container.innerHTML='<div class="empty-state"><div class="ico">☕</div><p>Chưa có mẫu nào</p></div>';return;}
+
+  const rows=filtered.map(s=>{
+    const typeClass=TYPE_CLASS[s.coffee_type]||'other';
+    const statusClass=STATUS_CLASS[s.status]||'luu';
+    const date=s.sample_date?new Date(s.sample_date).toLocaleDateString('vi-VN'):'—';
+    const photos=(s.photos||[]).length;
+    const cupping=s.cupping_score?`<span class="cupping-score ${s.cupping_score>=80?'high':s.cupping_score>=70?'mid':'low'}">${s.cupping_score}</span>`:'—';
+    return`<tr onclick="openDetail('${s.id}')">
+      <td style="font-weight:600;color:#333;">${esc(s.lot_code)}</td>
+      <td style="font-size:12px;color:#666;">${esc(s.contract_code||'—')}</td>
+      <td><span class="type-badge type-${typeClass}">${TYPE_LABELS[s.coffee_type]||s.coffee_type}</span></td>
+      <td style="font-size:12px;">${esc(s.customer||'—')}</td>
+      <td style="font-size:12px;">${date}</td>
+      <td style="font-size:12px;">${esc(s.location||'—')}</td>
+      <td>${cupping}</td>
+      <td>${photos?`📷 ${photos}`:''}</td>
+      <td><span class="status-pill status-${statusClass}">${STATUS_LABELS[s.status]||s.status}</span></td>
+    </tr>`;
+  }).join('');
+
+  container.innerHTML=`<table class="sample-table"><thead><tr>
+    <th>Mã lô</th><th>Hợp đồng</th><th>Loại</th><th>Khách hàng</th><th>Ngày lấy mẫu</th><th>Vị trí</th><th>Cupping</th><th>Ảnh</th><th>Trạng thái</th>
+  </tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ─── DETAIL ───
+function openDetail(id){
+  const s=allSamples.find(x=>x.id===id);if(!s)return;
+  currentSampleId=id;
+  document.getElementById('viewList').classList.add('hidden');
+  document.getElementById('viewDetail').classList.remove('hidden');
+  document.getElementById('detailBreadcrumb').textContent=s.lot_code;
+
+  const typeClass=TYPE_CLASS[s.coffee_type]||'other';
+  const statusClass=STATUS_CLASS[s.status]||'luu';
+  const cupping=s.cupping_score?`<span class="cupping-score ${s.cupping_score>=80?'high':s.cupping_score>=70?'mid':'low'}">${s.cupping_score} pts</span>`:'Chưa có';
+  const photos=(s.photos||[]).map((url,i)=>`<div class="photo-item"><img src="${esc(url)}" onclick="window.open('${esc(url)}','_blank')" alt="Mẫu ${i+1}">${canManage()?`<button class="photo-del" onclick="event.stopPropagation();deletePhoto('${id}',${i})">✕</button>`:''}</div>`).join('')||'<span style="color:#aaa;font-size:13px;">Chưa có ảnh</span>';
+  const exportDate=s.export_date?new Date(s.export_date).toLocaleDateString('vi-VN'):'—';
+  const sampleDate=s.sample_date?new Date(s.sample_date).toLocaleDateString('vi-VN'):'—';
+  const createdDate=s.created_at?new Date(s.created_at).toLocaleString('vi-VN'):'';
+
+  document.getElementById('detailContent').innerHTML=`
+    <div class="detail-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+        <div>
+          <div style="font-size:22px;font-weight:700;color:#333;">${esc(s.lot_code)}</div>
+          <div style="margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <span class="type-badge type-${typeClass}">${TYPE_LABELS[s.coffee_type]||s.coffee_type}</span>
+            <span class="status-pill status-${statusClass}">${STATUS_LABELS[s.status]||s.status}</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          ${canManage()?`<button class="btn" onclick="openEditModal('${id}')">✏️ Sửa</button>`:''}
+          ${isAdmin()?`<button class="btn btn-danger" onclick="deleteSample('${id}')">🗑️ Xóa</button>`:''}
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <div class="detail-item"><div class="d-label">Hợp đồng</div><div class="d-value">${esc(s.contract_code||'—')}</div></div>
+        <div class="detail-item"><div class="d-label">Khách hàng</div><div class="d-value">${esc(s.customer||'—')}</div></div>
+        <div class="detail-item"><div class="d-label">NCC / Mua từ</div><div class="d-value">${esc(s.supplier||'—')}</div></div>
+        <div class="detail-item"><div class="d-label">Ngày lấy mẫu</div><div class="d-value">${sampleDate}</div></div>
+        <div class="detail-item"><div class="d-label">Ngày xuất hàng</div><div class="d-value">${exportDate}</div></div>
+        <div class="detail-item"><div class="d-label">Số lượng lô</div><div class="d-value">${s.lot_qty?s.lot_qty+' MT':'—'}</div></div>
+        <div class="detail-item"><div class="d-label">Vị trí lưu mẫu</div><div class="d-value">📍 ${esc(s.location||'—')}</div></div>
+        <div class="detail-item"><div class="d-label">Độ ẩm</div><div class="d-value">${s.moisture?s.moisture+'%':'—'}</div></div>
+        <div class="detail-item"><div class="d-label">Điểm cupping</div><div class="d-value">${cupping}</div></div>
+      </div>
+    </div>
+
+    ${s.quality_notes?`<div class="detail-card"><div style="font-size:13px;font-weight:600;color:#333;margin-bottom:8px;">📋 Kết quả chất lượng / Cupping notes</div><div style="font-size:13px;color:#555;line-height:1.6;white-space:pre-wrap;">${esc(s.quality_notes)}</div></div>`:''}
+
+    <div class="detail-card">
+      <div style="font-size:13px;font-weight:600;color:#333;margin-bottom:8px;">📷 Ảnh mẫu</div>
+      <div class="photo-grid">${photos}</div>
+    </div>
+
+    ${s.notes?`<div class="detail-card"><div style="font-size:13px;font-weight:600;color:#333;margin-bottom:8px;">📝 Ghi chú</div><div style="font-size:13px;color:#555;white-space:pre-wrap;">${esc(s.notes)}</div></div>`:''}
+
+    <div style="font-size:12px;color:#aaa;margin-top:12px;">Tạo bởi ${esc(s.created_by||'?')} · ${createdDate}${s.updated_by?' · Cập nhật bởi '+esc(s.updated_by):''}</div>`;
+}
+
+function showList(){
+  document.getElementById('viewDetail').classList.add('hidden');
+  document.getElementById('viewList').classList.remove('hidden');
+  currentSampleId=null;
+}
+
+// ─── MODAL ───
+function closeModal(){document.getElementById('sampleModal').classList.add('hidden');}
+
+function openNewModal(){
+  if(!canManage()){alert('Bạn không có quyền tạo mẫu');return;}
+  document.getElementById('modalTitle').textContent='Thêm mẫu đối chứng';
+  document.getElementById('editId').value='';
+  ['fLotCode','fContract','fCustomer','fSupplier','fQualityNotes','fNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fCoffeeType').value='robusta_r2';
+  document.getElementById('fStatus').value='stored';
+  document.getElementById('fSampleDate').value=new Date().toISOString().split('T')[0];
+  document.getElementById('fExportDate').value='';
+  document.getElementById('fLotQty').value='';
+  document.getElementById('fCuppingScore').value='';
+  document.getElementById('fMoisture').value='';
+  document.getElementById('fLocation').value='';
+  document.getElementById('photoInputs').innerHTML='<div style="display:flex;gap:6px;margin-bottom:6px;"><input type="url" class="photo-url" placeholder="Dán link ảnh..."><button class="btn-mini" onclick="addPhotoInput()" type="button">+</button></div>';
+  document.getElementById('modalError').style.display='none';
+  document.getElementById('saveBtn').textContent='Lưu mẫu';
+  document.getElementById('sampleModal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('fLotCode').focus(),50);
+}
+
+function openEditModal(id){
+  const s=allSamples.find(x=>x.id===id);if(!s)return;
+  if(!canManage()){alert('Bạn không có quyền sửa');return;}
+  document.getElementById('modalTitle').textContent='Sửa mẫu · '+s.lot_code;
+  document.getElementById('editId').value=id;
+  document.getElementById('fLotCode').value=s.lot_code||'';
+  document.getElementById('fContract').value=s.contract_code||'';
+  document.getElementById('fCoffeeType').value=s.coffee_type||'robusta_r2';
+  document.getElementById('fCustomer').value=s.customer||'';
+  document.getElementById('fSupplier').value=s.supplier||'';
+  document.getElementById('fSampleDate').value=s.sample_date||'';
+  document.getElementById('fExportDate').value=s.export_date||'';
+  document.getElementById('fLotQty').value=s.lot_qty||'';
+  document.getElementById('fLocation').value=s.location||'';
+  document.getElementById('fStatus').value=s.status||'stored';
+  document.getElementById('fCuppingScore').value=s.cupping_score||'';
+  document.getElementById('fMoisture').value=s.moisture||'';
+  document.getElementById('fQualityNotes').value=s.quality_notes||'';
+  document.getElementById('fNotes').value=s.notes||'';
+
+  const photoContainer=document.getElementById('photoInputs');
+  const photos=s.photos||[];
+  photoContainer.innerHTML=photos.map(url=>`<div style="display:flex;gap:6px;margin-bottom:6px;"><input type="url" class="photo-url" value="${esc(url)}"><button class="btn-mini" onclick="this.parentElement.remove()" type="button" style="color:#c0392b;">✕</button></div>`).join('')+`<div style="display:flex;gap:6px;margin-bottom:6px;"><input type="url" class="photo-url" placeholder="Dán link ảnh..."><button class="btn-mini" onclick="addPhotoInput()" type="button">+</button></div>`;
+
+  document.getElementById('modalError').style.display='none';
+  document.getElementById('saveBtn').textContent='Cập nhật';
+  document.getElementById('sampleModal').classList.remove('hidden');
+}
+
+function addPhotoInput(){
+  const div=document.createElement('div');
+  div.style.cssText='display:flex;gap:6px;margin-bottom:6px;';
+  div.innerHTML=`<input type="url" class="photo-url" placeholder="Dán link ảnh..."><button class="btn-mini" onclick="this.parentElement.remove()" type="button" style="color:#c0392b;">✕</button>`;
+  document.getElementById('photoInputs').appendChild(div);
+}
+
+async function saveSample(){
+  const errEl=document.getElementById('modalError');errEl.style.display='none';
+  const lotCode=document.getElementById('fLotCode').value.trim();
+  const sampleDate=document.getElementById('fSampleDate').value;
+  const location=document.getElementById('fLocation').value.trim();
+  if(!lotCode||!sampleDate||!location){errEl.textContent='Vui lòng nhập mã lô, ngày lấy mẫu và vị trí lưu';errEl.style.display='block';return;}
+
+  const photos=[...document.querySelectorAll('.photo-url')].map(i=>i.value.trim()).filter(u=>u&&/^https?:\/\//i.test(u));
+  const cuppingScore=parseFloat(document.getElementById('fCuppingScore').value)||null;
+  const moisture=parseFloat(document.getElementById('fMoisture').value)||null;
+  const lotQty=parseFloat(document.getElementById('fLotQty').value)||null;
+
+  const payload={
+    lot_code:lotCode,
+    contract_code:document.getElementById('fContract').value.trim()||null,
+    coffee_type:document.getElementById('fCoffeeType').value,
+    customer:document.getElementById('fCustomer').value.trim()||null,
+    supplier:document.getElementById('fSupplier').value.trim()||null,
+    sample_date:sampleDate,
+    export_date:document.getElementById('fExportDate').value||null,
+    lot_qty:lotQty,
+    location:location,
+    status:document.getElementById('fStatus').value,
+    cupping_score:cuppingScore,
+    moisture:moisture,
+    quality_notes:document.getElementById('fQualityNotes').value.trim()||null,
+    photos:photos,
+    notes:document.getElementById('fNotes').value.trim()||null,
+    updated_by:currentUser.name,
+    updated_at:new Date().toISOString()
+  };
+
+  const editId=document.getElementById('editId').value;
+  const btn=document.getElementById('saveBtn');btn.disabled=true;
+  showLoading(editId?'Đang cập nhật...':'Đang lưu...');
+
+  try{
+    if(editId){
+      const{error}=await sb.from('coffee_samples').update(payload).eq('id',editId);
+      if(error)throw error;
+    }else{
+      payload.id='sam_'+Date.now()+'_'+Math.floor(Math.random()*9999);
+      payload.created_by=currentUser.name;
+      payload.created_at=new Date().toISOString();
+      const{error}=await sb.from('coffee_samples').insert(payload);
+      if(error)throw error;
+    }
+    closeModal();await loadSamples();
+    if(editId)openDetail(editId);
+  }catch(e){errEl.textContent='Lỗi: '+e.message;errEl.style.display='block';}
+  finally{btn.disabled=false;hideLoading();}
+}
+
+async function deleteSample(id){
+  if(!isAdmin()){alert('Chỉ Admin được xóa');return;}
+  const s=allSamples.find(x=>x.id===id);
+  if(!confirm(`Xóa mẫu "${s?.lot_code}"? Không thể hoàn tác.`))return;
+  showLoading('Đang xóa...');
+  try{
+    const{error}=await sb.from('coffee_samples').delete().eq('id',id);
+    if(error)throw error;
+    showList();await loadSamples();
+  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
+}
+
+async function deletePhoto(sampleId,photoIdx){
+  if(!canManage())return;
+  const s=allSamples.find(x=>x.id===sampleId);if(!s)return;
+  const photos=[...(s.photos||[])];
+  photos.splice(photoIdx,1);
+  showLoading('Đang xóa ảnh...');
+  try{
+    const{error}=await sb.from('coffee_samples').update({photos,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',sampleId);
+    if(error)throw error;
+    s.photos=photos;openDetail(sampleId);
+  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
+}
+
+// ─── INIT ───
+(async function init(){
+  showLoading('Đang khởi động...');
+  try{const{data:{session}}=await sb.auth.getSession();if(session?.user)await loadCurrentUser(session.user);}
+  catch(e){console.error(e);}finally{hideLoading();}
+  sb.auth.onAuthStateChange(async(event,session)=>{
+    if(event==='SIGNED_IN'&&session?.user&&!currentUser){await loadCurrentUser(session.user);}
+    if(event==='SIGNED_OUT'){currentUser=null;document.getElementById('mainApp').classList.add('hidden');document.getElementById('loginScreen').classList.remove('hidden');}
+  });
+})();
+</script>
+</body>
+</html>
