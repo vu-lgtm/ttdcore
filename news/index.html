@@ -3,326 +3,312 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Thị trường cà phê 07/08/2026 — Coffee Market Desk</title>
+<title>Thị trường cà phê 10/08/2026 · Coffee Market Desk</title>
 <style>
   :root{
-    --bg:#f7f1e6;
-    --card:#fffaf2;
-    --brown-dark:#3a2417;
-    --brown:#6b4226;
-    --brown-mid:#8a5a35;
-    --cream:#e8dcc4;
-    --accent:#b5651d;
-    --accent2:#7a8450;
-    --red:#a83232;
-    --green:#3d7a3d;
-    --line:#e0d2b8;
-    --shadow: 0 2px 10px rgba(58,36,23,0.08);
+    --cream:#f7f1e6;
+    --cream-dark:#efe4cf;
+    --brown-900:#3b2a1e;
+    --brown-800:#4e3826;
+    --brown-700:#6b4c34;
+    --brown-500:#8a6440;
+    --brown-300:#c9a878;
+    --accent:#b5591f;
+    --green:#3f6b3f;
+    --red:#a13b2b;
+    --card-bg:#fffdf8;
+    --border:#e2d2b4;
   }
   *{box-sizing:border-box;}
   body{
     margin:0;
-    background:var(--bg);
-    color:var(--brown-dark);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-family:"Segoe UI",Georgia,"Helvetica Neue",Arial,sans-serif;
+    background:linear-gradient(180deg,var(--cream) 0%,var(--cream-dark) 100%);
+    color:var(--brown-900);
     line-height:1.55;
+    padding:0 0 40px;
   }
-  .wrap{max-width:920px;margin:0 auto;padding:20px 16px 60px;}
-  header{
-    background:linear-gradient(135deg,var(--brown-dark),var(--brown));
-    color:#f7f1e6;
-    border-radius:16px;
-    padding:28px 24px;
-    margin-bottom:20px;
-    box-shadow:var(--shadow);
+  .wrap{max-width:900px;margin:0 auto;padding:0 18px;}
+  header.hero{
+    background:linear-gradient(135deg,var(--brown-800),var(--brown-700));
+    color:var(--cream);
+    padding:36px 18px 30px;
+    border-radius:0 0 22px 22px;
+    margin-bottom:24px;
   }
+  header.hero .inner{max-width:900px;margin:0 auto;}
   .kicker{
-    font-size:12.5px;
-    letter-spacing:.12em;
     text-transform:uppercase;
-    color:#e6c9a0;
+    letter-spacing:.12em;
+    font-size:12.5px;
+    color:var(--brown-300);
     font-weight:600;
-    margin-bottom:8px;
+    margin-bottom:10px;
   }
   h1{
     margin:0 0 6px;
-    font-size:26px;
-    font-weight:800;
+    font-size:clamp(24px,5vw,34px);
+    font-weight:700;
+    color:#fffaf0;
   }
-  .subdate{
-    font-size:13.5px;
-    color:#e8dcc4;
-    opacity:.9;
-  }
+  .subtitle{color:#e6d2b3;font-size:14.5px;}
   .summary-grid{
     display:grid;
     grid-template-columns:repeat(4,1fr);
     gap:12px;
-    margin-bottom:22px;
+    margin-top:22px;
   }
-  .sum-card{
-    background:var(--card);
-    border:1px solid var(--line);
+  @media(max-width:700px){.summary-grid{grid-template-columns:repeat(2,1fr);}}
+  .sum-box{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.16);
     border-radius:12px;
-    padding:14px 14px;
-    box-shadow:var(--shadow);
+    padding:14px;
   }
-  .sum-label{
-    font-size:11.5px;
-    text-transform:uppercase;
-    letter-spacing:.05em;
-    color:var(--brown-mid);
-    font-weight:700;
-    margin-bottom:6px;
-  }
-  .sum-value{
-    font-size:19px;
-    font-weight:800;
-    color:var(--brown-dark);
-    margin-bottom:2px;
-  }
-  .sum-change{
-    font-size:13px;
-    font-weight:700;
-  }
-  .up{color:var(--green);}
-  .down{color:var(--red);}
-  .sum-note{
-    font-size:11px;
-    color:#8a7a5f;
-    margin-top:4px;
-  }
+  .sum-label{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--brown-300);margin-bottom:6px;}
+  .sum-value{font-size:19px;font-weight:700;color:#fffaf0;}
+  .sum-change{font-size:12.5px;margin-top:4px;font-weight:600;}
+  .up{color:#8fd19e;}
+  .down{color:#f1a191;}
+  .flat{color:#e6d2b3;}
+
   .card{
-    background:var(--card);
-    border:1px solid var(--line);
-    border-radius:14px;
-    padding:20px 22px;
-    margin-bottom:16px;
-    box-shadow:var(--shadow);
+    background:var(--card-bg);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:22px 22px 20px;
+    margin-bottom:18px;
+    box-shadow:0 1px 3px rgba(59,42,30,.06);
   }
-  .card h2{
-    margin:0 0 12px;
-    font-size:17px;
-    color:var(--brown);
-    display:flex;
-    align-items:center;
-    gap:8px;
-  }
-  .num{
+  .card-num{
     display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    width:26px;height:26px;
+    align-items:center;justify-content:center;
+    width:28px;height:28px;
     background:var(--accent);
     color:#fff;
     border-radius:50%;
-    font-size:13px;
-    font-weight:800;
-    flex-shrink:0;
+    font-weight:700;
+    font-size:14px;
+    margin-right:10px;
+    flex:none;
   }
-  .card p{margin:0 0 10px;font-size:14.5px;color:#4a382a;}
-  .card p:last-child{margin-bottom:0;}
+  .card h2{
+    display:flex;align-items:center;
+    margin:0 0 14px;
+    font-size:18.5px;
+    color:var(--brown-800);
+  }
+  .card.highlight{
+    background:linear-gradient(135deg,#fbf0dc,#f5e4c3);
+    border:1px solid var(--brown-300);
+  }
+  .card.highlight h2{color:var(--accent);}
   table{
     width:100%;
     border-collapse:collapse;
-    margin:10px 0;
-    font-size:13.5px;
+    margin:8px 0 14px;
+    font-size:14.5px;
   }
   th,td{
     text-align:left;
-    padding:7px 8px;
-    border-bottom:1px solid var(--line);
+    padding:8px 10px;
+    border-bottom:1px solid var(--border);
   }
   th{
-    background:var(--cream);
-    color:var(--brown-dark);
-    font-weight:700;
-    font-size:12.5px;
+    background:var(--cream-dark);
+    color:var(--brown-800);
+    font-weight:600;
+    font-size:13px;
     text-transform:uppercase;
     letter-spacing:.03em;
   }
   tr:last-child td{border-bottom:none;}
   .tag{
     display:inline-block;
-    background:var(--cream);
-    color:var(--brown);
     font-size:11.5px;
-    font-weight:700;
+    background:var(--cream-dark);
+    color:var(--brown-700);
     padding:2px 8px;
     border-radius:20px;
     margin-left:6px;
+    font-weight:600;
   }
-  .insight{
-    background:linear-gradient(135deg,#3a2417,#5a3a22);
-    color:#f7f1e6;
-    border:none;
-  }
-  .insight h2{color:#f0d9b5;}
-  .insight .num{background:#f0d9b5;color:#3a2417;}
-  .insight p{color:#e8dcc4;}
-  .insight ul{color:#e8dcc4;font-size:14.5px;padding-left:20px;margin:8px 0 0;}
-  .insight li{margin-bottom:6px;}
-  .disclaimer{
-    background:#fbf0dc;
-    border:1px solid #e6c9a0;
-    border-radius:12px;
-    padding:16px 20px;
+  .note{
     font-size:13px;
-    color:#5a4530;
-    margin-bottom:16px;
+    color:var(--brown-500);
+    margin-top:8px;
+    font-style:italic;
   }
-  .disclaimer strong{color:var(--brown-dark);}
-  .disclaimer ul{margin:8px 0 0;padding-left:18px;}
-  .disclaimer li{margin-bottom:5px;}
+  ul.points{margin:8px 0 0;padding-left:20px;}
+  ul.points li{margin-bottom:8px;}
+  .disclaimer{
+    background:#fbeee0;
+    border:1px dashed var(--brown-300);
+    border-radius:14px;
+    padding:18px 20px;
+    font-size:13.5px;
+    color:var(--brown-800);
+    margin-bottom:24px;
+  }
+  .disclaimer strong{color:var(--accent);}
   footer{
-    font-size:12.5px;
-    color:#8a7a5f;
-    text-align:center;
+    font-size:13px;
+    color:var(--brown-500);
     padding-top:10px;
+    border-top:1px solid var(--border);
   }
-  footer a{color:var(--brown-mid);}
-  .src-list{
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px;
-    justify-content:center;
-    margin-top:10px;
-  }
-  .src-list a{
-    background:var(--cream);
-    padding:4px 10px;
-    border-radius:20px;
-    text-decoration:none;
-    font-size:11.5px;
-  }
-  @media (max-width:640px){
-    .summary-grid{grid-template-columns:repeat(2,1fr);}
-    h1{font-size:21px;}
-    .card{padding:16px;}
-  }
+  footer a{color:var(--brown-700);}
+  footer ul{padding-left:18px;}
+  footer li{margin-bottom:4px;}
+  .badge-red{color:var(--red);font-weight:700;}
+  .badge-green{color:var(--green);font-weight:700;}
 </style>
 </head>
 <body>
+<header class="hero">
+  <div class="inner">
+    <div class="kicker">Bản tin chuyên sâu · Coffee Market Desk</div>
+    <h1>☕ Thị trường cà phê 10/08/2026</h1>
+    <div class="subtitle">Cập nhật sáng thứ Hai, giờ Việt Nam (GMT+7) — tổng hợp giá giao ngay, tồn kho, vị thế đầu cơ và nền tảng cung cầu</div>
+
+    <div class="summary-grid">
+      <div class="sum-box">
+        <div class="sum-label">Giá nội địa (nhân xô)</div>
+        <div class="sum-value">96.300–97.000</div>
+        <div class="sum-change up">▲ +100 đ/kg so với tuần trước</div>
+      </div>
+      <div class="sum-box">
+        <div class="sum-label">Robusta ICE London · kỳ hạn 09/26</div>
+        <div class="sum-value">3.787 USD/tấn</div>
+        <div class="sum-change down">▼ -11 USD (-0,29%) phiên T6 7/8</div>
+      </div>
+      <div class="sum-box">
+        <div class="sum-label">Arabica ICE NY · kỳ hạn 09/26 (KCU26)</div>
+        <div class="sum-value">333,50 cent/lb</div>
+        <div class="sum-change down">▼ -0,61% đầu phiên T2 (sau khi +4,32% phiên T6)</div>
+      </div>
+      <div class="sum-box">
+        <div class="sum-label">Managed Money net-long (CFTC)</div>
+        <div class="sum-value">+33.499 hợp đồng</div>
+        <div class="sum-change flat">Tuần báo cáo 28/7/2026</div>
+      </div>
+    </div>
+  </div>
+</header>
+
 <div class="wrap">
 
-  <header>
-    <div class="kicker">Bản tin chuyên sâu · Coffee Market Desk</div>
-    <h1>☕ Thị trường cà phê 07/08/2026</h1>
-    <div class="subdate">Cập nhật 11:30 (giờ VN) · Dữ liệu nội địa Tây Nguyên &amp; hai sàn kỳ hạn quốc tế</div>
-  </header>
-
-  <div class="summary-grid">
-    <div class="sum-card">
-      <div class="sum-label">Giá nội địa (TB Tây Nguyên)</div>
-      <div class="sum-value">97.400 đ/kg</div>
-      <div class="sum-change down">▼ 1.500 đ so hôm qua</div>
-    </div>
-    <div class="sum-card">
-      <div class="sum-label">Robusta London <span class="tag">HĐ 11/26</span></div>
-      <div class="sum-value">3.787 USD/tấn</div>
-      <div class="sum-change down">▼ 97 (−2,50%)</div>
-    </div>
-    <div class="sum-card">
-      <div class="sum-label">Arabica New York <span class="tag">HĐ 09/26</span></div>
-      <div class="sum-value">324,25 c/lb</div>
-      <div class="sum-change up">▲ 2,60 (+0,81%)</div>
-    </div>
-    <div class="sum-card">
-      <div class="sum-label">Fund net-long (Arabica ICE US)</div>
-      <div class="sum-value">12.454 HĐ</div>
-      <div class="sum-note">Tuần kết 14/07/2026, +2.231 HĐ so tuần trước</div>
-    </div>
-  </div>
-
   <div class="card">
-    <h2><span class="num">1</span> Giá giao ngay</h2>
-    <p>Giá cà phê nhân xô Tây Nguyên hôm nay <strong>giảm 1.500 đ/kg</strong> so với phiên trước, về mức trung bình <strong>97.400 đ/kg</strong> — cắt đứt chuỗi tăng của các phiên 5–6/8.</p>
+    <h2><span class="card-num">1</span>Giá giao ngay</h2>
     <table>
-      <tr><th>Tỉnh</th><th>Giá (đ/kg)</th><th>So hôm qua</th></tr>
-      <tr><td>Đắk Lắk</td><td>97.300</td><td class="down">▼ 1.500</td></tr>
-      <tr><td>Đắk Nông</td><td>97.500</td><td class="down">▼ 1.500</td></tr>
-      <tr><td>Gia Lai</td><td>97.300</td><td class="down">▼ 1.500</td></tr>
-      <tr><td>Lâm Đồng</td><td>96.800</td><td class="down">▼ 1.500</td></tr>
+      <thead><tr><th>Tỉnh</th><th>Giá (đ/kg)</th></tr></thead>
+      <tbody>
+        <tr><td>Đắk Nông</td><td>97.000</td></tr>
+        <tr><td>Đắk Lắk</td><td>96.800</td></tr>
+        <tr><td>Gia Lai</td><td>96.800</td></tr>
+        <tr><td>Lâm Đồng</td><td>96.300</td></tr>
+      </tbody>
     </table>
-    <p style="margin-top:14px;"><strong>Sàn quốc tế</strong> — chọn hợp đồng có khối lượng giao dịch cao nhất trong phiên làm giá tham chiếu:</p>
+    <p class="note">Chốt tuần qua giá nội địa tăng nhẹ 100 đ/kg, biên độ cao–thấp giữa các tỉnh khoảng 700 đ/kg. Chưa có số liệu tách riêng cho Kon Tum trong nguồn tham khảo.</p>
     <table>
-      <tr><th>Sàn</th><th>Hợp đồng</th><th>Giá</th><th>Thay đổi</th><th>Khối lượng</th></tr>
-      <tr><td>Robusta – ICE London</td><td>RMX26 (11/2026)</td><td>3.787 USD/tấn</td><td class="down">▼ 97 (−2,50%)</td><td>13.980</td></tr>
-      <tr><td>Arabica – ICE New York</td><td>KCU26 (09/2026)</td><td>324,25 cent/lb</td><td class="up">▲ 2,60 (+0,81%)</td><td>Yahoo Finance realtime</td></tr>
+      <thead><tr><th>Sàn</th><th>Hợp đồng active</th><th>Giá</th><th>Thay đổi</th></tr></thead>
+      <tbody>
+        <tr><td>Robusta – ICE London</td><td>09/26 (RMU26/KCU26)</td><td>3.787 USD/tấn</td><td class="badge-red">-0,29%</td></tr>
+        <tr><td>Arabica – ICE New York</td><td>09/26 (KCU26)</td><td>333,50 cent/lb</td><td class="badge-red">-0,61%*</td></tr>
+      </tbody>
     </table>
-    <p style="font-size:12.5px;color:#8a7a5f;">Ghi chú: hợp đồng Robusta gần đáo hạn nhất (RMN26, 07/26) gần như không có thanh khoản (volume 0) nên không dùng làm giá tham chiếu. Robusta 09/26 (RMU26) giao dịch ở 3.798 USD/tấn với volume 8.192 — thấp hơn RMX26 nên không được chọn làm số chính.</p>
+    <p class="note">*Đầu phiên thứ Hai giờ VN, London/NY chưa mở phiên chính thức — số Arabica lấy trực tiếp mã hợp đồng KCU26.NYB (kỳ hạn 09/26, thanh khoản cao nhất hiện tại) qua Yahoo Finance, so với giá đóng cửa phiên thứ Sáu 7/8 (335,55 cent/lb, +4,32%). <strong>Lưu ý quan trọng:</strong> mã continuous KC=F trên Yahoo Finance tại thời điểm biên soạn đã tự động roll sang hợp đồng xa hơn (khác kỳ hạn 09/26), cho ra mức thay đổi sai lệch tới -6,5% không phản ánh đúng thị trường — bản tin đã loại bỏ số này và dùng trực tiếp mã hợp đồng KCU26.</p>
   </div>
 
   <div class="card">
-    <h2><span class="num">2</span> Tồn kho ICE Certified Stocks</h2>
-    <p><strong>Arabica:</strong> tồn kho được chứng nhận trên ICE tiếp tục rơi, còn khoảng <strong>253.343 bao</strong> tính đến 04/08/2026 — mức thấp nhất trong hơn 2 năm, xóa bỏ vùng đệm thanh khoản cho các nhà rang xay. Đây là lực đỡ chính cho giá Arabica dù nguồn cung trung hạn được dự báo dồi dào.</p>
-    <p><strong>Robusta:</strong> tồn kho được chứng nhận dao động quanh <strong>4.150–4.250 lô</strong> đầu tháng 8, sau khi lập đỉnh 4,25 tháng (4.254 lô) vào 22/7 — mức tương đối cao so với giai đoạn khan hiếm cuối 2025, tạo áp lực nguồn cung ngắn hạn lên giá Robusta.</p>
+    <h2><span class="card-num">2</span>Tồn kho ICE Certified Stocks</h2>
+    <ul class="points">
+      <li><strong>Arabica:</strong> giảm còn <strong>264.179 bao</strong>, phiên giảm thứ 27 liên tiếp; so với 770.621 bao cùng kỳ năm ngoái — thâm hụt hơn 506.000 bao YoY, mức thấp nhất trong nhiều năm. Đây là yếu tố hỗ trợ giá Arabica mạnh nhất hiện nay.</li>
+      <li><strong>Robusta:</strong> tăng lên khoảng <strong>4.261 lô</strong> (chốt phiên 7/8/2026) — đỉnh khoảng 4,5 tháng, tạo áp lực giảm giá lên Robusta.</li>
+    </ul>
+    <p class="note">Xu hướng trái chiều giữa hai dòng cà phê: Arabica khan hiếm dần trên sàn, Robusta dư cung tương đối.</p>
   </div>
 
   <div class="card">
-    <h2><span class="num">3</span> Vị thế đầu cơ (CFTC)</h2>
-    <p>Theo báo cáo Commitment of Traders (ICE US, hợp đồng Arabica) công bố cho tuần kết thúc <strong>14/07/2026</strong> — dữ liệu mới nhất tra cứu được — quỹ quản lý (Managed Money) đã <strong>tăng vị thế mua ròng thêm 2.231 hợp đồng, lên 12.454 hợp đồng</strong>. Mức tăng phản ánh kỳ vọng thận trọng nhưng vẫn nghiêng về khả năng giá tiếp tục được hỗ trợ, phù hợp bối cảnh tồn kho Arabica cạn dần.</p>
-    <p style="font-size:12.5px;color:#8a7a5f;">CFTC công bố báo cáo theo tuần (thường vào thứ Sáu, phản ánh số liệu thứ Ba); số liệu tuần gần nhất tại thời điểm biên soạn bản tin này chưa được cập nhật công khai đầy đủ.</p>
+    <h2><span class="card-num">3</span>Vị thế đầu cơ CFTC (Commitment of Traders)</h2>
+    <table>
+      <thead><tr><th>Nhóm</th><th>Long</th><th>Short</th><th>Net</th></tr></thead>
+      <tbody>
+        <tr><td>Managed Money</td><td>42.402</td><td>8.903</td><td class="badge-green">+33.499</td></tr>
+      </tbody>
+    </table>
+    <p class="note">Số liệu tuần kết thúc 28/7/2026 (công bố 31/7/2026) — báo cáo mới nhất hiện có tại thời điểm biên soạn; open interest toàn thị trường Coffee C: 164.447 hợp đồng. Báo cáo tiếp theo dự kiến công bố thứ Sáu tuần này.</p>
   </div>
 
   <div class="card">
-    <h2><span class="num">4</span> Nền tảng cung — vụ mùa Brazil</h2>
-    <p><strong>CONAB</strong> dự báo sản lượng cà phê Brazil niên vụ 2026/27 đạt <strong>66,7 triệu bao</strong> (60kg), tăng khoảng 17% so với vụ trước và là mức kỷ lục — trong đó Arabica ước 44,1 triệu bao (+20%) và Conilon/Robusta 22,1 triệu bao (+6,4%).</p>
-    <p><strong>USDA</strong> lạc quan hơn, dự báo sản lượng Brazil niên vụ 2026/27 (7/2026–6/2027) đạt kỷ lục <strong>71,9 triệu bao</strong> (+8,9 triệu bao so vụ trước), riêng Arabica phục hồi mạnh lên 47,5 triệu bao sau 5 năm sụt giảm liên tiếp do thời tiết bất lợi. Ở quy mô toàn cầu, USDA dự báo sản lượng 2026/27 đạt kỷ lục gần <strong>189,7 triệu bao</strong>.</p>
-    <p style="font-size:12.5px;color:#8a7a5f;">Nghịch lý thị trường hiện nay: dự báo nguồn cung trung hạn kỷ lục nhưng tồn kho vật lý ngắn hạn (đặc biệt Arabica) vẫn rất căng do thu hoạch Brazil chậm.</p>
+    <h2><span class="card-num">4</span>Nền tảng cung — vụ mùa Brazil (CONAB / USDA)</h2>
+    <table>
+      <thead><tr><th>Nguồn</th><th>Niên vụ 2026/27</th><th>Arabica</th><th>Conilon/Robusta</th></tr></thead>
+      <tbody>
+        <tr><td>CONAB</td><td>66,7 triệu bao (+18% YoY)</td><td>44,1 triệu (+20%)</td><td>22,1 triệu (+6,4%)</td></tr>
+        <tr><td>USDA</td><td>71,9 triệu bao (kỷ lục, +8,9tr bao)</td><td>47,5 triệu (+9,5tr bao)</td><td>—</td></tr>
+      </tbody>
+    </table>
+    <p class="note">USDA dự báo sản lượng toàn cầu niên vụ 2026/27 có thể đạt kỷ lục gần 190 triệu bao (+6,0% YoY), chủ yếu nhờ phục hồi tại Brazil. Chênh lệch dự báo giữa CONAB và USDA (66,7tr so với 71,9tr bao) vẫn còn khá lớn, đáng theo dõi khi các báo cáo cập nhật.</p>
   </div>
 
   <div class="card">
-    <h2><span class="num">5</span> Xuất khẩu Cecafé (Brazil)</h2>
-    <p>Xuất khẩu cà phê Brazil tháng 6/2026 đạt <strong>3,06 triệu bao</strong>, tăng 16,9% so với cùng kỳ năm trước — tín hiệu phục hồi sau giai đoạn chậm đầu vụ.</p>
-    <p>Tính chung cả niên vụ 2025/26 (7/2025–6/2026) vừa khép lại, tổng khối lượng xuất khẩu giảm 15,7% xuống còn <strong>38,462 triệu bao</strong>, nhưng nhờ giá bán bình quân đạt mức kỷ lục <strong>379,48 USD/bao</strong> (+17,4% so vụ trước), kim ngạch xuất khẩu vẫn ở mức cao thứ hai trong lịch sử.</p>
+    <h2><span class="card-num">5</span>Xuất khẩu Cecafé</h2>
+    <ul class="points">
+      <li>Niên vụ 2025/26 (7/2025–6/2026): tổng xuất khẩu <strong>38,46 triệu bao</strong> (-15,7% so với niên vụ trước), nhưng giá xuất khẩu bình quân đạt kỷ lục <strong>379,48 USD/bao</strong> (+17,4%) — doanh thu vẫn cao thứ hai trong lịch sử.</li>
+      <li>Riêng tháng 6/2026: xuất khẩu 3,06 triệu bao (+16,9% YoY), trong đó xuất khẩu Robusta tăng mạnh +32,7%.</li>
+    </ul>
+    <p class="note">Số liệu tháng 7/2026 (đầu niên vụ mới 2026/27) chưa được Cecafé công bố tại thời điểm biên soạn.</p>
   </div>
 
   <div class="card">
-    <h2><span class="num">6</span> Chỉ số ICO (I-CIP)</h2>
-    <p>Chỉ số giá tổng hợp ICO (I-CIP) tháng <strong>6/2026</strong> — số liệu mới nhất ICO công bố tại thời điểm biên soạn — đạt bình quân <strong>248,90 cent/lb</strong>, giảm 2,8% so với tháng 5. Trong tháng, chỉ số từng rơi xuống 231,96 cent/lb vào ngày 9/6, mức thấp nhất trong gần 2 năm, trước khi hồi phục.</p>
-    <p style="font-size:12.5px;color:#8a7a5f;">ICO thường công bố báo cáo tháng với độ trễ 4–6 tuần nên số liệu tháng 7–8/2026 chưa có sẵn công khai; xu hướng gần đây (Arabica ICE tăng, tồn kho cạn) gợi ý I-CIP tháng 7 nhiều khả năng đã phục hồi so với đáy tháng 6.</p>
+    <h2><span class="card-num">6</span>Chỉ số ICO (I-CIP)</h2>
+    <p>Chỉ số giá tổng hợp I-CIP tháng 6/2026 (số liệu mới nhất công bố): <strong>248,90 cent/lb</strong>, giảm 2,8% so với tháng 5/2026.</p>
+    <p class="note">ICO thường công bố báo cáo tháng với độ trễ khoảng 4–6 tuần; số liệu tháng 7 và 8/2026 chưa có tại thời điểm biên soạn bản tin.</p>
   </div>
 
   <div class="card">
-    <h2><span class="num">7</span> Rủi ro thời tiết</h2>
-    <p>Tại vùng trồng cà phê trọng điểm <strong>Minas Gerais</strong>, tuần kết thúc 02/08/2026 không ghi nhận mưa, nhưng các mô hình dự báo cho thấy mưa có thể quay lại sớm — nguy cơ tiếp tục làm gián đoạn tiến độ thu hoạch và ảnh hưởng chất lượng hạt.</p>
-    <p>Tiến độ thu hoạch Arabica Brazil tính đến 15/7 mới đạt <strong>64%</strong> sản lượng vụ 2026/27, thấp hơn đáng kể so với 77% cùng kỳ năm ngoái và dưới mức trung bình 5 năm (70%). Ngược lại, vụ Conilon/Robusta gần như đã hoàn tất, đạt khoảng <strong>97%</strong> vào cuối tháng 7 — lý giải phần nào vì sao nguồn cung Robusta dồi dào hơn trong khi Arabica vẫn căng.</p>
+    <h2><span class="card-num">7</span>Rủi ro thời tiết & tiến độ thu hoạch</h2>
+    <ul class="points">
+      <li>Minas Gerais (vùng Arabica trọng điểm của Brazil): không có mưa trong tuần kết thúc 2/8/2026 theo Somar Meteorologia — điều kiện khô giúp đẩy nhanh thu hoạch nhưng chưa bù được độ trễ tích lũy.</li>
+      <li>Tiến độ thu hoạch hợp tác xã Cooxupe: 67,3% hoàn thành tính đến 31/7/2026, chậm hơn cùng kỳ năm ngoái (74,2%).</li>
+      <li>Toàn Brazil: vụ 2026/27 đạt 64% tính đến 15/7/2026, chậm hơn cùng kỳ năm ngoái (77%) và trung bình 5 năm (70%).</li>
+    </ul>
+    <p class="note">Thu hoạch chậm là yếu tố hỗ trợ giá Arabica trong ngắn hạn, dù dự báo sản lượng cả vụ vẫn ở mức kỷ lục.</p>
   </div>
 
-  <div class="card insight">
-    <h2><span class="num">★</span> Góc nhìn tổng hợp</h2>
-    <p>Bức tranh hôm nay là một sự <strong>phân kỳ giữa hai dòng cà phê</strong>: Arabica New York tăng nhẹ (+0,81%) trong khi Robusta London giảm (-2,50%) trên hợp đồng thanh khoản nhất (11/26) — và giá nội địa Việt Nam, vốn bám theo Robusta London, giảm theo 1.500 đ/kg.</p>
-    <p>Nguyên nhân phân kỳ khá rõ ràng khi ghép các mảnh dữ liệu lại: vụ Arabica Brazil thu hoạch chậm (64% so với TB 5 năm 70%) đẩy tồn kho ICE Arabica xuống đáy hơn 2 năm (253.343 bao), khiến quỹ đầu cơ tiếp tục tăng vị thế mua ròng. Trong khi đó, vụ Conilon/Robusta gần hoàn tất (97%) và tồn kho Robusta ICE đang ở vùng cao 4-5 tháng, tạo áp lực chốt lời sau chuỗi tăng trước đó.</p>
-    <ul>
-      <li><strong>Theo dõi thời tiết Minas Gerais</strong> — nếu mưa quay lại đúng dự báo, thu hoạch Arabica có thể càng chậm, đẩy tồn kho ICE xuống sâu hơn và hỗ trợ giá.</li>
-      <li><strong>Báo cáo CFTC tuần mới</strong> (dự kiến công bố cuối tuần) sẽ cho thấy quỹ có tiếp tục mở rộng vị thế mua ròng Arabica hay đã bắt đầu chốt lời sau đợt tăng vừa qua.</li>
-      <li><strong>Khoảng cách cung trung hạn vs. căng thẳng ngắn hạn</strong>: dự báo kỷ lục 189,7 triệu bao toàn cầu (USDA) cho 2026/27 là lực cản dài hạn, nhưng chừng nào tồn kho certified còn giảm, thị trường vật lý vẫn có thể tiếp tục biến động mạnh trái chiều với kỳ vọng nguồn cung.</li>
+  <div class="card highlight">
+    <h2><span class="card-num">★</span>Góc nhìn tổng hợp</h2>
+    <p>Đà tăng của Arabica cuối tuần qua (+4,32% phiên thứ Sáu) khớp với bộ ba yếu tố: tồn kho ICE Arabica giảm liên tục 27 phiên xuống đáy nhiều năm, tiến độ thu hoạch Brazil chậm hơn trung bình 5 năm, và đồng USD suy yếu xuống đáy 7 tuần — cả ba đều là lực đẩy giá thực chất, không phải nhiễu số liệu. Robusta đi ngược chiều, chịu áp lực từ tồn kho ICE London đang ở đỉnh 4,5 tháng, khiến giá giảm nhẹ cuối tuần và gần như đi ngang khi London chưa mở phiên sáng thứ Hai. Giá nội địa Việt Nam tăng nhẹ theo đà Arabica quốc tế nhiều hơn là theo Robusta — logic phù hợp vì phần lớn chênh lệch giá nhân xô trong nước vẫn bám sát biến động Robusta London, nhưng tâm lý thị trường đang nghiêng theo hướng "khan hiếm ngắn hạn" của Arabica.</p>
+    <p>Điểm đáng chú ý nhất: vị thế Managed Money vẫn nghiêng net-long hơn 33.000 hợp đồng trong khi CONAB và USDA đều dự báo sản lượng Brazil niên vụ 2026/27 ở mức kỷ lục (66,7–71,9 triệu bao). Quỹ đầu cơ đang định giá theo tình trạng thắt chặt tồn kho hiện tại hơn là triển vọng cung dài hạn — một sự phân kỳ giữa dữ liệu tồn kho/tồn giao ngay và dữ liệu mùa vụ dự báo, cần theo dõi sát khi thu hoạch Brazil tăng tốc trong các tuần tới.</p>
+    <p><strong>Cần theo dõi tiếp:</strong></p>
+    <ul class="points">
+      <li>Chuỗi giảm tồn kho Arabica ICE có đảo chiều khi thu hoạch Brazil tăng tốc trong tháng 8 hay không.</li>
+      <li>Báo cáo CFTC mới (dự kiến công bố thứ Sáu tuần này, số liệu tuần đến 4/8 hoặc 11/8) — quỹ chốt lời net-long hay tiếp tục mua vào.</li>
+      <li>Khoảng cách dự báo CONAB (66,7tr bao) và USDA (71,9tr bao) cho vụ 2026/27 — nếu số liệu thực tế nghiêng về CONAB, nguồn cung có thể không dư thừa như kỳ vọng của USDA.</li>
     </ul>
   </div>
 
   <div class="disclaimer">
-    <strong>Lưu ý về nguồn số liệu:</strong>
-    <ul>
-      <li>Giá Robusta London lấy theo hợp đồng <strong>11/2026 (RMX26)</strong> — hợp đồng có khối lượng giao dịch cao nhất trong bảng dữ liệu ICE Futures Europe (qua TradingView), không phải hợp đồng gần đáo hạn nhất.</li>
-      <li>Giá Arabica New York lấy theo <strong>KC=F</strong> qua Yahoo Finance (tương ứng hợp đồng 09/2026), là nguồn realtime đáng tin nhất hiện có cho Arabica.</li>
-      <li>Một số bài báo trong nước sáng nay đưa tin giá thế giới "tăng đồng loạt" — con số này KHÔNG khớp với dữ liệu Robusta 11/26 (giảm 2,50%) dùng trong bản tin; khả năng cao các bài đó thuật lại phiên đóng cửa hôm trước hoặc dùng hợp đồng khác. Bản tin ưu tiên số liệu có khối lượng giao dịch xác thực.</li>
-      <li>Số liệu CFTC, CONAB, USDA, Cecafé, ICO là dữ liệu gốc đáng tin cậy nhưng công bố có độ trễ (tuần/tháng) — mỗi mục đã ghi rõ ngày của số liệu.</li>
-      <li>Giá nội địa tổng hợp từ báo trong nước, mang tính tham khảo, cần đối chiếu với đại lý thu mua tại địa phương để có giá giao dịch chính xác.</li>
-    </ul>
+    <strong>Về nguồn số liệu:</strong> Giá Arabica lấy theo hợp đồng kỳ hạn 09/26 (mã KCU26.NYB, thanh khoản cao nhất hiện tại) qua Yahoo Finance — không dùng mã continuous KC=F vì đã tự động roll sang hợp đồng xa hơn, gây sai lệch khoảng -6,5% không phản ánh đúng thị trường. Giá Robusta lấy theo kỳ hạn 09/26 trên ICE London, đối chiếu qua nhiều báo trong nước (doanhnghiephoinhap.vn, chocaphe.vn, baolaocai.vn) do Yahoo Finance không có dữ liệu Robusta; tại thời điểm biên soạn (sáng thứ Hai giờ VN) London chưa mở phiên mới nên giá vẫn là mức chốt phiên thứ Sáu 7/8. Số liệu CFTC, CONAB, USDA, Cecafé, ICO là nguồn gốc chính thức, đáng tin cậy, cập nhật theo tuần/tháng — trong khi giá nội địa và giá sàn thuật lại qua báo Việt Nam cần đối chiếu thời gian thực vì thường có độ trễ vài giờ đến một ngày.
   </div>
 
   <footer>
-    <div>Bản tin tự động — Coffee Market Desk · 07/08/2026</div>
-    <div class="src-list">
-      <a href="https://baohatinh.vn/cong-cu/gia-ca-phe-hom-nay" target="_blank">Giá nội địa &amp; sàn — Báo Hà Tĩnh</a>
-      <a href="https://finance.yahoo.com/quote/KC=F" target="_blank">Yahoo Finance KC=F</a>
-      <a href="https://www.cocoaintel.com/arabica-coffee-rebounds-sharply-as-tight-stocks-and-delayed-brazilian-harvest-support-prices-31-july-2026/" target="_blank">CocoaIntel — Tồn kho ICE</a>
-      <a href="https://rockmartholdings.com/brazil-coffee-market-report-week-32-2026-harvest-drags-stocks-crumble-to-a-two-year-low/" target="_blank">Rockmart — Brazil Week 32</a>
-      <a href="https://vietnambiz.vn/usda-san-luong-ca-phe-toan-cau-co-the-dat-ky-luc-gan-190-trieu-bao-trong-nien-vu-2026-2027-202684144212569.htm" target="_blank">USDA/CONAB — VietnamBiz</a>
-      <a href="https://stockbiz.vn/tin-tuc/ca-phe-brazil-nien-vu-202526-xuat-khau-giam-157-nhung-doanh-thu-van-cao-thu-hai-lich-su--ban-do-thuong-mai-dang-duoc-ve-lai/40952956" target="_blank">Cecafé — StockBiz</a>
-      <a href="https://www.ico.org/documents/cy2025-26/cmr-1225-e.pdf" target="_blank">ICO Coffee Market Report</a>
-    </div>
+    <strong>Nguồn tham khảo:</strong>
+    <ul>
+      <li><a href="https://baolaocai.vn/gia-ca-phe-hom-nay-1082026-cao-nhat-97000-dongkg-post905733.html" target="_blank">Giá cà phê hôm nay 10/8/2026 — Báo Lào Cai</a></li>
+      <li><a href="https://doanhnghiephoinhap.vn/gia-ca-phe-hom-nay-1082026-ket-thuc-tuan-qua-gia-ca-phe-trong-nuoc-tang-nhe-robusta-london-quay-dau-giam-145871.html" target="_blank">Giá cà phê hôm nay 10/8/2026 — Doanh nghiệp Hội nhập</a></li>
+      <li><a href="http://vov.vn/thi-truong/gia-ca-phe/gia-ca-phe-hom-nay-108-gia-ca-phe-arabica-tang-manh-post1322542.vov" target="_blank">Giá cà phê hôm nay 10/8 — VOV</a></li>
+      <li><a href="https://chocaphe.vn/gia-ca-phe-truc-tuyen.cfp" target="_blank">Giá cà phê trực tuyến — chocaphe.vn</a></li>
+      <li><a href="https://www.barchart.com/story/news/3722426/arabica-coffee-soars-on-dollar-weakness-and-tight-ice-inventories" target="_blank">Arabica Coffee Soars on Dollar Weakness and Tight ICE Inventories — Barchart</a></li>
+      <li><a href="https://www.stonex.com/en/insights/daily-coffee-report-8-3-26/" target="_blank">Daily Coffee Report — StoneX</a></li>
+      <li><a href="https://vietnambiz.vn/conab-giam-du-bao-san-luong-ca-phe-brazil-202599151736767.htm" target="_blank">CONAB dự báo sản lượng cà phê Brazil — VietnamBiz</a></li>
+      <li><a href="https://vietnambiz.vn/usda-san-luong-ca-phe-toan-cau-co-the-dat-ky-luc-gan-190-trieu-bao-trong-nien-vu-2026-2027-202684144212569.htm" target="_blank">USDA: sản lượng cà phê toàn cầu kỷ lục 2026/27 — VietnamBiz</a></li>
+      <li><a href="https://stockbiz.vn/tin-tuc/ca-phe-brazil-nien-vu-202526-xuat-khau-giam-157-nhung-doanh-thu-van-cao-thu-hai-lich-su--ban-do-thuong-mai-dang-duoc-ve-lai/40952956" target="_blank">Cecafé: xuất khẩu cà phê Brazil niên vụ 2025/26 — StockBiz</a></li>
+      <li><a href="https://ico.org/documents/cy2025-26/cmr-1225-e.pdf" target="_blank">ICO Coffee Market Report — ico.org</a></li>
+      <li><a href="https://www.fas.usda.gov/data/gain/2026/06/brazil-coffee-annual" target="_blank">Brazil: Coffee Annual — USDA FAS</a></li>
+    </ul>
+    <p style="margin-top:14px;">Bản tin tự động tổng hợp bởi Coffee Market Desk. Chỉ mang tính tham khảo, không phải khuyến nghị đầu tư/giao dịch.</p>
   </footer>
 
 </div>
