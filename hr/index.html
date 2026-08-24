@@ -414,6 +414,8 @@ async function loadAll(){
 
 const SUPER_ADMIN='vu@ttdglobal.vn';
 const LEAVE_APPROVER='duom@ttdglobal.vn';
+const CAN_DELETE_EMP=['vu@ttdglobal.vn','duom@ttdglobal.vn'];
+function canDeleteEmp(){return CAN_DELETE_EMP.includes(_email);}
 // Jacob duyệt phép cho nhóm Logistics cụ thể
 const JACOB_EMAIL='jacob@ttdglobal.vn';
 const JACOB_MANAGEES=['tuan@ttdglobal.vn','trung@ttdglobal.vn','jasmine@ttdglobal.vn','thuy@ttdglobal.vn'];
@@ -544,7 +546,7 @@ function renderEmployees(){
         </div>
         <div class="emp-actions">
           ${canAdjustLeave()?`<button onclick="openAdjustModal('${e.ma}','${e.ten}')" style="background:rgba(0,191,165,.08);border:1px solid rgba(0,191,165,.2);color:var(--teal);border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer;">✏️ Sửa</button>`:''}
-          ${isSuperAdmin()?`<button onclick="deleteEmployee('${e.ma}','${e.ten}')" style="background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.2);color:#ef5350;border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer;">🗑</button>`:''}
+          ${canDeleteEmp()?`<button onclick="deleteEmployee('${e.ma}','${e.ten}')" style="background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.2);color:#ef5350;border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer;">🗑</button>`:''}
         </div>
       </div>
     </div>`;
@@ -580,7 +582,7 @@ async function addEmployee(){
   }catch(e){alert('Lỗi: '+e.message);}
 }
 async function deleteEmployee(ma,ten){
-  if(!isSuperAdmin()||!confirm(`Xóa nhân viên "${ten}"?`))return;
+  if(!canDeleteEmp()||!confirm(`Xóa nhân viên "${ten}"?`))return;
   try{
     await sbDel('employees',{ma});
     _emps=_emps.filter(e=>e.ma!==ma);
