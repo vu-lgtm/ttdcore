@@ -798,7 +798,9 @@ function renderDetail(){
         </div>
       </div>
       <div id="shipmentEditRow" class="hidden" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-        <input type="text" id="supplierInput" value="${esc(o.supplier||'')}" placeholder="Công ty mua hàng từ..." style="flex:1;padding:7px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;">
+        <input type="text" id="customerInput" value="${esc(o.customer||'')}" placeholder="Tên khách hàng" style="flex:1;min-width:180px;padding:7px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;">
+        <input type="text" id="noteInput" value="${esc(o.note||'')}" placeholder="Mặt hàng / ghi chú (VD: Robusta G1, S18...)" style="flex:2;min-width:220px;padding:7px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;">
+        <input type="text" id="supplierInput" value="${esc(o.supplier||'')}" placeholder="Công ty mua hàng từ..." style="flex:1;min-width:160px;padding:7px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;">
         <input type="text" id="monthInput" value="${esc(o.shipment_month||'')}" placeholder="Tháng (VD: 2026-06)" style="width:150px;padding:7px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;">
         <input type="text" id="qtyInput" value="${esc(o.shipment_qty||'')}" placeholder="Số lượng" style="width:120px;padding:7px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;">
         <button class="btn-mini" onclick="saveShipmentInfo()">Lưu</button>
@@ -830,11 +832,14 @@ function renderDetail(){
 
 function editShipmentInfo(){const row=document.getElementById('shipmentEditRow');if(row){row.classList.remove('hidden');row.style.display='flex';}}
 async function saveShipmentInfo(){
+  const customer=document.getElementById('customerInput')?.value.trim()||'';
+  const note=document.getElementById('noteInput')?.value.trim()||'';
   const supplier=document.getElementById('supplierInput')?.value.trim()||'';
   const month=document.getElementById('monthInput')?.value.trim()||'';
   const qty=document.getElementById('qtyInput')?.value.trim()||'';
+  if(!customer){alert('Tên khách hàng không được để trống');return;}
   showLoading('Đang lưu...');
-  try{const{error}=await sb.from('orders').update({supplier,shipment_month:month,shipment_qty:qty}).eq('id',currentOrderId);if(error)throw error;currentOrder.supplier=supplier;currentOrder.shipment_month=month;currentOrder.shipment_qty=qty;renderDetail();}
+  try{const{error}=await sb.from('orders').update({customer,note,supplier,shipment_month:month,shipment_qty:qty}).eq('id',currentOrderId);if(error)throw error;currentOrder.customer=customer;currentOrder.note=note;currentOrder.supplier=supplier;currentOrder.shipment_month=month;currentOrder.shipment_qty=qty;const idx=allOrders.findIndex(o=>o.id===currentOrderId);if(idx>=0){allOrders[idx].customer=customer;allOrders[idx].note=note;allOrders[idx].supplier=supplier;}renderDetail();}
   catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
 }
 
