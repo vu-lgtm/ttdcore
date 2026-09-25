@@ -794,7 +794,7 @@ function renderDetail(){
         </div>
         <div style="text-align:right;">
           <div style="font-size:12px;color:#888;">Tạo bởi ${esc(o.created_by||'?')} · ${o.created_at?new Date(o.created_at).toLocaleDateString('vi-VN'):''}</div>
-          ${canEditPayment()?`<button class="btn-mini" style="margin-top:6px;" onclick="editShipmentInfo()">✏️ Sửa thông tin</button>`:''}
+          <button class="btn-mini" style="margin-top:6px;" onclick="editShipmentInfo()">✏️ Sửa thông tin</button>
         </div>
       </div>
       <div id="shipmentEditRow" class="hidden" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
