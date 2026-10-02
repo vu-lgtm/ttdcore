@@ -559,7 +559,7 @@ function renderListTable(container,groups){
     }
 
     rows+=`<tr class="parent-row" onclick="openOrder('${o.id}')">
-      <td style="font-weight:700;">${collapseBtn}${esc(o.code)}${shipBadge}</td>
+      <td style="font-weight:700;">${collapseBtn}${esc(o.code)}${shipBadge}${renderFlowInline(o)}</td>
       <td style="color:#555;">${esc(o.customer)}</td>
       <td style="font-size:12px;color:#777;">${o.supplier?esc(o.supplier):'—'}</td>
       <td>${progCell}</td>
@@ -578,7 +578,7 @@ function renderListTable(container,groups){
         const lBadge=`<span style="font-size:10px;background:#667eea;color:white;padding:1px 6px;border-radius:8px;font-weight:600;margin-right:4px;">L${String(k.shipment_no||'?').padStart(2,'0')}</span>`;
         const meta=[k.shipment_month?`📅 ${k.shipment_month}`:'',k.shipment_qty?`⚖️ ${k.shipment_qty}`:''].filter(Boolean).join(' · ');
         rows+=`<tr class="child-row" onclick="openOrder('${k.id}')">
-          <td style="padding-left:32px;font-size:12px;">${lBadge}${esc(k.code)}${meta?`<div style="font-size:10px;color:#888;margin-top:2px;">${meta}</div>`:''}
+          <td style="padding-left:32px;font-size:12px;">${lBadge}${esc(k.code)}${meta?`<div style="font-size:10px;color:#888;margin-top:2px;">${meta}</div>`:''}${renderFlowInline(k)}
           <td style="font-size:12px;color:#888;">${esc(k.customer)}</td>
           <td style="font-size:11px;color:#aaa;">${k.supplier?esc(k.supplier):'—'}</td>
           <td><div style="display:flex;align-items:center;gap:6px;"><div style="flex:1;height:3px;background:#f0f0f0;border-radius:2px;overflow:hidden;min-width:50px;"><div style="height:100%;width:${kPct}%;background:${kBar};border-radius:2px;"></div></div><span style="font-size:11px;color:#888;">${kPct}%</span></div><div style="font-size:11px;color:#aaa;margin-top:1px;">${kDone}/${TOTAL}</div></td>
@@ -793,6 +793,20 @@ function getContracts(o){
     {label:'HĐ Trung gian',code:'',url:''},
     {label:'HĐ Bán quốc tế',code:o.code||'',url:''}
   ];
+}
+
+// Luồng gọn cho danh sách — chỉ hiện khi đơn đã nhập hợp đồng
+function renderFlowInline(o){
+  const cs=(Array.isArray(o.contracts)?o.contracts:[]).filter(c=>(c.code||'').trim()||(c.url||'').trim());
+  if(!cs.length)return '';
+  const chips=cs.map((c,i)=>{
+    const p=CONTRACT_PALETTE[i%CONTRACT_PALETTE.length];
+    const hasUrl=c.url&&/^https?:\/\//i.test(c.url);
+    const base=`font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;background:${p.bg};color:${p.color};border:1px solid ${p.border};white-space:nowrap;`;
+    const click=hasUrl?`onclick="event.stopPropagation();window.open('${esc(c.url)}','_blank')" style="cursor:pointer;${base}" title="${esc(c.label)} — mở bản scan"`:`style="${base}" title="${esc(c.label)}"`;
+    return `<span ${click}>${hasUrl?'📎':''}${esc(c.code||c.label)}</span>`;
+  }).join('<span style="color:#ccc;font-size:10px;">›</span>');
+  return `<div style="margin-top:4px;font-weight:400;display:flex;flex-wrap:wrap;align-items:center;gap:3px;">${chips}</div>`;
 }
 
 function renderFlowView(cs){
