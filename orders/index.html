@@ -715,7 +715,7 @@ async function openOrder(id){
     if(!currentOrder.history)currentOrder.history=[];
     if(!currentOrder.step_notes)currentOrder.step_notes={};
     if(!currentOrder.checklist)currentOrder.checklist={};
-    driveTreeOpen=false;checklistExpanded={};expandedNotes={};
+    driveTreeOpen=false;checklistExpanded={};expandedNotes={};editingContracts=false;
     document.getElementById('tabDetail').classList.remove('hidden');
     document.getElementById('tabHistory').classList.remove('hidden');
     await renderShipmentNav();
@@ -768,6 +768,87 @@ function canTick(step){
 }
 const canEditPayment=()=>currentUser.role==='admin'||currentUser.role==='ketoan';
 
+// ===== LUỒNG HỢP ĐỒNG ĐỘNG =====
+const CONTRACT_PALETTE=[
+  {color:'#1565c0',bg:'#eef6ff',border:'#bbdcff'},
+  {color:'#b7791f',bg:'#fff8ec',border:'#ffe0a6'},
+  {color:'#2e7d32',bg:'#eafaf0',border:'#a5e0bd'},
+  {color:'#6a1b9a',bg:'#f6edfb',border:'#d9b8ea'},
+  {color:'#c2410c',bg:'#fff1ea',border:'#ffcbb0'},
+  {color:'#0e7490',bg:'#e8fafc',border:'#a8e4ee'}
+];
+let editingContracts=false, contractDraft=[];
+
+// Lấy danh sách HĐ; nếu đơn còn dữ liệu cũ (6 cột) thì tự chuyển sang mảng
+function getContracts(o){
+  if(Array.isArray(o.contracts)&&o.contracts.length)return o.contracts;
+  const legacy=[];
+  if(o.contract_buy||o.contract_buy_url)legacy.push({label:'HĐ Mua (NCC)',code:o.contract_buy||'',url:o.contract_buy_url||''});
+  if(o.contract_intermediary||o.contract_intermediary_url)legacy.push({label:'HĐ Trung gian',code:o.contract_intermediary||'',url:o.contract_intermediary_url||''});
+  if(o.contract_sell||o.contract_sell_url)legacy.push({label:'HĐ Bán quốc tế',code:o.contract_sell||'',url:o.contract_sell_url||''});
+  if(legacy.length)return legacy;
+  // Mặc định 3 loại trống
+  return [
+    {label:'HĐ Mua (NCC)',code:'',url:''},
+    {label:'HĐ Trung gian',code:'',url:''},
+    {label:'HĐ Bán quốc tế',code:o.code||'',url:''}
+  ];
+}
+
+function renderFlowView(cs){
+  if(!cs.length)return '<div style="font-size:13px;color:#bbb;">Chưa có hợp đồng nào.</div>';
+  let html='<div style="display:flex;align-items:stretch;gap:0;flex-wrap:wrap;">';
+  cs.forEach((c,i)=>{
+    const p=CONTRACT_PALETTE[i%CONTRACT_PALETTE.length];
+    const hasUrl=c.url&&/^https?:\/\//i.test(c.url);
+    const click=hasUrl?`onclick="window.open('${esc(c.url)}','_blank')" style="cursor:pointer;flex:1;min-width:150px;background:${p.bg};border:1.5px solid ${p.border};border-radius:8px;padding:10px 12px;"`:`style="flex:1;min-width:150px;background:${p.bg};border:1.5px solid ${p.border};border-radius:8px;padding:10px 12px;"`;
+    const footer=hasUrl?`<div style="font-size:11px;color:#1a73e8;margin-top:6px;font-weight:600;">📎 Xem bản scan ↗</div>`:`<div style="font-size:11px;color:#bbb;margin-top:6px;">Chưa có file scan</div>`;
+    if(i>0)html+='<div style="display:flex;align-items:center;padding:0 8px;color:#c5c5e6;font-size:20px;font-weight:700;">→</div>';
+    html+=`<div ${click}>
+      <div style="font-size:10px;color:${p.color};font-weight:700;text-transform:uppercase;">${esc(c.label)}</div>
+      <div style="font-size:14px;font-weight:700;color:#333;margin-top:3px;word-break:break-word;">${esc(c.code||'—')}</div>
+      ${footer}
+    </div>`;
+  });
+  html+='</div>';
+  return html;
+}
+
+function renderFlowEdit(){
+  const rows=contractDraft.map((c,i)=>`
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
+      <span style="font-size:12px;color:#aaa;width:18px;text-align:center;">${i+1}</span>
+      <input type="text" value="${esc(c.label)}" oninput="contractDraft[${i}].label=this.value" placeholder="Loại hợp đồng" style="flex:1;min-width:140px;padding:7px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;">
+      <input type="text" value="${esc(c.code)}" oninput="contractDraft[${i}].code=this.value" placeholder="Mã hợp đồng" style="flex:1;min-width:130px;padding:7px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;">
+      <input type="url" value="${esc(c.url)}" oninput="contractDraft[${i}].url=this.value" placeholder="Link scan (Drive)" style="flex:2;min-width:160px;padding:7px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;">
+      <button class="btn-mini" style="color:#c0392b;" onclick="removeContract(${i})">✕</button>
+    </div>`).join('');
+  return `<div style="margin-top:4px;">${rows}
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+      <button class="btn-mini" style="border:1.5px dashed #a5c4ff;background:#f5f9ff;color:#1565c0;font-weight:600;" onclick="addContract()">+ Thêm hợp đồng</button>
+      <button class="btn-mini" style="background:#667eea;color:white;border-color:#667eea;" onclick="saveContracts()">💾 Lưu luồng</button>
+      <button class="btn-mini" style="color:#c0392b;" onclick="cancelContracts()">Hủy</button>
+    </div>
+  </div>`;
+}
+
+function startEditContracts(){contractDraft=JSON.parse(JSON.stringify(getContracts(currentOrder)));editingContracts=true;renderDetail();}
+function addContract(){contractDraft.push({label:'Hợp đồng mới',code:'',url:''});renderDetail();}
+function removeContract(i){contractDraft.splice(i,1);renderDetail();}
+function cancelContracts(){editingContracts=false;renderDetail();}
+async function saveContracts(){
+  const clean=contractDraft.filter(c=>(c.label||'').trim()||(c.code||'').trim()||(c.url||'').trim())
+    .map(c=>({label:(c.label||'').trim()||'Hợp đồng',code:(c.code||'').trim(),url:(c.url||'').trim()}));
+  showLoading('Đang lưu luồng hợp đồng...');
+  try{
+    const{error}=await sb.from('orders').update({contracts:clean}).eq('id',currentOrderId);
+    if(error)throw error;
+    currentOrder.contracts=clean;
+    const idx=allOrders.findIndex(o=>o.id===currentOrderId);if(idx>=0)allOrders[idx].contracts=clean;
+    editingContracts=false;renderDetail();
+  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
+}
+
 function renderDetail(){
   const o=currentOrder;
   const canEditFolder=currentUser.role==='admin'||currentUser.role==='sale_admin'||currentUser.role==='sale';
@@ -807,6 +888,13 @@ function renderDetail(){
         <button class="btn-mini" style="color:#c0392b;" onclick="document.getElementById('shipmentEditRow').classList.add('hidden')">Hủy</button>
       </div>
     </div>
+    <div style="background:#fff;border:1.5px solid #eef0f5;border-radius:10px;padding:14px 16px;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+        <div style="font-size:11px;font-weight:700;color:#888;letter-spacing:.5px;text-transform:uppercase;">🔗 Luồng hợp đồng ${editingContracts?'· đang sửa':'<span style="font-weight:400;text-transform:none;color:#aaa;">· bấm hợp đồng để mở bản scan</span>'}</div>
+        ${editingContracts?'':`<button class="btn-mini" onclick="startEditContracts()">✏️ Sửa luồng</button>`}
+      </div>
+      ${editingContracts?renderFlowEdit():renderFlowView(getContracts(o))}
+    </div>
     ${folderSection}${renderChecklistSection()}${renderPaymentSection()}`;
 
   const noticeEl=document.getElementById('roleNotice');
@@ -839,7 +927,7 @@ async function saveShipmentInfo(){
   const qty=document.getElementById('qtyInput')?.value.trim()||'';
   if(!customer){alert('Tên khách hàng không được để trống');return;}
   showLoading('Đang lưu...');
-  try{const{error}=await sb.from('orders').update({customer,note,supplier,shipment_month:month,shipment_qty:qty}).eq('id',currentOrderId);if(error)throw error;currentOrder.customer=customer;currentOrder.note=note;currentOrder.supplier=supplier;currentOrder.shipment_month=month;currentOrder.shipment_qty=qty;const idx=allOrders.findIndex(o=>o.id===currentOrderId);if(idx>=0){allOrders[idx].customer=customer;allOrders[idx].note=note;allOrders[idx].supplier=supplier;}renderDetail();}
+  try{const{error}=await sb.from('orders').update({customer,note,supplier,shipment_month:month,shipment_qty:qty}).eq('id',currentOrderId);if(error)throw error;Object.assign(currentOrder,{customer,note,supplier,shipment_month:month,shipment_qty:qty});const idx=allOrders.findIndex(o=>o.id===currentOrderId);if(idx>=0)Object.assign(allOrders[idx],{customer,note,supplier});renderDetail();}
   catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
 }
 
