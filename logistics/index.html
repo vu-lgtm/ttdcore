@@ -429,6 +429,9 @@ function renderDetail(){
   }).join('');
   // File đính kèm chung (không gắn mã chứng từ nào)
   const genFiles=allAtt.map((a,i)=>({a,i})).filter(x=>!x.a.doc);
+  // Bộ tài liệu nén .zip (doc==='_zip')
+  const zipFiles=allAtt.map((a,i)=>({a,i})).filter(x=>x.a.doc==='_zip');
+  const zipHtml=zipFiles.map(({a,i})=>`<div class="att-row"><div class="att-thumb">🗜️</div><span class="att-name" onclick="downloadDriveFile('${esc(a.fileId||'')}')">${esc(a.title)}</span><span class="att-meta">${a.size?fmtSize(a.size):''}${a.user?' · '+esc(a.user):''}</span><button class="btn-mini" onclick="downloadDriveFile('${esc(a.fileId||'')}')">⬇ Tải</button>${canEdit()?`<button class="btn-mini" style="color:#c0392b;" onclick="removeAtt(${i})">✕</button>`:''}</div>`).join('')||'<span style="color:#aaa;font-size:13px;">Chưa có file nén</span>';
   const attHtml=genFiles.map(({a,i})=>{
     const isImg=(a.mime||'').startsWith('image/')||/\.(jpg|jpeg|png|gif|webp)$/i.test(a.title||'');
     const isPdf=(a.mime==='application/pdf')||/\.pdf$/i.test(a.title||'');
@@ -467,10 +470,18 @@ function renderDetail(){
     <div class="detail-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px;">
         <div class="section-title" style="margin:0;">📄 Bộ chứng từ xuất khẩu (${docProgress(s)})</div>
-        ${canEdit()?`<button class="btn-mini" style="background:#ff7043;color:white;border-color:#ff7043;" onclick="triggerBulkUpload('${s.id}')">⬆ Upload hàng loạt (tự nhận theo số)</button>`:''}
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn-mini" onclick="downloadAllDocs()">⬇ Tải nguyên bộ (.zip)</button>
+          ${canEdit()?`<button class="btn-mini" style="background:#ff7043;color:white;border-color:#ff7043;" onclick="triggerBulkUpload('${s.id}')">⬆ Upload hàng loạt (tự nhận theo số)</button>`:''}
+        </div>
       </div>
       <div style="font-size:11px;color:#999;margin-bottom:12px;">Đặt tên file bắt đầu bằng số thứ tự mục (VD: <b>1</b> Invoice.pdf, <b>3</b>_BL.pdf, <b>07</b> phyto.pdf) rồi kéo cả xấp vào ô bên dưới — hệ thống tự xếp đúng mục, tự tick xanh. File nhiều số cùng mục đều được.</div>
       <div class="doc-grid" id="docBulkZone">${docHtml}</div>
+    </div>
+    <div class="detail-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:8px;"><div class="section-title" style="margin:0;">📦 Bộ tài liệu nén (.zip)</div>${canEdit()?`<button class="btn-mini" onclick="triggerZipUpload('${s.id}')">+ Tải file .zip lên</button>`:''}</div>
+      <div style="font-size:11px;color:#999;margin-bottom:8px;">Gói sẵn nhiều tài liệu thành 1 file .zip ở máy rồi tải lên đây. Tự tick tay các mục chứng từ ở trên. Tải lại nguyên file .zip bất cứ lúc nào.</div>
+      <div class="att-list">${zipHtml}</div>
     </div>
     ${renderFeeCard(s)}
     <div class="detail-card">
@@ -553,6 +564,28 @@ document.getElementById('fileInput').addEventListener('change',e=>{handleFiles(e
 function triggerUpload(id){uploadCtx={id,mode:'general'};document.getElementById('fileInput').click();}       // đính kèm chung
 function triggerDocUpload(id,docKey){uploadCtx={id,mode:'doc',docKey};document.getElementById('fileInput').click();} // đính cho 1 mục
 function triggerBulkUpload(id){uploadCtx={id,mode:'bulk'};document.getElementById('fileInput').click();}         // hàng loạt theo số
+function triggerZipUpload(id){uploadCtx={id,mode:'doc',docKey:'_zip'};document.getElementById('fileInput').click();} // file nén .zip
+function downloadDriveFile(fileId){if(!fileId)return;window.open('https://drive.google.com/uc?export=download&id='+fileId,'_blank');}
+// Tải nguyên bộ chứng từ: nén tất cả file các mục thành 1 zip
+async function downloadAllDocs(){
+  const atts=(currentShip.attachments||[]).filter(a=>a.doc&&a.fileId);
+  if(!atts.length){alert('Chưa có file chứng từ nào để tải.');return;}
+  const files=atts.map(a=>{
+    const di=DOC_LIST.findIndex(d=>d.key===a.doc);
+    const prefix=di>=0?String(di+1).padStart(2,'0')+' - '+DOC_LIST[di].label+' - ':'';
+    return {fileId:a.fileId,name:prefix+(a.title||'file')};
+  });
+  const zipName=(currentShip.lot_code||'lo-hang')+' - Bo chung tu';
+  showLoading('Đang nén bộ chứng từ...');
+  try{
+    const res=await fetch(APPS_SCRIPT_URL,{method:'POST',body:JSON.stringify({secret:UPLOAD_SECRET,action:'zip',files,zipName})});
+    const j=await res.json();
+    if(!j.ok)throw new Error(j.error||'Nén thất bại');
+    const bin=atob(j.zipBase64);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+    const blob=new Blob([arr],{type:'application/zip'});
+    const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=j.zipName;link.click();URL.revokeObjectURL(url);
+  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
+}
 async function handleFiles(files){
   if(!uploadCtx||!currentShip)return;
   const newDocStatus={...(currentShip.doc_status||{})};
@@ -575,7 +608,7 @@ async function handleFiles(files){
       const list=[...(currentShip.attachments||[]),docItem];
       await sb.from('logistics_shipments').update({attachments:list}).eq('id',currentShip.id);
       currentShip.attachments=list;
-      if(docKey)newDocStatus[docKey]=true;             // có file = tự tick xanh
+      if(docKey&&DOC_LIST.some(d=>d.key===docKey))newDocStatus[docKey]=true; // chỉ auto-tick mục chứng từ thật (bỏ qua _zip)
     }catch(e){alert(`Lỗi tải "${file.name}": ${e.message}`);}
   }
   // cập nhật tick nếu có thay đổi
