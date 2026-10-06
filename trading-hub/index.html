@@ -226,7 +226,7 @@ const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const GRACE_EMAIL='grace@ttdglobal.vn';
 // ===== DRIVE UPLOAD (qua Apps Script Web App) =====
-const APPS_SCRIPT_URL='https://script.google.com/a/macros/ttdglobal.vn/s/AKfycbzN1tkdBbiHyiaIDAU20-8NEyTqYoIDL3EfNM3fnGKeZOw1OSA7E-xSlUzkznpUoZT_/exec'; // Apps Script Web App
+const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbzN1tkdBbiHyiaIDAU20-8NEyTqYoIDL3EfNM3fnGKeZOw1OSA7E-xSlUzkznpUoZT_/exec'; // Apps Script Web App (public)
 const UPLOAD_SECRET='ttd_th_2026';                   // phải khớp với Apps Script
 function fileToBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});}
 async function driveUpload(kind,itemId,itemName,file){
