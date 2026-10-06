@@ -78,6 +78,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .doc-item.checked .doc-check{background:#43a047;border-color:#43a047;color:white;}
 .doc-label{font-size:13px;color:#333;}
 .doc-item.checked .doc-label{color:#2e7d32;font-weight:600;}
+.doc2{border:2px solid #eee;border-radius:8px;padding:10px 12px;background:white;transition:all .15s;}
+.doc2.checked{background:#e8f5e9;border-color:#a5d6a7;}
+.doc2-head{display:flex;align-items:center;gap:8px;}
+.doc2-check{width:18px;height:18px;border-radius:4px;border:2px solid #ccc;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;font-size:12px;}
+.doc2.checked .doc2-check{background:#43a047;border-color:#43a047;color:white;}
+.doc2-num{width:20px;height:20px;border-radius:50%;background:#fff3e0;color:#e65100;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.doc2-label{flex:1;font-size:13px;color:#333;}
+.doc2.checked .doc2-label{color:#2e7d32;font-weight:600;}
+.doc2-add{border:1px solid #ffcc80;background:#fff8f0;color:#e65100;border-radius:5px;cursor:pointer;font-size:12px;padding:2px 7px;flex-shrink:0;}
+.doc2-add:hover{background:#ff7043;color:white;border-color:#ff7043;}
+.doc2-files{margin-top:8px;display:flex;flex-direction:column;gap:4px;padding-left:28px;}
+.doc2-file{display:flex;align-items:center;gap:6px;font-size:11px;background:#f8f9fc;border:1px solid #eee;border-radius:5px;padding:3px 7px;}
+.doc2-fname{flex:1;color:#1976d2;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.doc2-fname:hover{text-decoration:underline;}
+.doc-grid.drag{outline:2px dashed #ff7043;outline-offset:4px;border-radius:10px;}
 .att-list{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
 .att-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8f9fc;border:1px solid #eee;border-radius:8px;}
 .att-thumb{width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #eee;font-size:20px;}
@@ -396,8 +411,25 @@ function showList(){document.getElementById('viewDetail').classList.add('hidden'
 function renderDetail(){
   const s=currentShip;
   const docs=s.doc_status||{};
-  const docHtml=DOC_LIST.map(d=>{const on=!!docs[d.key];return`<div class="doc-item ${on?'checked':''}" ${canEdit()?`onclick="toggleDoc('${d.key}')"`:''}><div class="doc-check">${on?'✓':''}</div><div class="doc-label">${d.label}</div></div>`;}).join('');
-  const attHtml=(s.attachments||[]).map((a,i)=>{
+  const allAtt=s.attachments||[];
+  // Mỗi ô chứng từ: số thứ tự, tick, nút đính file riêng, danh sách file của ô
+  const docHtml=DOC_LIST.map((d,di)=>{
+    const on=!!docs[d.key];
+    const files=allAtt.map((a,i)=>({a,i})).filter(x=>x.a.doc===d.key);
+    const chips=files.map(({a,i})=>`<div class="doc2-file"><span class="doc2-fname" onclick="previewDoc('${esc(a.previewUrl||a.url)}','${esc(a.url||'')}')">${esc(a.title)}</span>${canEdit()?`<button onclick="removeAtt(${i})" style="border:none;background:none;color:#c0392b;cursor:pointer;font-size:11px;">✕</button>`:''}</div>`).join('');
+    return`<div class="doc2 ${on?'checked':''}">
+      <div class="doc2-head">
+        <div class="doc2-check" ${canEdit()?`onclick="toggleDoc('${d.key}')"`:''}>${on?'✓':''}</div>
+        <div class="doc2-num">${di+1}</div>
+        <div class="doc2-label">${d.label}</div>
+        ${canEdit()?`<button class="doc2-add" onclick="triggerDocUpload('${s.id}','${d.key}')" title="Đính file cho mục này">📎${files.length?' '+files.length:''}</button>`:''}
+      </div>
+      ${files.length?`<div class="doc2-files">${chips}</div>`:''}
+    </div>`;
+  }).join('');
+  // File đính kèm chung (không gắn mã chứng từ nào)
+  const genFiles=allAtt.map((a,i)=>({a,i})).filter(x=>!x.a.doc);
+  const attHtml=genFiles.map(({a,i})=>{
     const isImg=(a.mime||'').startsWith('image/')||/\.(jpg|jpeg|png|gif|webp)$/i.test(a.title||'');
     const isPdf=(a.mime==='application/pdf')||/\.pdf$/i.test(a.title||'');
     const thumb=isImg&&a.url?`<img src="${esc(a.url)}">`:isPdf?'📕':/\.(docx?|rtf)$/i.test(a.title||'')?'📄':/\.(xlsx?|csv)$/i.test(a.title||'')?'📊':'📎';
@@ -432,15 +464,25 @@ function renderDetail(){
       </div>
       ${s.notes?`<div style="margin-top:12px;padding:12px 14px;background:#fff8f0;border-left:3px solid #ff7043;border-radius:6px;font-size:13px;white-space:pre-wrap;">${esc(s.notes)}</div>`:''}
     </div>
-    <div class="detail-card"><div class="section-title">📄 Bộ chứng từ xuất khẩu (${docProgress(s)})</div><div class="doc-grid">${docHtml}</div></div>
+    <div class="detail-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px;">
+        <div class="section-title" style="margin:0;">📄 Bộ chứng từ xuất khẩu (${docProgress(s)})</div>
+        ${canEdit()?`<button class="btn-mini" style="background:#ff7043;color:white;border-color:#ff7043;" onclick="triggerBulkUpload('${s.id}')">⬆ Upload hàng loạt (tự nhận theo số)</button>`:''}
+      </div>
+      <div style="font-size:11px;color:#999;margin-bottom:12px;">Đặt tên file bắt đầu bằng số thứ tự mục (VD: <b>1</b> Invoice.pdf, <b>3</b>_BL.pdf, <b>07</b> phyto.pdf) rồi kéo cả xấp vào ô bên dưới — hệ thống tự xếp đúng mục, tự tick xanh. File nhiều số cùng mục đều được.</div>
+      <div class="doc-grid" id="docBulkZone">${docHtml}</div>
+    </div>
     ${renderFeeCard(s)}
     <div class="detail-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div class="section-title" style="margin:0;">📎 File đính kèm</div><button class="btn-mini" onclick="triggerUpload('${s.id}')">+ Tải file lên</button></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div class="section-title" style="margin:0;">📎 File đính kèm chung</div><button class="btn-mini" onclick="triggerUpload('${s.id}')">+ Tải file lên</button></div>
+      <div style="font-size:11px;color:#999;margin-bottom:8px;">File không thuộc mục chứng từ nào (ảnh container, email, ghi chú...)</div>
       <div class="drop-zone" id="dropZone" onclick="triggerUpload('${s.id}')"><div style="font-size:28px;">📤</div><div style="font-size:13px;color:#e65100;font-weight:600;margin-top:4px;">Bấm hoặc kéo file vào đây</div><div style="font-size:11px;color:#999;">PDF, ảnh, Word, Excel · tối đa 20MB</div></div>
       <div class="att-list">${attHtml}</div>
     </div>`;
   const drop=document.getElementById('dropZone');
-  if(drop){drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag');});drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');uploadId=s.id;handleFiles(e.dataTransfer.files);});}
+  if(drop){drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag');});drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');uploadCtx={id:s.id,mode:'general'};handleFiles(e.dataTransfer.files);});}
+  const bulk=document.getElementById('docBulkZone');
+  if(bulk){bulk.addEventListener('dragover',e=>{e.preventDefault();bulk.classList.add('drag');});bulk.addEventListener('dragleave',()=>bulk.classList.remove('drag'));bulk.addEventListener('drop',e=>{e.preventDefault();bulk.classList.remove('drag');uploadCtx={id:s.id,mode:'bulk'};handleFiles(e.dataTransfer.files);});}
 }
 
 // ===== CHI PHÍ LÔ HÀNG =====
@@ -505,23 +547,45 @@ async function toggleDoc(key){
 }
 
 // ===== UPLOAD (Drive) =====
-let uploadId=null;
+// uploadCtx = {id, mode:'general'|'doc'|'bulk', docKey?}
+let uploadCtx=null;
 document.getElementById('fileInput').addEventListener('change',e=>{handleFiles(e.target.files);e.target.value='';});
-function triggerUpload(id){uploadId=id;document.getElementById('fileInput').click();}
+function triggerUpload(id){uploadCtx={id,mode:'general'};document.getElementById('fileInput').click();}       // đính kèm chung
+function triggerDocUpload(id,docKey){uploadCtx={id,mode:'doc',docKey};document.getElementById('fileInput').click();} // đính cho 1 mục
+function triggerBulkUpload(id){uploadCtx={id,mode:'bulk'};document.getElementById('fileInput').click();}         // hàng loạt theo số
 async function handleFiles(files){
-  if(!uploadId||!currentShip)return;
+  if(!uploadCtx||!currentShip)return;
+  const newDocStatus={...(currentShip.doc_status||{})};
+  const warn=[];
   for(const file of [...files]){
     if(file.size>MAX_FILE){alert(`File "${file.name}" quá 20MB, bỏ qua.`);continue;}
+    // Xác định mục chứng từ cho file này
+    let docKey=null;
+    if(uploadCtx.mode==='doc'){docKey=uploadCtx.docKey;}
+    else if(uploadCtx.mode==='bulk'){
+      const m=(file.name||'').match(/^\s*0*(\d+)/);   // số đứng đầu tên file
+      const n=m?parseInt(m[1]):0;
+      if(n>=1&&n<=DOC_LIST.length){docKey=DOC_LIST[n-1].key;}
+      else{warn.push(file.name);}                      // không có số hợp lệ → đính kèm chung
+    }
     showLoading(`Đang tải lên Drive: ${file.name}...`);
     try{
       const r=await driveUpload(currentShip.id,currentShip.lot_code||'',file);
-      const doc={title:r.name||file.name,url:r.url,previewUrl:r.previewUrl,fileId:r.fileId,mime:file.type,size:r.size||file.size,user:currentUser.name,time:Date.now()};
-      const list=[...(currentShip.attachments||[]),doc];
-      await sb.from('logistics_shipments').update({attachments:list,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',currentShip.id);
-      currentShip.attachments=list;const idx=allShips.findIndex(x=>x.id===currentShip.id);if(idx>=0)allShips[idx].attachments=list;
+      const docItem={title:r.name||file.name,url:r.url,previewUrl:r.previewUrl,fileId:r.fileId,mime:file.type,size:r.size||file.size,user:currentUser.name,time:Date.now(),doc:docKey};
+      const list=[...(currentShip.attachments||[]),docItem];
+      await sb.from('logistics_shipments').update({attachments:list}).eq('id',currentShip.id);
+      currentShip.attachments=list;
+      if(docKey)newDocStatus[docKey]=true;             // có file = tự tick xanh
     }catch(e){alert(`Lỗi tải "${file.name}": ${e.message}`);}
   }
+  // cập nhật tick nếu có thay đổi
+  if(JSON.stringify(newDocStatus)!==JSON.stringify(currentShip.doc_status||{})){
+    currentShip.doc_status=newDocStatus;
+    await sb.from('logistics_shipments').update({doc_status:newDocStatus,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',currentShip.id);
+  }
+  const idx=allShips.findIndex(x=>x.id===currentShip.id);if(idx>=0){allShips[idx].attachments=currentShip.attachments;allShips[idx].doc_status=currentShip.doc_status;}
   hideLoading();renderDetail();
+  if(warn.length)alert(`${warn.length} file không có số đầu hợp lệ (1–${DOC_LIST.length}) → đã đưa vào "File đính kèm chung":\n\n`+warn.join('\n'));
 }
 async function removeAtt(i){
   const a=(currentShip.attachments||[])[i];if(!a)return;
