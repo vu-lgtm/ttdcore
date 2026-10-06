@@ -168,7 +168,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <option value="all">Tất cả trạng thái</option>
         <option value="booking">Booking</option><option value="loading">Đóng hàng</option><option value="customs">Thông quan</option><option value="shipped">Đã xuất</option><option value="done">Hoàn tất</option>
       </select>
-      <div class="view-toggle"><button class="vt-card active" onclick="setView('card')" title="Dạng thẻ">⊞</button><button class="vt-list" onclick="setView('list')" title="Dạng danh sách">☰</button></div>
+      <div class="view-toggle"><button class="vt-card" onclick="setView('card')" title="Dạng thẻ">⊞</button><button class="vt-list active" onclick="setView('list')" title="Dạng danh sách">☰</button></div>
       <button class="btn btn-primary hidden" onclick="openModal()" id="btnAdd">+ Thêm lô hàng</button>
       <button class="btn" onclick="loadData()">🔄</button>
     </div>
@@ -312,7 +312,7 @@ const DEFAULT_FEES=[
 const SEC_NAME={I:'I. CÁC LOẠI PHÍ CỐ ĐỊNH',II:'II. CÁC LOẠI PHÍ PHÁT SINH THEO LÔ HÀNG'};
 const MAX_FILE=20*1024*1024;
 
-let currentUser=null, allShips=[], currentId=null, currentShip=null, viewMode='card';
+let currentUser=null, allShips=[], currentId=null, currentShip=null, viewMode='list';
 let collapsedSup={};
 function toggleSup(k){collapsedSup[k]=!collapsedSup[k];renderList();}
 
