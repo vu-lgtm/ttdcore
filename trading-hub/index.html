@@ -112,6 +112,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <div class="tabs">
     <button class="tab active" id="tab-reports" onclick="switchTab('reports')">📈 Coffee Report</button>
     <button class="tab" id="tab-buyers" onclick="switchTab('buyers')">🧑‍💼 Buyer Profile</button>
+    <button class="tab" id="tab-countries" onclick="switchTab('countries')">🌍 Country Profile</button>
   </div>
 
   <!-- ===== COFFEE REPORTS ===== -->
@@ -158,6 +159,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div id="buyerDetail" class="hidden">
       <button class="back-btn" onclick="backToBuyers()">← Danh sách buyer</button>
       <div id="buyerDetailContent"></div>
+    </div>
+  </div>
+
+  <!-- ===== COUNTRY PROFILES ===== -->
+  <div id="paneCountries" class="hidden">
+    <div id="countriesList">
+      <div class="toolbar">
+        <div class="search-box"><input type="text" id="countrySearch" placeholder="Tìm quốc gia, khu vực..." oninput="renderCountries()"></div>
+        <button class="btn btn-primary" onclick="openCountryModal()">+ Thêm quốc gia</button>
+        <button class="btn" onclick="loadCountries()">🔄</button>
+      </div>
+      <div class="card-grid" id="countryGrid"></div>
+    </div>
+    <div id="countryDetail" class="hidden">
+      <button class="back-btn" onclick="backToCountries()">← Danh sách quốc gia</button>
+      <div id="countryDetailContent"></div>
     </div>
   </div>
 </div>
@@ -213,6 +230,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   </div>
 </div>
 
+<!-- MODAL: Country -->
+<div class="modal-backdrop hidden" id="countryModal">
+  <div class="modal">
+    <h2 id="countryModalTitle">Thêm quốc gia</h2>
+    <input type="hidden" id="cEditId">
+    <div class="form-row">
+      <div class="form-group"><label>Tên quốc gia *</label><input type="text" id="cName" placeholder="VD: UAE / Đức / Hàn Quốc"></div>
+      <div class="form-group"><label>Khu vực</label><input type="text" id="cRegion" placeholder="VD: Trung Đông / EU / Đông Á"></div>
+    </div>
+    <div class="form-group"><label>Tóm tắt thị trường / quy định</label><textarea id="cSummary" rows="3" placeholder="Đặc điểm thị trường, quy định nhập khẩu, thuế, tiêu chuẩn..."></textarea></div>
+    <div class="form-group"><label>Ghi chú</label><textarea id="cNotes" rows="2" placeholder="Ghi chú thêm..."></textarea></div>
+    <div id="cError" style="color:#c0392b;font-size:13px;display:none;"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('countryModal')">Hủy</button>
+      <button class="btn btn-primary" onclick="saveCountry()" id="cSaveBtn">Lưu</button>
+    </div>
+  </div>
+</div>
+
 <!-- PREVIEW -->
 <div class="preview-backdrop hidden" id="previewBackdrop">
   <button class="preview-close" onclick="closePreview()">✕</button>
@@ -249,7 +285,8 @@ const MAX_FILE=20*1024*1024;
 let currentUser=null, activeTab='reports';
 let allReports=[], currentReport=null;
 let allBuyers=[], currentBuyer=null;
-let uploadTarget=null; // {kind:'report'|'buyer', id}
+let allCountries=[], currentCountry=null;
+let uploadTarget=null; // {kind:'report'|'buyer'|'country', id}
 
 function esc(s){if(s==null)return'';return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function showLoading(t='Đang tải...'){document.getElementById('loadingText').textContent=t;document.getElementById('loadingOverlay').classList.remove('hidden');}
@@ -280,42 +317,42 @@ function showMainApp(){
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('mainApp').classList.remove('hidden');
   document.getElementById('userBadge').textContent=`${currentUser.name} · ${isAdmin()?'👑 Admin':DEPTS[currentUser.role]||currentUser.role}`;
-  loadReports();loadBuyers();
+  loadReports();loadBuyers();loadCountries();
 }
 function switchTab(t){
   activeTab=t;
   document.getElementById('tab-reports').classList.toggle('active',t==='reports');
   document.getElementById('tab-buyers').classList.toggle('active',t==='buyers');
+  document.getElementById('tab-countries').classList.toggle('active',t==='countries');
   document.getElementById('paneReports').classList.toggle('hidden',t!=='reports');
   document.getElementById('paneBuyers').classList.toggle('hidden',t!=='buyers');
+  document.getElementById('paneCountries').classList.toggle('hidden',t!=='countries');
 }
 
 // ===== FILE UPLOAD (chung) =====
 document.getElementById('fileInput').addEventListener('change',e=>{handleFiles(e.target.files);e.target.value='';});
+// Cấu hình theo loại (report/buyer/country)
+function kindCfg(kind){
+  if(kind==='report')return{obj:currentReport,table:'coffee_reports',key:'attachments',nameField:'title',render:renderReportDetail};
+  if(kind==='country')return{obj:currentCountry,table:'country_profiles',key:'documents',nameField:'name',render:renderCountryDetail};
+  return{obj:currentBuyer,table:'buyer_profiles',key:'documents',nameField:'name',render:renderBuyerDetail};
+}
 async function handleFiles(files){
   if(!uploadTarget)return;
-  const isReport=uploadTarget.kind==='report';
-  const obj=isReport?currentReport:currentBuyer;
-  const itemName=isReport?(obj.title||''):(obj.name||'');
+  const cfg=kindCfg(uploadTarget.kind);
+  const itemName=cfg.obj[cfg.nameField]||'';
   for(const file of [...files]){
     if(file.size>MAX_FILE){alert(`File "${file.name}" quá 20MB, bỏ qua.`);continue;}
     showLoading(`Đang tải lên Drive: ${file.name}...`);
     try{
       const r=await driveUpload(uploadTarget.kind,uploadTarget.id,itemName,file);
       const doc={title:r.name||file.name,url:r.url,previewUrl:r.previewUrl,fileId:r.fileId,mime:file.type,size:r.size||file.size,user:currentUser.name,time:Date.now()};
-      if(isReport){
-        const list=[...(currentReport.attachments||[]),doc];
-        await sb.from('coffee_reports').update({attachments:list,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',currentReport.id);
-        currentReport.attachments=list;
-      }else{
-        const list=[...(currentBuyer.documents||[]),doc];
-        await sb.from('buyer_profiles').update({documents:list,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',currentBuyer.id);
-        currentBuyer.documents=list;
-      }
+      const list=[...(cfg.obj[cfg.key]||[]),doc];
+      await sb.from(cfg.table).update({[cfg.key]:list,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',cfg.obj.id);
+      cfg.obj[cfg.key]=list;
     }catch(e){alert(`Lỗi tải "${file.name}": ${e.message}`);}
   }
-  hideLoading();
-  if(isReport)renderReportDetail();else renderBuyerDetail();
+  hideLoading();cfg.render();
 }
 function triggerUpload(kind,id){uploadTarget={kind,id};document.getElementById('fileInput').click();}
 
@@ -338,8 +375,7 @@ function previewDoc(previewUrl,openUrl){
 }
 function closePreview(){document.getElementById('previewBackdrop').classList.add('hidden');document.getElementById('previewContent').innerHTML='';}
 async function removeDoc(kind,idx){
-  const obj=kind==='report'?currentReport:currentBuyer;
-  const key=kind==='report'?'attachments':'documents';
+  const cfg=kindCfg(kind);const obj=cfg.obj,key=cfg.key;
   const d=(obj[key]||[])[idx];if(!d)return;
   if(!confirm(`Xóa "${d.title}"?`))return;
   showLoading('Đang xóa...');
@@ -347,10 +383,8 @@ async function removeDoc(kind,idx){
     if(d.fileId)await driveDelete(d.fileId);
     else if(d.path)await sb.storage.from('order-files').remove([d.path]);
     const list=[...obj[key]];list.splice(idx,1);
-    const table=kind==='report'?'coffee_reports':'buyer_profiles';
-    await sb.from(table).update({[key]:list,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',obj.id);
-    obj[key]=list;
-    if(kind==='report')renderReportDetail();else renderBuyerDetail();
+    await sb.from(cfg.table).update({[key]:list,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',obj.id);
+    obj[key]=list;cfg.render();
   }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
 }
 
@@ -548,6 +582,97 @@ async function deleteBuyer(id){
   try{
     const paths=(b.documents||[]).map(d=>d.path).filter(Boolean);if(paths.length)await sb.storage.from('order-files').remove(paths);
     await sb.from('buyer_profiles').delete().eq('id',id);backToBuyers();await loadBuyers();
+  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
+}
+
+// ===== COUNTRY PROFILES =====
+async function loadCountries(){
+  try{const{data,error}=await sb.from('country_profiles').select('*').order('name');if(error)throw error;allCountries=data||[];renderCountries();}
+  catch(e){document.getElementById('countryGrid').innerHTML=`<div class="empty-state"><p>Lỗi: ${e.message}</p></div>`;}
+}
+function renderCountries(){
+  const g=document.getElementById('countryGrid');
+  const s=(document.getElementById('countrySearch').value||'').toLowerCase();
+  let list=allCountries.filter(c=>!s||[c.name,c.region].some(v=>(v||'').toLowerCase().includes(s)));
+  if(!list.length){g.innerHTML='<div class="empty-state"><div class="ico">🌍</div><p>Chưa có quốc gia nào</p></div>';return;}
+  g.innerHTML=list.map(c=>{
+    const n=(c.documents||[]).length;
+    return`<div class="item-card" onclick="openCountry('${c.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">
+        <span style="font-size:22px;">🌍</span>
+        ${c.region?`<span class="cat-pill">${esc(c.region)}</span>`:''}
+      </div>
+      <div style="font-size:16px;font-weight:700;color:#333;line-height:1.3;">${esc(c.name)}</div>
+      ${c.summary?`<div style="font-size:12px;color:#888;margin-top:6px;max-height:54px;overflow:hidden;line-height:1.5;">${esc(c.summary)}</div>`:''}
+      <div style="font-size:11px;color:#aaa;margin-top:10px;">${n?`📎 ${n} tài liệu`:'Chưa có tài liệu'}</div>
+    </div>`;
+  }).join('');
+}
+function openCountry(id){currentCountry=allCountries.find(c=>c.id===id);if(!currentCountry)return;document.getElementById('countriesList').classList.add('hidden');document.getElementById('countryDetail').classList.remove('hidden');renderCountryDetail();}
+function backToCountries(){document.getElementById('countryDetail').classList.add('hidden');document.getElementById('countriesList').classList.remove('hidden');currentCountry=null;}
+function renderCountryDetail(){
+  const c=currentCountry;
+  const docs=(c.documents||[]).map((d,i)=>docRow(d,'country',i)).join('')||'<span style="color:#aaa;font-size:13px;">Chưa có tài liệu</span>';
+  document.getElementById('countryDetailContent').innerHTML=`
+    <div class="detail-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+        <div>
+          <div style="font-size:24px;font-weight:700;">🌍 ${esc(c.name)}</div>
+          ${c.region?`<div style="margin-top:6px;"><span class="cat-pill">${esc(c.region)}</span></div>`:''}
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn" onclick="openCountryModal('${c.id}')">✏️ Sửa</button>
+          ${isAdmin()?`<button class="btn btn-danger" onclick="deleteCountry('${c.id}')">🗑️ Xóa</button>`:''}
+        </div>
+      </div>
+      ${c.summary?`<div style="padding:12px 14px;background:#f0fdfa;border-left:3px solid #0f766e;border-radius:6px;font-size:13px;color:#444;white-space:pre-wrap;">${esc(c.summary)}</div>`:''}
+      ${c.notes?`<div style="margin-top:10px;font-size:13px;color:#666;white-space:pre-wrap;">${esc(c.notes)}</div>`:''}
+    </div>
+    <div class="detail-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:600;color:#0f766e;text-transform:uppercase;letter-spacing:.5px;">📎 Tài liệu quốc gia</div>
+        <button class="btn-mini" onclick="triggerUpload('country','${c.id}')">+ Tải tài liệu lên</button>
+      </div>
+      <div class="drop-zone" id="countryDrop" onclick="triggerUpload('country','${c.id}')">
+        <div style="font-size:28px;">📤</div>
+        <div style="font-size:13px;color:#0f766e;font-weight:600;margin-top:4px;">Bấm hoặc kéo tài liệu vào đây</div>
+        <div style="font-size:11px;color:#999;margin-top:2px;">PDF, ảnh, Word, Excel · tối đa 20MB</div>
+      </div>
+      <div class="doc-list" style="margin-top:12px;">${docs}</div>
+    </div>`;
+  const drop=document.getElementById('countryDrop');
+  if(drop){drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag');});drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');uploadTarget={kind:'country',id:c.id};handleFiles(e.dataTransfer.files);});}
+}
+function openCountryModal(id){
+  document.getElementById('cError').style.display='none';
+  if(id){const c=allCountries.find(x=>x.id===id);document.getElementById('countryModalTitle').textContent='Sửa quốc gia';document.getElementById('cEditId').value=id;
+    document.getElementById('cName').value=c.name||'';document.getElementById('cRegion').value=c.region||'';document.getElementById('cSummary').value=c.summary||'';document.getElementById('cNotes').value=c.notes||'';document.getElementById('cSaveBtn').textContent='Cập nhật';
+  }else{document.getElementById('countryModalTitle').textContent='Thêm quốc gia';document.getElementById('cEditId').value='';
+    ['cName','cRegion','cSummary','cNotes'].forEach(x=>document.getElementById(x).value='');document.getElementById('cSaveBtn').textContent='Lưu';}
+  document.getElementById('countryModal').classList.remove('hidden');
+}
+async function saveCountry(){
+  const err=document.getElementById('cError');err.style.display='none';
+  const name=document.getElementById('cName').value.trim();
+  if(!name){err.textContent='Vui lòng nhập tên quốc gia';err.style.display='block';return;}
+  const payload={name,region:document.getElementById('cRegion').value.trim()||null,summary:document.getElementById('cSummary').value.trim()||null,
+    notes:document.getElementById('cNotes').value.trim()||null,updated_by:currentUser.name,updated_at:new Date().toISOString()};
+  const id=document.getElementById('cEditId').value;
+  const btn=document.getElementById('cSaveBtn');btn.disabled=true;showLoading('Đang lưu...');
+  try{
+    if(id){await sb.from('country_profiles').update(payload).eq('id',id);}
+    else{payload.id='cty_'+Date.now()+'_'+Math.floor(Math.random()*9999);payload.created_by=currentUser.name;payload.created_at=new Date().toISOString();payload.documents=[];await sb.from('country_profiles').insert(payload);}
+    closeModal('countryModal');await loadCountries();
+    if(id){currentCountry=allCountries.find(x=>x.id===id);if(!document.getElementById('countryDetail').classList.contains('hidden'))renderCountryDetail();}
+  }catch(e){err.textContent='Lỗi: '+e.message;err.style.display='block';}finally{btn.disabled=false;hideLoading();}
+}
+async function deleteCountry(id){
+  if(!isAdmin()){alert('Chỉ Admin được xóa');return;}
+  const c=allCountries.find(x=>x.id===id);if(!confirm(`Xóa quốc gia "${c?.name}" và toàn bộ tài liệu?`))return;
+  showLoading('Đang xóa...');
+  try{
+    for(const d of (c.documents||[]))if(d.fileId)await driveDelete(d.fileId);
+    await sb.from('country_profiles').delete().eq('id',id);backToCountries();await loadCountries();
   }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
 }
 
