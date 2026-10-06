@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
@@ -313,6 +313,8 @@ const SEC_NAME={I:'I. CÁC LOẠI PHÍ CỐ ĐỊNH',II:'II. CÁC LOẠI PHÍ PH
 const MAX_FILE=20*1024*1024;
 
 let currentUser=null, allShips=[], currentId=null, currentShip=null, viewMode='card';
+let collapsedSup={};
+function toggleSup(k){collapsedSup[k]=!collapsedSup[k];renderList();}
 
 function esc(s){if(s==null)return'';return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function showLoading(t='Đang tải...'){document.getElementById('loadingText').textContent=t;document.getElementById('loadingOverlay').classList.remove('hidden');}
@@ -375,33 +377,51 @@ function renderStats(){
     <div class="stat-card purple"><div class="stat-label">Hoàn tất</div><div class="stat-value">${done}</div></div>`;
 }
 function docProgress(s){const d=s.doc_status||{};const done=DOC_LIST.filter(x=>d[x.key]).length;return`${done}/${DOC_LIST.length}`;}
+// 1 thẻ lô
+function shipCard(s){
+  const att=(s.attachments||[]).length;const etd=fmtDate(s.etd);
+  return`<div class="item-card" onclick="openDetail('${s.id}')">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">
+      ${typeBadge(s.coffee_type)}
+      <span class="status-pill ${STATUS_CLASS[s.status]||'st-booking'}">${STATUS_LABELS[s.status]||s.status}</span>
+    </div>
+    <div style="font-size:16px;font-weight:700;color:#333;">${esc(s.lot_code)}</div>
+    <div style="font-size:12px;color:#666;margin-top:3px;">👤 ${esc(s.customer||'—')}</div>
+    ${s.vessel?`<div style="font-size:12px;color:#888;margin-top:2px;">🚢 ${esc(s.vessel)}${etd?' · '+etd:''}</div>`:''}
+    <div style="font-size:11px;color:#aaa;margin-top:10px;">📄 ${docProgress(s)} chứng từ${att?` · 📎 ${att}`:''}${costTotal(s)>0?` · 💵 ${fmtMoney(costTotal(s))} ${s.cost_currency||'VND'}`:''}</div>
+  </div>`;
+}
+// 1 dòng bảng
+function shipRow(s){
+  return`<tr onclick="openDetail('${s.id}')"><td style="font-weight:600;">${esc(s.lot_code)}</td><td style="font-size:12px;color:#666;">${esc(s.contract_code||'—')}</td><td>${typeBadge(s.coffee_type)}</td><td style="font-size:12px;">${esc(s.customer||'—')}</td><td style="font-size:12px;">${esc(s.vessel||'—')}</td><td style="font-size:12px;">${fmtDate(s.etd)||'—'}</td><td style="font-size:12px;">📄 ${docProgress(s)}</td><td>${(s.attachments||[]).length||''}</td><td><span class="status-pill ${STATUS_CLASS[s.status]||'st-booking'}">${STATUS_LABELS[s.status]||s.status}</span></td></tr>`;
+}
 function renderList(){
   const c=document.getElementById('listContainer');
+  c.className='';c.style.display='block';
   const search=(document.getElementById('searchInput').value||'').toLowerCase();
   const fs=document.getElementById('filterStatus').value;
   let list=allShips.filter(s=>{
-    const ms=!search||[s.lot_code,s.contract_code,s.vessel,s.container_no,s.customer].some(v=>(v||'').toLowerCase().includes(search));
+    const ms=!search||[s.lot_code,s.contract_code,s.vessel,s.container_no,s.customer,s.supplier].some(v=>(v||'').toLowerCase().includes(search));
     return ms&&(fs==='all'||s.status===fs);
   });
-  c.style.display=viewMode==='list'?'block':'';
   if(!list.length){c.innerHTML='<div class="empty-state"><div class="ico">🚢</div><p>Chưa có lô hàng nào</p></div>';return;}
-  if(viewMode==='list'){
-    c.innerHTML=`<table class="ship-table"><thead><tr><th>Mã lô</th><th>Hợp đồng</th><th>Loại</th><th>Khách hàng</th><th>Tàu</th><th>ETD</th><th>Chứng từ</th><th>📎</th><th>Trạng thái</th></tr></thead><tbody>${list.map(s=>`
-      <tr onclick="openDetail('${s.id}')"><td style="font-weight:600;">${esc(s.lot_code)}</td><td style="font-size:12px;color:#666;">${esc(s.contract_code||'—')}</td><td>${typeBadge(s.coffee_type)}</td><td style="font-size:12px;">${esc(s.customer||'—')}</td><td style="font-size:12px;">${esc(s.vessel||'—')}</td><td style="font-size:12px;">${fmtDate(s.etd)||'—'}</td><td style="font-size:12px;">📄 ${docProgress(s)}</td><td>${(s.attachments||[]).length||''}</td><td><span class="status-pill ${STATUS_CLASS[s.status]||'st-booking'}">${STATUS_LABELS[s.status]||s.status}</span></td></tr>`).join('')}</tbody></table>`;
-    return;
-  }
-  c.innerHTML=list.map(s=>{
-    const att=(s.attachments||[]).length;
-    const etd=fmtDate(s.etd);
-    return`<div class="item-card" onclick="openDetail('${s.id}')">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">
-        ${typeBadge(s.coffee_type)}
-        <span class="status-pill ${STATUS_CLASS[s.status]||'st-booking'}">${STATUS_LABELS[s.status]||s.status}</span>
+  // Gom nhóm theo Nhà cung cấp
+  const groups={};
+  list.forEach(s=>{const k=(s.supplier||'').trim()||'(Chưa phân loại NCC)';(groups[k]=groups[k]||[]).push(s);});
+  const keys=Object.keys(groups).sort((a,b)=>{if(a[0]==='(')return 1;if(b[0]==='(')return -1;return a.localeCompare(b,'vi');});
+  const tHead=`<thead><tr><th>Mã lô</th><th>Hợp đồng</th><th>Loại</th><th>Khách hàng</th><th>Tàu</th><th>ETD</th><th>Chứng từ</th><th>📎</th><th>Trạng thái</th></tr></thead>`;
+  c.innerHTML=keys.map(k=>{
+    const items=groups[k];const collapsed=collapsedSup[k];
+    const body=collapsed?'':(viewMode==='list'
+      ? `<table class="ship-table">${tHead}<tbody>${items.map(shipRow).join('')}</tbody></table>`
+      : `<div class="card-grid">${items.map(shipCard).join('')}</div>`);
+    return`<div style="margin-bottom:18px;">
+      <div data-k="${esc(k)}" onclick="toggleSup(this.dataset.k)" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:11px 16px;background:#fff3e0;border:1.5px solid #ffe0b2;border-radius:8px;margin-bottom:10px;">
+        <span style="font-size:13px;color:#e65100;width:12px;">${collapsed?'▶':'▼'}</span>
+        <span style="font-weight:700;color:#e65100;font-size:15px;">🏭 ${esc(k)}</span>
+        <span style="font-size:12px;background:#ff7043;color:white;border-radius:12px;padding:2px 10px;font-weight:600;">${items.length} lô</span>
       </div>
-      <div style="font-size:16px;font-weight:700;color:#333;">${esc(s.lot_code)}</div>
-      <div style="font-size:12px;color:#666;margin-top:3px;">👤 ${esc(s.customer||'—')}</div>
-      ${s.vessel?`<div style="font-size:12px;color:#888;margin-top:2px;">🚢 ${esc(s.vessel)}${etd?' · '+etd:''}</div>`:''}
-      <div style="font-size:11px;color:#aaa;margin-top:10px;">📄 ${docProgress(s)} chứng từ${att?` · 📎 ${att}`:''}${costTotal(s)>0?` · 💵 ${fmtMoney(costTotal(s))} ${s.cost_currency||'VND'}`:''}</div>
+      ${body}
     </div>`;
   }).join('');
 }
