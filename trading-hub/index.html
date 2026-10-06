@@ -225,6 +225,21 @@ const SUPABASE_URL='https://fyjinbtabsentsvnkqzg.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5amluYnRhYnNlbnRzdm5rcXpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MTAxNTUsImV4cCI6MjA5NDI4NjE1NX0.m1H8bOT7gUXJxPoQT6bDqtRUjo4nCSxb4A1rth7Eols';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const GRACE_EMAIL='grace@ttdglobal.vn';
+// ===== DRIVE UPLOAD (qua Apps Script Web App) =====
+const APPS_SCRIPT_URL='https://script.google.com/a/macros/ttdglobal.vn/s/AKfycbzN1tkdBbiHyiaIDAU20-8NEyTqYoIDL3EfNM3fnGKeZOw1OSA7E-xSlUzkznpUoZT_/exec'; // Apps Script Web App
+const UPLOAD_SECRET='ttd_th_2026';                   // phải khớp với Apps Script
+function fileToBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});}
+async function driveUpload(kind,itemId,itemName,file){
+  const dataBase64=await fileToBase64(file);
+  const res=await fetch(APPS_SCRIPT_URL,{method:'POST',body:JSON.stringify({secret:UPLOAD_SECRET,action:'upload',kind,itemId,itemName,fileName:file.name,mimeType:file.type,dataBase64})});
+  const j=await res.json();
+  if(!j.ok)throw new Error(j.error||'Upload thất bại');
+  return j;
+}
+async function driveDelete(fileId){
+  if(!fileId)return;
+  try{await fetch(APPS_SCRIPT_URL,{method:'POST',body:JSON.stringify({secret:UPLOAD_SECRET,action:'delete',fileId})});}catch(_){}
+}
 const DEPTS={sale:'Sale',ketoan:'Kế toán',thumua:'Thu mua',logistics:'Logistics',admin:'Ban Giám Đốc',sale_admin:'Sale Admin'};
 const CAT_LABELS={market:'Thị trường',price:'Giá',supply:'Nguồn cung',demand:'Nhu cầu',weather:'Thời tiết',other:'Khác'};
 const BSTATUS_LABELS={active:'Đang giao dịch',prospect:'Tiềm năng',inactive:'Ngừng'};
@@ -279,17 +294,16 @@ function switchTab(t){
 document.getElementById('fileInput').addEventListener('change',e=>{handleFiles(e.target.files);e.target.value='';});
 async function handleFiles(files){
   if(!uploadTarget)return;
+  const isReport=uploadTarget.kind==='report';
+  const obj=isReport?currentReport:currentBuyer;
+  const itemName=isReport?(obj.title||''):(obj.name||'');
   for(const file of [...files]){
     if(file.size>MAX_FILE){alert(`File "${file.name}" quá 20MB, bỏ qua.`);continue;}
-    showLoading(`Đang tải lên: ${file.name}...`);
+    showLoading(`Đang tải lên Drive: ${file.name}...`);
     try{
-      const ext=file.name.split('.').pop();
-      const path=`trading-hub/${uploadTarget.kind}/${uploadTarget.id}/${Date.now()}_${Math.floor(Math.random()*9999)}.${ext}`;
-      const{error:upErr}=await sb.storage.from('order-files').upload(path,file,{contentType:file.type,upsert:false});
-      if(upErr)throw upErr;
-      const{data:pub}=sb.storage.from('order-files').getPublicUrl(path);
-      const doc={title:file.name,url:pub.publicUrl,path,mime:file.type,size:file.size,user:currentUser.name,time:Date.now()};
-      if(uploadTarget.kind==='report'){
+      const r=await driveUpload(uploadTarget.kind,uploadTarget.id,itemName,file);
+      const doc={title:r.name||file.name,url:r.url,previewUrl:r.previewUrl,fileId:r.fileId,mime:file.type,size:r.size||file.size,user:currentUser.name,time:Date.now()};
+      if(isReport){
         const list=[...(currentReport.attachments||[]),doc];
         await sb.from('coffee_reports').update({attachments:list,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',currentReport.id);
         currentReport.attachments=list;
@@ -301,7 +315,7 @@ async function handleFiles(files){
     }catch(e){alert(`Lỗi tải "${file.name}": ${e.message}`);}
   }
   hideLoading();
-  if(uploadTarget.kind==='report')renderReportDetail();else renderBuyerDetail();
+  if(isReport)renderReportDetail();else renderBuyerDetail();
 }
 function triggerUpload(kind,id){uploadTarget={kind,id};document.getElementById('fileInput').click();}
 
@@ -311,19 +325,15 @@ function docRow(d,kind,idx){
   const thumb=isImg&&d.url?`<img src="${esc(d.url)}" alt="">`:isPdf?'📕':/\.(docx?|rtf)$/i.test(d.title||'')?'📄':/\.(xlsx?|csv)$/i.test(d.title||'')?'📊':'📎';
   return`<div class="doc-row">
     <div class="doc-thumb">${thumb}</div>
-    <span class="doc-name" onclick="previewDoc('${esc(d.url)}','${esc(d.mime||'')}','${esc(d.title||'')}')">${esc(d.title)}</span>
+    <span class="doc-name" onclick="previewDoc('${esc(d.previewUrl||d.url)}','${esc(d.url||'')}')">${esc(d.title)}</span>
     <span class="doc-meta">${d.size?fmtSize(d.size):''}${d.user?' · '+esc(d.user):''}</span>
     <button class="btn-mini" style="color:#c0392b;" onclick="removeDoc('${kind}',${idx})">✕</button>
   </div>`;
 }
-function previewDoc(url,mime,title){
-  if(!url)return;
-  const isImg=(mime||'').startsWith('image/')||/\.(jpg|jpeg|png|gif|webp)$/i.test(title||'');
-  const isPdf=(mime==='application/pdf')||/\.pdf$/i.test(title||'');
-  const box=document.getElementById('previewContent');
-  if(isImg){box.innerHTML=`<img src="${esc(url)}" alt="${esc(title)}">`;}
-  else if(isPdf){box.innerHTML=`<iframe src="${esc(url)}"></iframe>`;}
-  else{window.open(url,'_blank');return;}
+// Drive preview: mọi loại (PDF/ảnh/Word/Excel) đều xem được qua iframe /preview
+function previewDoc(previewUrl,openUrl){
+  if(!previewUrl){if(openUrl)window.open(openUrl,'_blank');return;}
+  document.getElementById('previewContent').innerHTML=`<iframe src="${esc(previewUrl)}"></iframe>`;
   document.getElementById('previewBackdrop').classList.remove('hidden');
 }
 function closePreview(){document.getElementById('previewBackdrop').classList.add('hidden');document.getElementById('previewContent').innerHTML='';}
@@ -334,7 +344,8 @@ async function removeDoc(kind,idx){
   if(!confirm(`Xóa "${d.title}"?`))return;
   showLoading('Đang xóa...');
   try{
-    if(d.path)await sb.storage.from('order-files').remove([d.path]);
+    if(d.fileId)await driveDelete(d.fileId);
+    else if(d.path)await sb.storage.from('order-files').remove([d.path]);
     const list=[...obj[key]];list.splice(idx,1);
     const table=kind==='report'?'coffee_reports':'buyer_profiles';
     await sb.from(table).update({[key]:list,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',obj.id);
