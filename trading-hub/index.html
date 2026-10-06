@@ -80,6 +80,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .empty-state{text-align:center;padding:60px 20px;color:#999;}
 .empty-state .ico{font-size:48px;margin-bottom:12px;}
 .back-btn{padding:9px 18px;border:2px solid #e0e0e0;background:white;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500;color:#555;margin-bottom:16px;}
+.view-toggle{display:flex;border:2px solid #e0e0e0;border-radius:8px;overflow:hidden;}
+.view-toggle button{padding:8px 12px;border:none;background:white;cursor:pointer;font-size:15px;color:#888;transition:all .15s;}
+.view-toggle button.active{background:#0f766e;color:white;}
+.th-table{width:100%;border-collapse:collapse;background:white;border:2px solid #eee;border-radius:10px;overflow:hidden;}
+.th-table th{background:#f0fdfa;padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:#0f766e;border-bottom:2px solid #d7f0ec;white-space:nowrap;}
+.th-table td{padding:10px 14px;border-bottom:1px solid #f0f0f0;font-size:13px;vertical-align:middle;}
+.th-table tr:last-child td{border-bottom:none;}
+.th-table tr:hover td{background:#fafafa;cursor:pointer;}
 @media(max-width:768px){.container{padding:16px;}.detail-grid{grid-template-columns:1fr 1fr;}.form-row,.form-row-3{grid-template-columns:1fr;}}
 ::-webkit-scrollbar{width:6px;}
 ::-webkit-scrollbar-thumb{background:#80cbc4;border-radius:4px;}
@@ -129,6 +137,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
           <option value="weather">Thời tiết</option>
           <option value="other">Khác</option>
         </select>
+        <div class="view-toggle"><button class="vt-card active" onclick="setView('card')" title="Dạng thẻ">⊞</button><button class="vt-list" onclick="setView('list')" title="Dạng danh sách">☰</button></div>
         <button class="btn btn-primary" onclick="openReportModal()">+ Thêm báo cáo</button>
         <button class="btn" onclick="loadReports()">🔄</button>
       </div>
@@ -151,6 +160,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
           <option value="prospect">Tiềm năng</option>
           <option value="inactive">Ngừng</option>
         </select>
+        <div class="view-toggle"><button class="vt-card active" onclick="setView('card')" title="Dạng thẻ">⊞</button><button class="vt-list" onclick="setView('list')" title="Dạng danh sách">☰</button></div>
         <button class="btn btn-primary" onclick="openBuyerModal()">+ Thêm buyer</button>
         <button class="btn" onclick="loadBuyers()">🔄</button>
       </div>
@@ -167,6 +177,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div id="countriesList">
       <div class="toolbar">
         <div class="search-box"><input type="text" id="countrySearch" placeholder="Tìm quốc gia, khu vực..." oninput="renderCountries()"></div>
+        <div class="view-toggle"><button class="vt-card active" onclick="setView('card')" title="Dạng thẻ">⊞</button><button class="vt-list" onclick="setView('list')" title="Dạng danh sách">☰</button></div>
         <button class="btn btn-primary" onclick="openCountryModal()">+ Thêm quốc gia</button>
         <button class="btn" onclick="loadCountries()">🔄</button>
       </div>
@@ -287,6 +298,13 @@ let allReports=[], currentReport=null;
 let allBuyers=[], currentBuyer=null;
 let allCountries=[], currentCountry=null;
 let uploadTarget=null; // {kind:'report'|'buyer'|'country', id}
+let viewMode='card'; // 'card' | 'list'
+function setView(m){
+  viewMode=m;
+  document.querySelectorAll('.vt-card').forEach(b=>b.classList.toggle('active',m==='card'));
+  document.querySelectorAll('.vt-list').forEach(b=>b.classList.toggle('active',m==='list'));
+  renderReports();renderBuyers();renderCountries();
+}
 
 function esc(s){if(s==null)return'';return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function showLoading(t='Đang tải...'){document.getElementById('loadingText').textContent=t;document.getElementById('loadingOverlay').classList.remove('hidden');}
@@ -401,7 +419,13 @@ function renderReports(){
     const ms=!s||[r.title,r.period,r.summary].some(v=>(v||'').toLowerCase().includes(s));
     return ms&&(cat==='all'||r.category===cat);
   });
+  g.style.display=viewMode==='list'?'block':'';
   if(!list.length){g.innerHTML='<div class="empty-state"><div class="ico">📈</div><p>Chưa có báo cáo nào</p></div>';return;}
+  if(viewMode==='list'){
+    g.innerHTML=`<table class="th-table"><thead><tr><th>Tiêu đề</th><th>Loại</th><th>Kỳ</th><th>Tác giả</th><th>Ngày</th><th>📎</th></tr></thead><tbody>${list.map(r=>`
+      <tr onclick="openReport('${r.id}')"><td style="font-weight:600;">${esc(r.title)}</td><td><span class="cat-pill">${CAT_LABELS[r.category]||r.category}</span></td><td>${esc(r.period||'—')}</td><td>${esc(r.author||'?')}</td><td>${fmtDate(r.created_at)}</td><td>${(r.attachments||[]).length||''}</td></tr>`).join('')}</tbody></table>`;
+    return;
+  }
   g.innerHTML=list.map(r=>{
     const n=(r.attachments||[]).length;
     return`<div class="item-card" onclick="openReport('${r.id}')">
@@ -493,7 +517,13 @@ function renderBuyers(){
     const ms=!s||[b.name,b.country,b.contact_person].some(v=>(v||'').toLowerCase().includes(s));
     return ms&&(st==='all'||b.status===st);
   });
+  g.style.display=viewMode==='list'?'block':'';
   if(!list.length){g.innerHTML='<div class="empty-state"><div class="ico">🧑‍💼</div><p>Chưa có buyer nào</p></div>';return;}
+  if(viewMode==='list'){
+    g.innerHTML=`<table class="th-table"><thead><tr><th>Tên buyer</th><th>Quốc gia</th><th>Người liên hệ</th><th>Trạng thái</th><th>📎</th></tr></thead><tbody>${list.map(b=>`
+      <tr onclick="openBuyer('${b.id}')"><td style="font-weight:600;">${esc(b.name)}</td><td>${esc(b.country||'—')}</td><td>${esc(b.contact_person||'—')}</td><td><span class="status-pill ${BSTATUS_CLASS[b.status]||'st-active'}">${BSTATUS_LABELS[b.status]||b.status}</span></td><td>${(b.documents||[]).length||''}</td></tr>`).join('')}</tbody></table>`;
+    return;
+  }
   g.innerHTML=list.map(b=>{
     const n=(b.documents||[]).length;
     return`<div class="item-card" onclick="openBuyer('${b.id}')">
@@ -594,7 +624,13 @@ function renderCountries(){
   const g=document.getElementById('countryGrid');
   const s=(document.getElementById('countrySearch').value||'').toLowerCase();
   let list=allCountries.filter(c=>!s||[c.name,c.region].some(v=>(v||'').toLowerCase().includes(s)));
+  g.style.display=viewMode==='list'?'block':'';
   if(!list.length){g.innerHTML='<div class="empty-state"><div class="ico">🌍</div><p>Chưa có quốc gia nào</p></div>';return;}
+  if(viewMode==='list'){
+    g.innerHTML=`<table class="th-table"><thead><tr><th>Quốc gia</th><th>Khu vực</th><th>Tóm tắt</th><th>📎</th></tr></thead><tbody>${list.map(c=>`
+      <tr onclick="openCountry('${c.id}')"><td style="font-weight:600;">🌍 ${esc(c.name)}</td><td>${esc(c.region||'—')}</td><td style="color:#888;max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(c.summary||'')}</td><td>${(c.documents||[]).length||''}</td></tr>`).join('')}</tbody></table>`;
+    return;
+  }
   g.innerHTML=list.map(c=>{
     const n=(c.documents||[]).length;
     return`<div class="item-card" onclick="openCountry('${c.id}')">
