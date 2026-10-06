@@ -313,8 +313,9 @@ const SEC_NAME={I:'I. CÁC LOẠI PHÍ CỐ ĐỊNH',II:'II. CÁC LOẠI PHÍ PH
 const MAX_FILE=20*1024*1024;
 
 let currentUser=null, allShips=[], currentId=null, currentShip=null, viewMode='list';
-let collapsedSup={};
-function toggleSup(k){collapsedSup[k]=!collapsedSup[k];renderList();}
+let activeSupplier=null; // null = màn chọn NCC; có giá trị = đang xem lô của NCC đó
+function openSupplier(k){activeSupplier=k;renderList();}
+function backSuppliers(){activeSupplier=null;renderList();}
 
 function esc(s){if(s==null)return'';return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function showLoading(t='Đang tải...'){document.getElementById('loadingText').textContent=t;document.getElementById('loadingOverlay').classList.remove('hidden');}
@@ -395,35 +396,57 @@ function shipCard(s){
 function shipRow(s){
   return`<tr onclick="openDetail('${s.id}')"><td style="font-weight:600;">${esc(s.lot_code)}</td><td style="font-size:12px;color:#666;">${esc(s.contract_code||'—')}</td><td>${typeBadge(s.coffee_type)}</td><td style="font-size:12px;">${esc(s.customer||'—')}</td><td style="font-size:12px;">${esc(s.vessel||'—')}</td><td style="font-size:12px;">${fmtDate(s.etd)||'—'}</td><td style="font-size:12px;">📄 ${docProgress(s)}</td><td>${(s.attachments||[]).length||''}</td><td><span class="status-pill ${STATUS_CLASS[s.status]||'st-booking'}">${STATUS_LABELS[s.status]||s.status}</span></td></tr>`;
 }
+function supKey(s){return (s.supplier||'').trim()||'(Chưa phân loại NCC)';}
 function renderList(){
   const c=document.getElementById('listContainer');
   c.className='';c.style.display='block';
   const search=(document.getElementById('searchInput').value||'').toLowerCase();
   const fs=document.getElementById('filterStatus').value;
-  let list=allShips.filter(s=>{
-    const ms=!search||[s.lot_code,s.contract_code,s.vessel,s.container_no,s.customer,s.supplier].some(v=>(v||'').toLowerCase().includes(search));
-    return ms&&(fs==='all'||s.status===fs);
-  });
-  if(!list.length){c.innerHTML='<div class="empty-state"><div class="ico">🚢</div><p>Chưa có lô hàng nào</p></div>';return;}
-  // Gom nhóm theo Nhà cung cấp
-  const groups={};
-  list.forEach(s=>{const k=(s.supplier||'').trim()||'(Chưa phân loại NCC)';(groups[k]=groups[k]||[]).push(s);});
-  const keys=Object.keys(groups).sort((a,b)=>{if(a[0]==='(')return 1;if(b[0]==='(')return -1;return a.localeCompare(b,'vi');});
+  const base=allShips.filter(s=>fs==='all'||s.status===fs);
   const tHead=`<thead><tr><th>Mã lô</th><th>Hợp đồng</th><th>Loại</th><th>Khách hàng</th><th>Tàu</th><th>ETD</th><th>Chứng từ</th><th>📎</th><th>Trạng thái</th></tr></thead>`;
-  c.innerHTML=keys.map(k=>{
-    const items=groups[k];const collapsed=collapsedSup[k];
-    const body=collapsed?'':(viewMode==='list'
-      ? `<table class="ship-table">${tHead}<tbody>${items.map(shipRow).join('')}</tbody></table>`
-      : `<div class="card-grid">${items.map(shipCard).join('')}</div>`);
-    return`<div style="margin-bottom:18px;">
-      <div data-k="${esc(k)}" onclick="toggleSup(this.dataset.k)" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:11px 16px;background:#fff3e0;border:1.5px solid #ffe0b2;border-radius:8px;margin-bottom:10px;">
-        <span style="font-size:13px;color:#e65100;width:12px;">${collapsed?'▶':'▼'}</span>
-        <span style="font-weight:700;color:#e65100;font-size:15px;">🏭 ${esc(k)}</span>
-        <span style="font-size:12px;background:#ff7043;color:white;border-radius:12px;padding:2px 10px;font-weight:600;">${items.length} lô</span>
-      </div>
-      ${body}
-    </div>`;
-  }).join('');
+
+  // ---- MÀN FOLDER: mỗi NCC là 1 ô ----
+  if(activeSupplier===null){
+    const groups={};
+    base.forEach(s=>{const k=supKey(s);(groups[k]=groups[k]||[]).push(s);});
+    let keys=Object.keys(groups).sort((a,b)=>{if(a[0]==='(')return 1;if(b[0]==='(')return -1;return a.localeCompare(b,'vi');});
+    if(search)keys=keys.filter(k=>k.toLowerCase().includes(search));
+    if(!keys.length){c.innerHTML='<div class="empty-state"><div class="ico">🏭</div><p>Chưa có nhà cung cấp nào</p></div>';return;}
+    c.innerHTML=`<div class="card-grid">`+keys.map(k=>{
+      const items=groups[k];
+      const shipped=items.filter(s=>['shipped','done'].includes(s.status)).length;
+      const proc=items.filter(s=>['booking','loading','customs'].includes(s.status)).length;
+      return`<div class="item-card" data-k="${esc(k)}" onclick="openSupplier(this.dataset.k)">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="font-size:34px;line-height:1;">🏭</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:16px;font-weight:700;color:#333;word-break:break-word;">${esc(k)}</div>
+            <div style="font-size:12px;color:#888;margin-top:3px;">${items.length} lô</div>
+          </div>
+          <div style="font-size:20px;color:#c5c5e6;">›</div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;">
+          <span style="font-size:11px;background:#fff3e0;color:#e65100;border-radius:10px;padding:2px 9px;font-weight:600;">⚙ Đang xử lý ${proc}</span>
+          <span style="font-size:11px;background:#e8f5e9;color:#2e7d32;border-radius:10px;padding:2px 9px;font-weight:600;">✅ Đã xuất ${shipped}</span>
+        </div>
+      </div>`;
+    }).join('')+`</div>`;
+    return;
+  }
+
+  // ---- TRONG 1 NCC ----
+  let list=base.filter(s=>supKey(s)===activeSupplier);
+  if(search)list=list.filter(s=>[s.lot_code,s.contract_code,s.vessel,s.container_no,s.customer].some(v=>(v||'').toLowerCase().includes(search)));
+  const header=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+    <button class="btn" onclick="backSuppliers()">← Tất cả NCC</button>
+    <span style="font-weight:700;color:#e65100;font-size:16px;">🏭 ${esc(activeSupplier)}</span>
+    <span style="font-size:12px;background:#ff7043;color:white;border-radius:12px;padding:2px 10px;font-weight:600;">${list.length} lô</span>
+  </div>`;
+  if(!list.length){c.innerHTML=header+'<div class="empty-state"><div class="ico">🚢</div><p>Không có lô nào</p></div>';return;}
+  const body=viewMode==='list'
+    ? `<table class="ship-table">${tHead}<tbody>${list.map(shipRow).join('')}</tbody></table>`
+    : `<div class="card-grid">${list.map(shipCard).join('')}</div>`;
+  c.innerHTML=header+body;
 }
 
 // ===== DETAIL =====
