@@ -85,6 +85,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .att-name{flex:1;font-size:13px;color:#1976d2;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;}
 .att-name:hover{text-decoration:underline;}
 .att-meta{font-size:11px;color:#999;white-space:nowrap;}
+.fee-table{width:100%;border-collapse:collapse;margin-top:6px;}
+.fee-table td{padding:7px 8px;border-bottom:1px solid #f0f0f0;font-size:13px;vertical-align:middle;}
+.fee-sec td{background:#fff3e0;color:#e65100;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.4px;padding:8px;}
+.fee-paid{background:#f1f8f2;}
+.fee-name{color:#333;}
+.fee-en{font-size:11px;color:#999;}
+.fee-amt{width:150px;text-align:right;}
+.fee-amt input{width:100%;padding:6px 8px;border:2px solid #e0e0e0;border-radius:6px;font-size:13px;text-align:right;font-family:inherit;}
+.fee-amt input:focus{outline:none;border-color:#ff7043;}
+.fee-del{width:28px;text-align:center;}
+.fee-del button{border:none;background:none;color:#c0392b;cursor:pointer;font-size:14px;opacity:.5;}
+.fee-del button:hover{opacity:1;}
+.fee-total td{font-weight:700;color:#e65100;border-top:2px solid #ffe0b2;font-size:14px;padding:10px 8px;}
 .drop-zone{border:2px dashed #ffcc80;border-radius:10px;padding:18px;text-align:center;background:#fff8f0;cursor:pointer;margin-top:12px;}
 .drop-zone:hover{border-color:#ff7043;background:#fff3e0;}
 .drop-zone.drag{border-color:#ff7043;background:#ffe0b2;}
@@ -226,6 +239,32 @@ const DOC_LIST=[
   {key:'fumi',label:'Fumigation'},{key:'weight',label:'Weight Cert'},{key:'quality',label:'Quality Cert'},
   {key:'customs',label:'Tờ khai thông quan'}
 ];
+// Danh sách phí mặc định (có thể sửa/thêm/xóa ngay trên web cho khớp lô của bạn)
+const DEFAULT_FEES=[
+  // I — CÁC LOẠI PHÍ CỐ ĐỊNH
+  {sec:'I',label:'Phí phát hành vận đơn',en:'B/L (Bill of Lading)'},
+  {sec:'I',label:'Phí niêm phong chì',en:'Seal Fee'},
+  {sec:'I',label:'Phí xử lý chứng từ',en:'Doc Fee'},
+  {sec:'I',label:'Phí xếp dỡ tại cảng',en:'THC (Terminal Handling Charge)'},
+  {sec:'I',label:'Phí mất cân bằng container',en:'CIC'},
+  {sec:'I',label:'Phí vệ sinh container',en:'Cleaning Fee'},
+  {sec:'I',label:'Phí hạ tầng cảng biển',en:'Infrastructure Fee'},
+  {sec:'I',label:'Phí khai manifest',en:'AMS / ENS'},
+  {sec:'I',label:'Phí điện giao hàng',en:'Telex Release'},
+  {sec:'I',label:'Phí dịch vụ hải quan',en:'Customs Clearance'},
+  // II — CÁC LOẠI PHÍ PHÁT SINH THEO LÔ HÀNG
+  {sec:'II',label:'Vận chuyển nội địa (kéo cont)',en:'Trucking / Drayage'},
+  {sec:'II',label:'Nâng hạ container',en:'LO/LO'},
+  {sec:'II',label:'Lưu container / lưu bãi',en:'Demurrage / Detention'},
+  {sec:'II',label:'Kiểm dịch thực vật',en:'Phytosanitary'},
+  {sec:'II',label:'Hun trùng',en:'Fumigation'},
+  {sec:'II',label:'Giám định khối lượng / chất lượng',en:'Inspection'},
+  {sec:'II',label:'Phí cấp C/O',en:'C/O Fee'},
+  {sec:'II',label:'Phí chứng thư ICO',en:'ICO Certificate'},
+  {sec:'II',label:'Lấy mẫu / phân tích',en:'Sampling'},
+  {sec:'II',label:'Làm hàng (bốc xếp, đóng hàng)',en:'Handling'}
+];
+const SEC_NAME={I:'I. CÁC LOẠI PHÍ CỐ ĐỊNH',II:'II. CÁC LOẠI PHÍ PHÁT SINH THEO LÔ HÀNG'};
 const MAX_FILE=20*1024*1024;
 
 let currentUser=null, allShips=[], currentId=null, currentShip=null, viewMode='card';
@@ -237,6 +276,15 @@ function isAdmin(){return currentUser&&(currentUser.role==='admin'||currentUser.
 function canEdit(){return !!currentUser;} // mọi nhân viên đăng nhập đều sửa được
 function fmtSize(b){if(!b)return'';if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB';}
 function fmtDate(d){return d?new Date(d).toLocaleDateString('vi-VN'):'';}
+function fmtVND(n){n=Number(n)||0;return n.toLocaleString('vi-VN')+' ₫';}
+// Lấy danh sách phí của lô; lần đầu chưa có thì nạp mặc định (chưa lưu DB tới khi người dùng sửa)
+function getFees(s){
+  const c=s.costs;
+  if(c&&Array.isArray(c.items)&&c.items.length)return c.items;
+  return DEFAULT_FEES.map((f,i)=>({id:'fee_'+i,sec:f.sec,label:f.label,en:f.en,amount:0}));
+}
+function feesTotal(items){return items.reduce((a,f)=>a+(Number(f.amount)||0),0);}
+function costProgress(s){const items=getFees(s);const paid=items.filter(f=>Number(f.amount)>0).length;return{paid,total:items.length,sum:feesTotal(items)};}
 function setView(m){viewMode=m;document.querySelectorAll('.vt-card').forEach(b=>b.classList.toggle('active',m==='card'));document.querySelectorAll('.vt-list').forEach(b=>b.classList.toggle('active',m==='list'));renderList();}
 
 // ===== AUTH =====
@@ -356,6 +404,7 @@ function renderDetail(){
       ${s.notes?`<div style="margin-top:12px;padding:12px 14px;background:#fff8f0;border-left:3px solid #ff7043;border-radius:6px;font-size:13px;white-space:pre-wrap;">${esc(s.notes)}</div>`:''}
     </div>
     <div class="detail-card"><div class="section-title">📄 Bộ chứng từ xuất khẩu (${docProgress(s)})</div><div class="doc-grid">${docHtml}</div></div>
+    ${renderFeeCard(s)}
     <div class="detail-card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div class="section-title" style="margin:0;">📎 File đính kèm</div><button class="btn-mini" onclick="triggerUpload('${s.id}')">+ Tải file lên</button></div>
       <div class="drop-zone" id="dropZone" onclick="triggerUpload('${s.id}')"><div style="font-size:28px;">📤</div><div style="font-size:13px;color:#e65100;font-weight:600;margin-top:4px;">Bấm hoặc kéo file vào đây</div><div style="font-size:11px;color:#999;">PDF, ảnh, Word, Excel · tối đa 20MB</div></div>
