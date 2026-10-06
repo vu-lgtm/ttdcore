@@ -239,6 +239,35 @@ const DOC_LIST=[
   {key:'fumi',label:'Fumigation'},{key:'weight',label:'Weight Cert'},{key:'quality',label:'Quality Cert'},
   {key:'customs',label:'Tờ khai thông quan'}
 ];
+// Checklist chi phí — 2 nhóm
+const COST_GROUPS=[
+  {title:'CÁC LOẠI PHÍ CỐ ĐỊNH',items:[
+    {key:'bl',label:'Phí phát hành vận đơn',en:'B/L (Bill of Lading)'},
+    {key:'seal',label:'Phí niêm phong chì',en:'Seal Fee'},
+    {key:'thc',label:'Phí xếp dỡ tại cảng',en:'THC (Terminal Handling Charge)'},
+    {key:'ens',label:'Khai báo an ninh hàng nhập EU',en:'ENS (Entry Summary Declaration)'},
+    {key:'quality',label:'Giám định chất lượng',en:'Quality Inspection'},
+    {key:'weight',label:'Giám định trọng lượng',en:'Weight Inspection'},
+    {key:'fumi',label:'Khử trùng hàng hóa',en:'Fumigation Fee'},
+    {key:'co',label:'Chứng nhận xuất xứ hàng hóa',en:'C/O (Certificate of Origin)'},
+    {key:'ico',label:'Chứng nhận cà phê quốc tế',en:'ICO Certificate'},
+    {key:'phyto',label:'Giám sát kiểm dịch tại cảng',en:'Phytosanitary Supervision'}
+  ]},
+  {title:'CÁC LOẠI PHÍ PHÁT SINH THEO LÔ HÀNG',items:[
+    {key:'freight',label:'Cước vận chuyển quốc tế',en:'Ocean / Air Freight'},
+    {key:'insurance',label:'Bảo hiểm hàng hóa xuất khẩu',en:'Cargo Insurance'},
+    {key:'sample',label:'Phí phân tích mẫu',en:'Sample Testing / Analysis'},
+    {key:'telex',label:'Phí làm điện giao hàng',en:'Telex Release / Surrender Fee'},
+    {key:'courier',label:'Phí chuyển phát nhanh',en:'Courier Fee'},
+    {key:'awb',label:'Phí vận chuyển theo AWB',en:'Air Freight / AWB Fee'},
+    {key:'vgm',label:'Phí khai trọng lượng điện tử',en:'VGM điện tử'},
+    {key:'detention',label:'Phí lưu vỏ container',en:'Container Detention Fee'},
+    {key:'storage',label:'Phí lưu container tại kho riêng',en:'Private Warehouse Storage'},
+    {key:'handling',label:'Làm hàng',en:'Handling'}
+  ]}
+];
+const COST_CURRENCIES=['VND','USD','EUR'];
+function fmtMoney(n){n=parseFloat(n)||0;return n.toLocaleString('vi-VN');}
 // Danh sách phí mặc định (có thể sửa/thêm/xóa ngay trên web cho khớp lô của bạn)
 const DEFAULT_FEES=[
   // I — CÁC LOẠI PHÍ CỐ ĐỊNH
@@ -356,13 +385,13 @@ function renderList(){
       <div style="font-size:16px;font-weight:700;color:#333;">${esc(s.lot_code)}</div>
       <div style="font-size:12px;color:#666;margin-top:3px;">👤 ${esc(s.customer||'—')}</div>
       ${s.vessel?`<div style="font-size:12px;color:#888;margin-top:2px;">🚢 ${esc(s.vessel)}${etd?' · '+etd:''}</div>`:''}
-      <div style="font-size:11px;color:#aaa;margin-top:10px;">📄 ${docProgress(s)} chứng từ${att?` · 📎 ${att}`:''}</div>
+      <div style="font-size:11px;color:#aaa;margin-top:10px;">📄 ${docProgress(s)} chứng từ${att?` · 📎 ${att}`:''}${costTotal(s)>0?` · 💵 ${fmtMoney(costTotal(s))} ${s.cost_currency||'VND'}`:''}</div>
     </div>`;
   }).join('');
 }
 
 // ===== DETAIL =====
-function openDetail(id){const s=allShips.find(x=>x.id===id);if(!s)return;currentId=id;currentShip=s;document.getElementById('viewList').classList.add('hidden');document.getElementById('viewDetail').classList.remove('hidden');renderDetail();}
+function openDetail(id){const s=allShips.find(x=>x.id===id);if(!s)return;currentId=id;currentShip=s;editingCosts=false;document.getElementById('viewList').classList.add('hidden');document.getElementById('viewDetail').classList.remove('hidden');renderDetail();}
 function showList(){document.getElementById('viewDetail').classList.add('hidden');document.getElementById('viewList').classList.remove('hidden');currentId=null;currentShip=null;}
 function renderDetail(){
   const s=currentShip;
@@ -412,6 +441,57 @@ function renderDetail(){
     </div>`;
   const drop=document.getElementById('dropZone');
   if(drop){drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag');});drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');uploadId=s.id;handleFiles(e.dataTransfer.files);});}
+}
+
+// ===== CHI PHÍ LÔ HÀNG =====
+let editingCosts=false;
+function costTotal(s){const c=s.costs||{};let t=0;COST_GROUPS.forEach(g=>g.items.forEach(it=>{t+=parseFloat(c[it.key])||0;}));return t;}
+function groupTotal(s,g){const c=s.costs||{};let t=0;g.items.forEach(it=>{t+=parseFloat(c[it.key])||0;});return t;}
+function renderFeeCard(s){
+  const c=s.costs||{};const cur=s.cost_currency||'VND';const total=costTotal(s);
+  let stt=0;
+  const groupsHtml=COST_GROUPS.map((g,gi)=>{
+    const rows=g.items.map(it=>{stt++;const val=c[it.key];
+      const cell=editingCosts
+        ?`<input type="number" step="any" min="0" id="cost_${it.key}" value="${val!=null&&val!==''?val:''}" placeholder="0" style="width:140px;padding:6px 8px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;text-align:right;">`
+        :`<span style="font-weight:${val?'600':'400'};color:${val?'#333':'#bbb'};">${val?fmtMoney(val):'—'}</span>`;
+      return`<tr>
+        <td style="text-align:center;color:#aaa;font-size:12px;">${stt}</td>
+        <td style="font-size:13px;">${it.label}</td>
+        <td style="font-size:12px;color:#888;">${it.en}</td>
+        <td style="text-align:right;">${cell}</td>
+      </tr>`;
+    }).join('');
+    const gt=groupTotal(s,g);
+    return`<tr style="background:#fff3e0;"><td colspan="3" style="font-weight:700;color:#e65100;font-size:12px;padding:8px 14px;">${['I','II','III','IV'][gi]||(gi+1)}. ${g.title}</td><td style="text-align:right;font-weight:700;color:#e65100;padding:8px 14px;">${gt?fmtMoney(gt)+' '+cur:''}</td></tr>${rows}`;
+  }).join('');
+  const curSel=editingCosts?`<select id="costCurrency" style="padding:5px 8px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:12px;">${COST_CURRENCIES.map(x=>`<option value="${x}" ${x===cur?'selected':''}>${x}</option>`).join('')}</select>`:`<span style="font-size:12px;color:#888;">${cur}</span>`;
+  return`<div class="detail-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+      <div class="section-title" style="margin:0;">💵 Chi phí lô hàng ${curSel}</div>
+      ${editingCosts
+        ?`<div style="display:flex;gap:8px;"><button class="btn-mini" style="background:#ff7043;color:white;border-color:#ff7043;" onclick="saveCosts()">💾 Lưu</button><button class="btn-mini" style="color:#c0392b;" onclick="editingCosts=false;renderDetail();">Hủy</button></div>`
+        :(canEdit()?`<button class="btn-mini" onclick="editingCosts=true;renderDetail();">✏️ Nhập chi phí</button>`:'')}
+    </div>
+    <table class="ship-table">
+      <thead><tr><th style="width:40px;text-align:center;">STT</th><th>Tên loại chi phí</th><th>Viết tắt / English</th><th style="text-align:right;">Số tiền đã chi</th></tr></thead>
+      <tbody>${groupsHtml}</tbody>
+      <tfoot><tr style="background:#fbe9e7;"><td colspan="3" style="font-weight:700;color:#bf360c;padding:12px 14px;font-size:14px;">TỔNG CHI PHÍ</td><td style="text-align:right;font-weight:700;color:#bf360c;padding:12px 14px;font-size:15px;">${fmtMoney(total)} ${cur}</td></tr></tfoot>
+    </table>
+  </div>`;
+}
+async function saveCosts(){
+  const costs={};
+  COST_GROUPS.forEach(g=>g.items.forEach(it=>{const el=document.getElementById('cost_'+it.key);const v=el?el.value.trim():'';if(v!=='')costs[it.key]=parseFloat(v)||0;}));
+  const cost_currency=document.getElementById('costCurrency')?.value||'VND';
+  showLoading('Đang lưu chi phí...');
+  try{
+    const{error}=await sb.from('logistics_shipments').update({costs,cost_currency,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',currentId);
+    if(error)throw error;
+    currentShip.costs=costs;currentShip.cost_currency=cost_currency;
+    const idx=allShips.findIndex(x=>x.id===currentId);if(idx>=0){allShips[idx].costs=costs;allShips[idx].cost_currency=cost_currency;}
+    editingCosts=false;renderDetail();
+  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
 }
 
 // ===== DOC CHECKLIST =====
@@ -485,7 +565,7 @@ async function saveShip(){
   const id=document.getElementById('editId').value;const btn=document.getElementById('saveBtn');btn.disabled=true;showLoading(id?'Đang cập nhật...':'Đang lưu...');
   try{
     if(id){await sb.from('logistics_shipments').update(payload).eq('id',id);}
-    else{payload.id='ls_'+Date.now()+'_'+Math.floor(Math.random()*9999);payload.created_by=currentUser.name;payload.created_at=new Date().toISOString();payload.doc_status={};payload.attachments=[];await sb.from('logistics_shipments').insert(payload);}
+    else{payload.id='ls_'+Date.now()+'_'+Math.floor(Math.random()*9999);payload.created_by=currentUser.name;payload.created_at=new Date().toISOString();payload.doc_status={};payload.attachments=[];payload.costs={};payload.cost_currency='VND';await sb.from('logistics_shipments').insert(payload);}
     closeModal();await loadData();
     if(id){currentShip=allShips.find(x=>x.id===id);if(!document.getElementById('viewDetail').classList.contains('hidden'))renderDetail();}
   }catch(e){err.textContent='Lỗi: '+e.message;err.style.display='block';}finally{btn.disabled=false;hideLoading();}
