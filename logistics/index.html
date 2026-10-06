@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
@@ -246,6 +246,7 @@ async function driveDelete(fileId){if(!fileId)return;try{await fetch(APPS_SCRIPT
 const DEPTS={sale:'Sale',ketoan:'Kế toán',thumua:'Thu mua',logistics:'Logistics',admin:'Ban Giám Đốc',sale_admin:'Sale Admin'};
 const TYPE_LABELS={robusta_r2:'Robusta R2',robusta_r1:'Robusta R1',arabica:'Arabica',other:'Khác'};
 const TYPE_CLASS={robusta_r2:'robusta',robusta_r1:'robusta',arabica:'arabica',other:'other'};
+function typeBadge(ct){if(!ct)return'';return`<span class="type-badge type-${TYPE_CLASS[ct]||'other'}">${TYPE_LABELS[ct]||ct}</span>`;}
 const STATUS_LABELS={booking:'Booking',loading:'Đóng hàng',customs:'Thông quan',shipped:'Đã xuất',done:'Hoàn tất'};
 const STATUS_CLASS={booking:'st-booking',loading:'st-loading',customs:'st-customs',shipped:'st-shipped',done:'st-done'};
 const DOC_LIST=[
@@ -386,7 +387,7 @@ function renderList(){
   if(!list.length){c.innerHTML='<div class="empty-state"><div class="ico">🚢</div><p>Chưa có lô hàng nào</p></div>';return;}
   if(viewMode==='list'){
     c.innerHTML=`<table class="ship-table"><thead><tr><th>Mã lô</th><th>Hợp đồng</th><th>Loại</th><th>Khách hàng</th><th>Tàu</th><th>ETD</th><th>Chứng từ</th><th>📎</th><th>Trạng thái</th></tr></thead><tbody>${list.map(s=>`
-      <tr onclick="openDetail('${s.id}')"><td style="font-weight:600;">${esc(s.lot_code)}</td><td style="font-size:12px;color:#666;">${esc(s.contract_code||'—')}</td><td><span class="type-badge type-${TYPE_CLASS[s.coffee_type]||'other'}">${TYPE_LABELS[s.coffee_type]||s.coffee_type}</span></td><td style="font-size:12px;">${esc(s.customer||'—')}</td><td style="font-size:12px;">${esc(s.vessel||'—')}</td><td style="font-size:12px;">${fmtDate(s.etd)||'—'}</td><td style="font-size:12px;">📄 ${docProgress(s)}</td><td>${(s.attachments||[]).length||''}</td><td><span class="status-pill ${STATUS_CLASS[s.status]||'st-booking'}">${STATUS_LABELS[s.status]||s.status}</span></td></tr>`).join('')}</tbody></table>`;
+      <tr onclick="openDetail('${s.id}')"><td style="font-weight:600;">${esc(s.lot_code)}</td><td style="font-size:12px;color:#666;">${esc(s.contract_code||'—')}</td><td>${typeBadge(s.coffee_type)}</td><td style="font-size:12px;">${esc(s.customer||'—')}</td><td style="font-size:12px;">${esc(s.vessel||'—')}</td><td style="font-size:12px;">${fmtDate(s.etd)||'—'}</td><td style="font-size:12px;">📄 ${docProgress(s)}</td><td>${(s.attachments||[]).length||''}</td><td><span class="status-pill ${STATUS_CLASS[s.status]||'st-booking'}">${STATUS_LABELS[s.status]||s.status}</span></td></tr>`).join('')}</tbody></table>`;
     return;
   }
   c.innerHTML=list.map(s=>{
@@ -394,7 +395,7 @@ function renderList(){
     const etd=fmtDate(s.etd);
     return`<div class="item-card" onclick="openDetail('${s.id}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">
-        <span class="type-badge type-${TYPE_CLASS[s.coffee_type]||'other'}">${TYPE_LABELS[s.coffee_type]||s.coffee_type}</span>
+        ${typeBadge(s.coffee_type)}
         <span class="status-pill ${STATUS_CLASS[s.status]||'st-booking'}">${STATUS_LABELS[s.status]||s.status}</span>
       </div>
       <div style="font-size:16px;font-weight:700;color:#333;">${esc(s.lot_code)}</div>
@@ -444,7 +445,7 @@ function renderDetail(){
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
         <div><div style="font-size:22px;font-weight:700;">${esc(s.lot_code)}</div>
           <div style="margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <span class="type-badge type-${TYPE_CLASS[s.coffee_type]||'other'}">${TYPE_LABELS[s.coffee_type]||s.coffee_type}</span>
+            ${typeBadge(s.coffee_type)}
             <span class="status-pill ${STATUS_CLASS[s.status]||'st-booking'}">${STATUS_LABELS[s.status]||s.status}</span>
           </div></div>
         <div style="display:flex;gap:8px;">
