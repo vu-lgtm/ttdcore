@@ -137,7 +137,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
           <option value="weather">Thời tiết</option>
           <option value="other">Khác</option>
         </select>
-        <div class="view-toggle"><button class="vt-card active" onclick="setView('card')" title="Dạng thẻ">⊞</button><button class="vt-list" onclick="setView('list')" title="Dạng danh sách">☰</button></div>
+        <div class="view-toggle"><button class="vt-card" onclick="setView('card')" title="Dạng thẻ">⊞</button><button class="vt-list active" onclick="setView('list')" title="Dạng danh sách">☰</button></div>
         <button class="btn btn-primary" onclick="openReportModal()">+ Thêm báo cáo</button>
         <button class="btn" onclick="loadReports()">🔄</button>
       </div>
@@ -160,7 +160,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
           <option value="prospect">Tiềm năng</option>
           <option value="inactive">Ngừng</option>
         </select>
-        <div class="view-toggle"><button class="vt-card active" onclick="setView('card')" title="Dạng thẻ">⊞</button><button class="vt-list" onclick="setView('list')" title="Dạng danh sách">☰</button></div>
+        <div class="view-toggle"><button class="vt-card" onclick="setView('card')" title="Dạng thẻ">⊞</button><button class="vt-list active" onclick="setView('list')" title="Dạng danh sách">☰</button></div>
         <button class="btn btn-primary" onclick="openBuyerModal()">+ Thêm buyer</button>
         <button class="btn" onclick="loadBuyers()">🔄</button>
       </div>
@@ -177,7 +177,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div id="countriesList">
       <div class="toolbar">
         <div class="search-box"><input type="text" id="countrySearch" placeholder="Tìm quốc gia, khu vực..." oninput="renderCountries()"></div>
-        <div class="view-toggle"><button class="vt-card active" onclick="setView('card')" title="Dạng thẻ">⊞</button><button class="vt-list" onclick="setView('list')" title="Dạng danh sách">☰</button></div>
+        <div class="view-toggle"><button class="vt-card" onclick="setView('card')" title="Dạng thẻ">⊞</button><button class="vt-list active" onclick="setView('list')" title="Dạng danh sách">☰</button></div>
         <button class="btn btn-primary" onclick="openCountryModal()">+ Thêm quốc gia</button>
         <button class="btn" onclick="loadCountries()">🔄</button>
       </div>
@@ -287,7 +287,7 @@ async function driveDelete(fileId){
   if(!fileId)return;
   try{await fetch(APPS_SCRIPT_URL,{method:'POST',body:JSON.stringify({secret:UPLOAD_SECRET,action:'delete',fileId})});}catch(_){}
 }
-const DEPTS={sale:'Sale',ketoan:'Kế toán',thumua:'Thu mua',logistics:'Logistics',admin:'Ban Giám Đốc',sale_admin:'Sale Admin'};
+const DEPTS={viewer:'Chỉ xem',sale:'Sale',ketoan:'Kế toán',thumua:'Thu mua',logistics:'Logistics',admin:'Ban Giám Đốc',sale_admin:'Sale Admin'};
 const CAT_LABELS={market:'Thị trường',price:'Giá',supply:'Nguồn cung',demand:'Nhu cầu',weather:'Thời tiết',other:'Khác'};
 const BSTATUS_LABELS={active:'Đang giao dịch',prospect:'Tiềm năng',inactive:'Ngừng'};
 const BSTATUS_CLASS={active:'st-active',prospect:'st-prospect',inactive:'st-inactive'};
@@ -298,7 +298,8 @@ let allReports=[], currentReport=null;
 let allBuyers=[], currentBuyer=null;
 let allCountries=[], currentCountry=null;
 let uploadTarget=null; // {kind:'report'|'buyer'|'country', id}
-let viewMode='card'; // 'card' | 'list'
+let viewMode='list'; // 'card' | 'list' — mặc định danh sách
+function lastDoc(arr){arr=arr||[];let t=0;arr.forEach(d=>{if(d&&d.time&&d.time>t)t=d.time;});return t?fmtDate(t):'—';}
 function setView(m){
   viewMode=m;
   document.querySelectorAll('.vt-card').forEach(b=>b.classList.toggle('active',m==='card'));
@@ -318,7 +319,7 @@ function fmtDate(d){return d?new Date(d).toLocaleDateString('vi-VN'):'';}
 async function loginWithGoogle(){
   const errEl=document.getElementById('loginError'),btn=document.getElementById('loginBtn');
   errEl.style.display='none';btn.disabled=true;showLoading('Đang chuyển hướng...');
-  try{const{error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.href,queryParams:{hd:'ttdglobal.vn'}}});if(error)throw error;}
+  try{const{error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.href,queryParams:{prompt:'select_account'}}});if(error)throw error;}
   catch(e){errEl.textContent='Lỗi: '+e.message;errEl.style.display='block';btn.disabled=false;hideLoading();}
 }
 async function loadCurrentUser(authUser){
@@ -381,7 +382,7 @@ function docRow(d,kind,idx){
   return`<div class="doc-row">
     <div class="doc-thumb">${thumb}</div>
     <span class="doc-name" onclick="previewDoc('${esc(d.previewUrl||d.url)}','${esc(d.url||'')}')">${esc(d.title)}</span>
-    <span class="doc-meta">${d.size?fmtSize(d.size):''}${d.user?' · '+esc(d.user):''}</span>
+    <span class="doc-meta">${d.size?fmtSize(d.size):''}${d.user?' · '+esc(d.user):''}${d.time?' · 📅 '+fmtDate(d.time):''}</span>
     <button class="btn-mini" style="color:#c0392b;" onclick="removeDoc('${kind}',${idx})">✕</button>
   </div>`;
 }
@@ -422,8 +423,8 @@ function renderReports(){
   g.style.display=viewMode==='list'?'block':'';
   if(!list.length){g.innerHTML='<div class="empty-state"><div class="ico">📈</div><p>Chưa có báo cáo nào</p></div>';return;}
   if(viewMode==='list'){
-    g.innerHTML=`<table class="th-table"><thead><tr><th>Tiêu đề</th><th>Loại</th><th>Kỳ</th><th>Tác giả</th><th>Ngày</th><th>📎</th></tr></thead><tbody>${list.map(r=>`
-      <tr onclick="openReport('${r.id}')"><td style="font-weight:600;">${esc(r.title)}</td><td><span class="cat-pill">${CAT_LABELS[r.category]||r.category}</span></td><td>${esc(r.period||'—')}</td><td>${esc(r.author||'?')}</td><td>${fmtDate(r.created_at)}</td><td>${(r.attachments||[]).length||''}</td></tr>`).join('')}</tbody></table>`;
+    g.innerHTML=`<table class="th-table"><thead><tr><th>Tiêu đề</th><th>Loại</th><th>Kỳ</th><th>Tác giả</th><th>Ngày tạo</th><th>Ngày upload TL</th><th>📎</th></tr></thead><tbody>${list.map(r=>`
+      <tr onclick="openReport('${r.id}')"><td style="font-weight:600;">${esc(r.title)}</td><td><span class="cat-pill">${CAT_LABELS[r.category]||r.category}</span></td><td>${esc(r.period||'—')}</td><td>${esc(r.author||'?')}</td><td>${fmtDate(r.created_at)}</td><td>${lastDoc(r.attachments)}</td><td>${(r.attachments||[]).length||''}</td></tr>`).join('')}</tbody></table>`;
     return;
   }
   g.innerHTML=list.map(r=>{
@@ -520,8 +521,8 @@ function renderBuyers(){
   g.style.display=viewMode==='list'?'block':'';
   if(!list.length){g.innerHTML='<div class="empty-state"><div class="ico">🧑‍💼</div><p>Chưa có buyer nào</p></div>';return;}
   if(viewMode==='list'){
-    g.innerHTML=`<table class="th-table"><thead><tr><th>Tên buyer</th><th>Quốc gia</th><th>Người liên hệ</th><th>Trạng thái</th><th>📎</th></tr></thead><tbody>${list.map(b=>`
-      <tr onclick="openBuyer('${b.id}')"><td style="font-weight:600;">${esc(b.name)}</td><td>${esc(b.country||'—')}</td><td>${esc(b.contact_person||'—')}</td><td><span class="status-pill ${BSTATUS_CLASS[b.status]||'st-active'}">${BSTATUS_LABELS[b.status]||b.status}</span></td><td>${(b.documents||[]).length||''}</td></tr>`).join('')}</tbody></table>`;
+    g.innerHTML=`<table class="th-table"><thead><tr><th>Tên buyer</th><th>Quốc gia</th><th>Người liên hệ</th><th>Trạng thái</th><th>Ngày upload TL</th><th>📎</th></tr></thead><tbody>${list.map(b=>`
+      <tr onclick="openBuyer('${b.id}')"><td style="font-weight:600;">${esc(b.name)}</td><td>${esc(b.country||'—')}</td><td>${esc(b.contact_person||'—')}</td><td><span class="status-pill ${BSTATUS_CLASS[b.status]||'st-active'}">${BSTATUS_LABELS[b.status]||b.status}</span></td><td>${lastDoc(b.documents)}</td><td>${(b.documents||[]).length||''}</td></tr>`).join('')}</tbody></table>`;
     return;
   }
   g.innerHTML=list.map(b=>{
@@ -627,8 +628,8 @@ function renderCountries(){
   g.style.display=viewMode==='list'?'block':'';
   if(!list.length){g.innerHTML='<div class="empty-state"><div class="ico">🌍</div><p>Chưa có quốc gia nào</p></div>';return;}
   if(viewMode==='list'){
-    g.innerHTML=`<table class="th-table"><thead><tr><th>Quốc gia</th><th>Khu vực</th><th>Tóm tắt</th><th>📎</th></tr></thead><tbody>${list.map(c=>`
-      <tr onclick="openCountry('${c.id}')"><td style="font-weight:600;">🌍 ${esc(c.name)}</td><td>${esc(c.region||'—')}</td><td style="color:#888;max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(c.summary||'')}</td><td>${(c.documents||[]).length||''}</td></tr>`).join('')}</tbody></table>`;
+    g.innerHTML=`<table class="th-table"><thead><tr><th>Quốc gia</th><th>Khu vực</th><th>Tóm tắt</th><th>Ngày upload TL</th><th>📎</th></tr></thead><tbody>${list.map(c=>`
+      <tr onclick="openCountry('${c.id}')"><td style="font-weight:600;">🌍 ${esc(c.name)}</td><td>${esc(c.region||'—')}</td><td style="color:#888;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(c.summary||'')}</td><td>${lastDoc(c.documents)}</td><td>${(c.documents||[]).length||''}</td></tr>`).join('')}</tbody></table>`;
     return;
   }
   g.innerHTML=list.map(c=>{
@@ -721,6 +722,47 @@ async function deleteCountry(id){
     if(event==='SIGNED_IN'&&session?.user&&!currentUser){await loadCurrentUser(session.user);}
     if(event==='SIGNED_OUT'){currentUser=null;document.getElementById('mainApp').classList.add('hidden');document.getElementById('loginScreen').classList.remove('hidden');}
   });
+})();
+</script>
+<!-- ===== TTD READ-ONLY GUARD — tài khoản chỉ xem (lsdinh@gmail.com) =====
+     Tự kích hoạt: nếu người đăng nhập nằm trong VIEWERS thì khóa mọi thao tác
+     ghi dữ liệu (checkbox, select trạng thái, nút Lưu/Thêm/Xóa/Duyệt/Upload…),
+     vẫn cho phép xem, mở chi tiết, lọc, tìm kiếm và đăng xuất.
+     Dán nguyên khối này ngay trước thẻ </body> của mỗi trang. -->
+<script>
+(function(){
+  var VIEWERS=['lsdinh@gmail.com'];   // thêm email chỉ-xem khác vào đây nếu cần
+  function viewer(){try{var u=window.currentUser;return !!(u&&u.email&&VIEWERS.indexOf(String(u.email).toLowerCase())>-1);}catch(e){return false;}}
+  var on=false;
+  function lock(){
+    if(!viewer())return;
+    document.querySelectorAll('input[type=checkbox]:not([disabled]),input[type=radio]:not([disabled])').forEach(function(el){el.disabled=true;});
+    document.querySelectorAll('select:not([disabled])').forEach(function(s){
+      var oc=s.getAttribute('onchange')||'';
+      if(/save|update|set|toggle|status|insert|trang\s*th/i.test(oc))s.disabled=true;
+    });
+  }
+  function start(){
+    if(on||!viewer())return;on=true;
+    lock();
+    try{new MutationObserver(lock).observe(document.body,{childList:true,subtree:true});}catch(e){}
+    document.addEventListener('click',function(e){
+      var el=e.target.closest&&e.target.closest('button,[onclick],label,a');
+      if(!el)return;
+      var s=((el.getAttribute&&el.getAttribute('onclick'))||'')+' '+(el.className||'')+' '+(el.id||'')+' '+String(el.textContent||'').slice(0,50);
+      if(/save|delete|remove|upload|submit|approve|duy|th[eê]m|x[oó]a|s[uử]a|l[uư]u|toggle|insert|\bnew\b|\badd\b|t[aạ]o|g[uử]i|c[aậ]p\s*nh[aậ]t/i.test(s)){
+        e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();
+        alert('👁️ Tài khoản chỉ xem — không thể thao tác chỉnh sửa.');
+        return false;
+      }
+    },true);
+    if(!document.getElementById('roBanner')){
+      var b=document.createElement('div');b.id='roBanner';b.textContent='👁️ Chế độ CHỈ XEM';
+      b.style.cssText='position:fixed;bottom:12px;right:12px;z-index:999999;background:#111827;color:#fff;font:600 12px sans-serif;padding:6px 12px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none;';
+      document.body.appendChild(b);
+    }
+  }
+  setInterval(start,400);
 })();
 </script>
 </body>
