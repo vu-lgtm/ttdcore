@@ -209,6 +209,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="form-row">
       <div class="form-group"><label>ETD (tàu chạy)</label><input type="date" id="fEtd"></div>
       <div class="form-group"><label>ETA (ngày đến)</label><input type="date" id="fEta"></div>
+      <div class="form-group"><label>Ngày xong chứng từ gốc</label><input type="date" id="fDocsDone"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Cảng đi</label><input type="text" id="fPortLoad" placeholder="VD: Cát Lái"></div>
@@ -243,7 +244,7 @@ async function driveUpload(itemId,itemName,file){
 }
 async function driveDelete(fileId){if(!fileId)return;try{await fetch(APPS_SCRIPT_URL,{method:'POST',body:JSON.stringify({secret:UPLOAD_SECRET,action:'delete',fileId})});}catch(_){}}
 
-const DEPTS={sale:'Sale',ketoan:'Kế toán',thumua:'Thu mua',logistics:'Logistics',admin:'Ban Giám Đốc',sale_admin:'Sale Admin'};
+const DEPTS={viewer:'Chỉ xem',sale:'Sale',ketoan:'Kế toán',thumua:'Thu mua',logistics:'Logistics',admin:'Ban Giám Đốc',sale_admin:'Sale Admin'};
 const TYPE_LABELS={robusta_r2:'Robusta R2',robusta_r1:'Robusta R1',arabica:'Arabica',other:'Khác'};
 const TYPE_CLASS={robusta_r2:'robusta',robusta_r1:'robusta',arabica:'arabica',other:'other'};
 function typeBadge(ct){if(!ct)return'';return`<span class="type-badge type-${TYPE_CLASS[ct]||'other'}">${TYPE_LABELS[ct]||ct}</span>`;}
@@ -339,7 +340,7 @@ function setView(m){viewMode=m;document.querySelectorAll('.vt-card').forEach(b=>
 async function loginWithGoogle(){
   const errEl=document.getElementById('loginError'),btn=document.getElementById('loginBtn');
   errEl.style.display='none';btn.disabled=true;showLoading('Đang chuyển hướng...');
-  try{const{error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.href,queryParams:{hd:'ttdglobal.vn'}}});if(error)throw error;}
+  try{const{error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.href,queryParams:{prompt:'select_account'}}});if(error)throw error;}
   catch(e){errEl.textContent='Lỗi: '+e.message;errEl.style.display='block';btn.disabled=false;hideLoading();}
 }
 async function loadCurrentUser(authUser){
@@ -506,6 +507,7 @@ function renderDetail(){
         <div class="detail-item"><div class="d-label">Container</div><div class="d-value">${esc(s.container_no||'—')}</div></div>
         <div class="detail-item"><div class="d-label">ETD</div><div class="d-value">🚢 ${etd}</div></div>
         <div class="detail-item"><div class="d-label">ETA</div><div class="d-value">🏁 ${eta}</div></div>
+        <div class="detail-item"><div class="d-label">Chứng từ gốc xong</div><div class="d-value">📄 ${fmtDate(s.docs_done_date)||'—'}</div></div>
         <div class="detail-item"><div class="d-label">Cảng đi</div><div class="d-value">${esc(s.port_load||'—')}</div></div>
         <div class="detail-item"><div class="d-label">Cảng đến</div><div class="d-value">${esc(s.port_disch||'—')}</div></div>
       </div>
@@ -685,11 +687,11 @@ function openModal(id){
     document.getElementById('fLot').value=s.lot_code||'';document.getElementById('fContract').value=s.contract_code||'';document.getElementById('fType').value=s.coffee_type||'robusta_r2';
     document.getElementById('fQty').value=s.quantity||'';document.getElementById('fStatus').value=s.status||'booking';document.getElementById('fCustomer').value=s.customer||'';
     document.getElementById('fSupplier').value=s.supplier||'';document.getElementById('fBooking').value=s.booking_no||'';document.getElementById('fVessel').value=s.vessel||'';
-    document.getElementById('fContainer').value=s.container_no||'';document.getElementById('fEtd').value=s.etd||'';document.getElementById('fEta').value=s.eta||'';
+    document.getElementById('fContainer').value=s.container_no||'';document.getElementById('fEtd').value=s.etd||'';document.getElementById('fEta').value=s.eta||'';document.getElementById('fDocsDone').value=s.docs_done_date||'';
     document.getElementById('fPortLoad').value=s.port_load||'';document.getElementById('fPortDisch').value=s.port_disch||'';document.getElementById('fNotes').value=s.notes||'';
     document.getElementById('saveBtn').textContent='Cập nhật';
   }else{document.getElementById('modalTitle').textContent='Thêm lô hàng';document.getElementById('editId').value='';
-    ['fLot','fContract','fQty','fCustomer','fSupplier','fBooking','fVessel','fContainer','fEtd','fEta','fPortLoad','fPortDisch','fNotes'].forEach(x=>document.getElementById(x).value='');
+    ['fLot','fContract','fQty','fCustomer','fSupplier','fBooking','fVessel','fContainer','fEtd','fEta','fDocsDone','fPortLoad','fPortDisch','fNotes'].forEach(x=>document.getElementById(x).value='');
     document.getElementById('fType').value='robusta_r2';document.getElementById('fStatus').value='booking';document.getElementById('saveBtn').textContent='Lưu';}
   document.getElementById('shipModal').classList.remove('hidden');
 }
@@ -702,6 +704,7 @@ async function saveShip(){
     supplier:document.getElementById('fSupplier').value.trim()||null,booking_no:document.getElementById('fBooking').value.trim()||null,vessel:document.getElementById('fVessel').value.trim()||null,
     container_no:document.getElementById('fContainer').value.trim()||null,etd:document.getElementById('fEtd').value||null,eta:document.getElementById('fEta').value||null,
     port_load:document.getElementById('fPortLoad').value.trim()||null,port_disch:document.getElementById('fPortDisch').value.trim()||null,notes:document.getElementById('fNotes').value.trim()||null,
+    docs_done_date:document.getElementById('fDocsDone').value||null,
     updated_by:currentUser.name,updated_at:new Date().toISOString()};
   const id=document.getElementById('editId').value;const btn=document.getElementById('saveBtn');btn.disabled=true;showLoading(id?'Đang cập nhật...':'Đang lưu...');
   try{
@@ -729,6 +732,47 @@ async function deleteShip(id){
     if(event==='SIGNED_IN'&&session?.user&&!currentUser){await loadCurrentUser(session.user);}
     if(event==='SIGNED_OUT'){currentUser=null;document.getElementById('mainApp').classList.add('hidden');document.getElementById('loginScreen').classList.remove('hidden');}
   });
+})();
+</script>
+<!-- ===== TTD READ-ONLY GUARD — tài khoản chỉ xem (lsdinh@gmail.com) =====
+     Tự kích hoạt: nếu người đăng nhập nằm trong VIEWERS thì khóa mọi thao tác
+     ghi dữ liệu (checkbox, select trạng thái, nút Lưu/Thêm/Xóa/Duyệt/Upload…),
+     vẫn cho phép xem, mở chi tiết, lọc, tìm kiếm và đăng xuất.
+     Dán nguyên khối này ngay trước thẻ </body> của mỗi trang. -->
+<script>
+(function(){
+  var VIEWERS=['lsdinh@gmail.com'];   // thêm email chỉ-xem khác vào đây nếu cần
+  function viewer(){try{var u=window.currentUser;return !!(u&&u.email&&VIEWERS.indexOf(String(u.email).toLowerCase())>-1);}catch(e){return false;}}
+  var on=false;
+  function lock(){
+    if(!viewer())return;
+    document.querySelectorAll('input[type=checkbox]:not([disabled]),input[type=radio]:not([disabled])').forEach(function(el){el.disabled=true;});
+    document.querySelectorAll('select:not([disabled])').forEach(function(s){
+      var oc=s.getAttribute('onchange')||'';
+      if(/save|update|set|toggle|status|insert|trang\s*th/i.test(oc))s.disabled=true;
+    });
+  }
+  function start(){
+    if(on||!viewer())return;on=true;
+    lock();
+    try{new MutationObserver(lock).observe(document.body,{childList:true,subtree:true});}catch(e){}
+    document.addEventListener('click',function(e){
+      var el=e.target.closest&&e.target.closest('button,[onclick],label,a');
+      if(!el)return;
+      var s=((el.getAttribute&&el.getAttribute('onclick'))||'')+' '+(el.className||'')+' '+(el.id||'')+' '+String(el.textContent||'').slice(0,50);
+      if(/save|delete|remove|upload|submit|approve|duy|th[eê]m|x[oó]a|s[uử]a|l[uư]u|toggle|insert|\bnew\b|\badd\b|t[aạ]o|g[uử]i|c[aậ]p\s*nh[aậ]t/i.test(s)){
+        e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();
+        alert('👁️ Tài khoản chỉ xem — không thể thao tác chỉnh sửa.');
+        return false;
+      }
+    },true);
+    if(!document.getElementById('roBanner')){
+      var b=document.createElement('div');b.id='roBanner';b.textContent='👁️ Chế độ CHỈ XEM';
+      b.style.cssText='position:fixed;bottom:12px;right:12px;z-index:999999;background:#111827;color:#fff;font:600 12px sans-serif;padding:6px 12px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none;';
+      document.body.appendChild(b);
+    }
+  }
+  setInterval(start,400);
 })();
 </script>
 </body>
