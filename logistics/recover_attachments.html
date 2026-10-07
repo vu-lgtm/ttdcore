@@ -66,7 +66,8 @@ function parseFolder(name){
 // suy ra doc key từ số đứng đầu tên file (1..10)
 function docKeyFromName(name){
   const nm=String(name||'');
-  if(/\.zip$/i.test(nm)) return '_zip';            // file .zip -> mục "Bộ tài liệu nén"
+  if(/\.(zip|rar|7z)$/i.test(nm)) return '_zip';        // file nén -> mục "Bộ tài liệu nén"
+  if(/(bo|bộ)\s*chung|chung\s*t[uừ]/i.test(nm) && /zip|rar|7z|nen|nén/i.test(nm)) return '_zip';
   const m=nm.match(/^\s*0*(\d+)/);
   if(!m) return null;
   const n=parseInt(m[1],10);
@@ -180,6 +181,9 @@ document.getElementById('btnScan').onclick=async()=>{
   try{
     const {plan}=await buildPlan();
     PLAN=plan; renderPlan(plan);
+    // in tên file để kiểm tra phân loại (zip / số thứ tự)
+    log('── Tên file trong từng lô ──');
+    plan.forEach(p=>{ if(p.raw.files.length){ log('📁 '+(p.lot||p.raw.folder)+' → '+p.raw.files.map(f=>f.name+' ['+(docKeyFromName(f.name)||'chung')+']').join('  |  ')); } });
     document.getElementById('btnApply').disabled=false;
     setStatus('Quét xong. Kiểm tra bảng khớp rồi bấm bước 2 để khôi phục.');
   }catch(e){ log('LỖI quét: '+e.message,'err'); setStatus('Lỗi: '+e.message+' (kiểm tra đã triển khai bản mới của Apps Script chưa).'); }
