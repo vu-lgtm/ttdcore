@@ -517,6 +517,7 @@ function renderDetail(){
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px;">
         <div class="section-title" style="margin:0;">📄 Bộ chứng từ xuất khẩu (${docProgress(s)})</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${canEdit()?`<button class="btn-mini" style="background:#2e7d32;color:white;border-color:#2e7d32;" onclick="toggleAllDocs()">${DOC_LIST.every(x=>docs[x.key])?'↩ Bỏ tick tất cả':'✓ Hoàn thành tất cả'}</button>`:''}
           <button class="btn-mini" onclick="downloadAllDocs()">⬇ Tải nguyên bộ (.zip)</button>
           ${canEdit()?`<button class="btn-mini" style="background:#ff7043;color:white;border-color:#ff7043;" onclick="triggerBulkUpload('${s.id}')">⬆ Upload hàng loạt (tự nhận theo số)</button>`:''}
         </div>
@@ -594,6 +595,15 @@ async function saveCosts(){
 }
 
 // ===== DOC CHECKLIST =====
+async function toggleAllDocs(){
+  if(!canEdit()||!currentShip)return;
+  const allDone=DOC_LIST.every(x=>(currentShip.doc_status||{})[x.key]);
+  const d={...(currentShip.doc_status||{})};DOC_LIST.forEach(x=>{d[x.key]=!allDone;});
+  showLoading(allDone?'Đang bỏ tick...':'Đang hoàn thành...');
+  try{const{error}=await sb.from('logistics_shipments').update({doc_status:d,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',currentId);if(error)throw error;
+    currentShip.doc_status=d;const idx=allShips.findIndex(x=>x.id===currentId);if(idx>=0)allShips[idx].doc_status=d;renderDetail();
+  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
+}
 async function toggleDoc(key){
   if(!canEdit())return;
   const d={...(currentShip.doc_status||{})};d[key]=!d[key];
