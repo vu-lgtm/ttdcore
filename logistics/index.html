@@ -189,7 +189,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="section-title">📦 Thông tin lô</div>
     <div class="form-row">
       <div class="form-group"><label>Mã lô *</label><input type="text" id="fLot" placeholder="VD: LOT-2610-R2"></div>
-      <div class="form-group"><label>Mã hợp đồng</label><input type="text" id="fContract" placeholder="VD: S-26015E.BR"></div>
+      <div class="form-group"><label>Incoterm</label><select id="fIncoterms"><option value="">—</option><option>EXW</option><option>FCA</option><option>FAS</option><option>FOB</option><option>CFR</option><option>CIF</option><option>CPT</option><option>CIP</option><option>DAP</option><option>DPU</option><option>DDP</option></select></div>
     </div>
     <div class="form-row-3">
       <div class="form-group"><label>Loại cà phê</label><select id="fType"><option value="robusta_r2">Robusta R2</option><option value="robusta_r1">Robusta R1</option><option value="arabica">Arabica</option><option value="other">Khác</option></select></div>
@@ -395,7 +395,7 @@ function shipCard(s){
 }
 // 1 dòng bảng
 function shipRow(s){
-  return`<tr onclick="openDetail('${s.id}')"><td style="font-weight:600;">${esc(s.lot_code)}</td><td style="font-size:12px;color:#666;">${esc(s.contract_code||'—')}</td><td>${typeBadge(s.coffee_type)}</td><td style="font-size:12px;">${esc(s.customer||'—')}</td><td style="font-size:12px;">${esc(s.vessel||'—')}</td><td style="font-size:12px;">${fmtDate(s.etd)||'—'}</td><td style="font-size:12px;">📄 ${docProgress(s)}</td><td>${(s.attachments||[]).length||''}</td><td><span class="status-pill ${STATUS_CLASS[s.status]||'st-booking'}">${STATUS_LABELS[s.status]||s.status}</span></td></tr>`;
+  return`<tr onclick="openDetail('${s.id}')"><td style="font-weight:600;">${esc(s.lot_code)}</td><td style="font-size:12px;color:#666;">${esc(s.incoterms||'—')}</td><td>${typeBadge(s.coffee_type)}</td><td style="font-size:12px;">${esc(s.customer||'—')}</td><td style="font-size:12px;">${esc(s.vessel||'—')}</td><td style="font-size:12px;">${fmtDate(s.etd)||'—'}</td><td style="font-size:12px;">📄 ${docProgress(s)}</td><td>${(s.attachments||[]).length||''}</td><td><span class="status-pill ${STATUS_CLASS[s.status]||'st-booking'}">${STATUS_LABELS[s.status]||s.status}</span></td></tr>`;
 }
 function supKey(s){return (s.supplier||'').trim()||'(Chưa phân loại NCC)';}
 function renderList(){
@@ -404,7 +404,7 @@ function renderList(){
   const search=(document.getElementById('searchInput').value||'').toLowerCase();
   const fs=document.getElementById('filterStatus').value;
   const base=allShips.filter(s=>fs==='all'||s.status===fs);
-  const tHead=`<thead><tr><th>Mã lô</th><th>Hợp đồng</th><th>Loại</th><th>Khách hàng</th><th>Tàu</th><th>ETD</th><th>Chứng từ</th><th>📎</th><th>Trạng thái</th></tr></thead>`;
+  const tHead=`<thead><tr><th>Mã lô</th><th>Incoterm</th><th>Loại</th><th>Khách hàng</th><th>Tàu</th><th>ETD</th><th>Chứng từ</th><th>📎</th><th>Trạng thái</th></tr></thead>`;
 
   // ---- MÀN FOLDER: mỗi NCC là 1 ô ----
   if(activeSupplier===null){
@@ -437,7 +437,7 @@ function renderList(){
 
   // ---- TRONG 1 NCC ----
   let list=base.filter(s=>supKey(s)===activeSupplier);
-  if(search)list=list.filter(s=>[s.lot_code,s.contract_code,s.vessel,s.container_no,s.customer].some(v=>(v||'').toLowerCase().includes(search)));
+  if(search)list=list.filter(s=>[s.lot_code,s.incoterms,s.vessel,s.container_no,s.customer].some(v=>(v||'').toLowerCase().includes(search)));
   const header=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
     <button class="btn" onclick="backSuppliers()">← Tất cả NCC</button>
     <span style="font-weight:700;color:#e65100;font-size:16px;">🏭 ${esc(activeSupplier)}</span>
@@ -498,7 +498,7 @@ function renderDetail(){
         </div>
       </div>
       <div class="detail-grid">
-        <div class="detail-item"><div class="d-label">Hợp đồng</div><div class="d-value">${esc(s.contract_code||'—')}</div></div>
+        <div class="detail-item"><div class="d-label">Incoterm</div><div class="d-value">${esc(s.incoterms||'—')}</div></div>
         <div class="detail-item"><div class="d-label">Khách hàng</div><div class="d-value">${esc(s.customer||'—')}</div></div>
         <div class="detail-item"><div class="d-label">NCC</div><div class="d-value">${esc(s.supplier||'—')}</div></div>
         <div class="detail-item"><div class="d-label">Số lượng</div><div class="d-value">${s.quantity?s.quantity+' MT':'—'}</div></div>
@@ -684,14 +684,14 @@ function closeModal(){document.getElementById('shipModal').classList.add('hidden
 function openModal(id){
   document.getElementById('modalError').style.display='none';
   if(id){const s=allShips.find(x=>x.id===id);document.getElementById('modalTitle').textContent='Sửa · '+s.lot_code;document.getElementById('editId').value=id;
-    document.getElementById('fLot').value=s.lot_code||'';document.getElementById('fContract').value=s.contract_code||'';document.getElementById('fType').value=s.coffee_type||'robusta_r2';
+    document.getElementById('fLot').value=s.lot_code||'';document.getElementById('fIncoterms').value=s.incoterms||'';document.getElementById('fType').value=s.coffee_type||'robusta_r2';
     document.getElementById('fQty').value=s.quantity||'';document.getElementById('fStatus').value=s.status||'booking';document.getElementById('fCustomer').value=s.customer||'';
     document.getElementById('fSupplier').value=s.supplier||'';document.getElementById('fBooking').value=s.booking_no||'';document.getElementById('fVessel').value=s.vessel||'';
     document.getElementById('fContainer').value=s.container_no||'';document.getElementById('fEtd').value=s.etd||'';document.getElementById('fEta').value=s.eta||'';document.getElementById('fDocsDone').value=s.docs_done_date||'';
     document.getElementById('fPortLoad').value=s.port_load||'';document.getElementById('fPortDisch').value=s.port_disch||'';document.getElementById('fNotes').value=s.notes||'';
     document.getElementById('saveBtn').textContent='Cập nhật';
   }else{document.getElementById('modalTitle').textContent='Thêm lô hàng';document.getElementById('editId').value='';
-    ['fLot','fContract','fQty','fCustomer','fSupplier','fBooking','fVessel','fContainer','fEtd','fEta','fDocsDone','fPortLoad','fPortDisch','fNotes'].forEach(x=>document.getElementById(x).value='');
+    ['fLot','fIncoterms','fQty','fCustomer','fSupplier','fBooking','fVessel','fContainer','fEtd','fEta','fDocsDone','fPortLoad','fPortDisch','fNotes'].forEach(x=>document.getElementById(x).value='');
     document.getElementById('fType').value='robusta_r2';document.getElementById('fStatus').value='booking';document.getElementById('saveBtn').textContent='Lưu';}
   document.getElementById('shipModal').classList.remove('hidden');
 }
@@ -699,7 +699,7 @@ async function saveShip(){
   const err=document.getElementById('modalError');err.style.display='none';
   const lot=document.getElementById('fLot').value.trim();
   if(!lot){err.textContent='Vui lòng nhập mã lô';err.style.display='block';return;}
-  const payload={lot_code:lot,contract_code:document.getElementById('fContract').value.trim()||null,coffee_type:document.getElementById('fType').value,
+  const payload={lot_code:lot,incoterms:document.getElementById('fIncoterms').value||null,coffee_type:document.getElementById('fType').value,
     quantity:document.getElementById('fQty').value.trim()||null,status:document.getElementById('fStatus').value,customer:document.getElementById('fCustomer').value.trim()||null,
     supplier:document.getElementById('fSupplier').value.trim()||null,booking_no:document.getElementById('fBooking').value.trim()||null,vessel:document.getElementById('fVessel').value.trim()||null,
     container_no:document.getElementById('fContainer').value.trim()||null,etd:document.getElementById('fEtd').value||null,eta:document.getElementById('fEta').value||null,
