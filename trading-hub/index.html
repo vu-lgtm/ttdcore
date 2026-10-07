@@ -121,6 +121,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <button class="tab active" id="tab-reports" onclick="switchTab('reports')">📈 Coffee Report</button>
     <button class="tab" id="tab-buyers" onclick="switchTab('buyers')">🧑‍💼 Buyer Profile</button>
     <button class="tab" id="tab-countries" onclick="switchTab('countries')">🌍 Country Profile</button>
+    <button class="tab" id="tab-services" onclick="switchTab('services')">🛠️ Hợp đồng dịch vụ</button>
   </div>
 
   <!-- ===== COFFEE REPORTS ===== -->
@@ -186,6 +187,38 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div id="countryDetail" class="hidden">
       <button class="back-btn" onclick="backToCountries()">← Danh sách quốc gia</button>
       <div id="countryDetailContent"></div>
+    </div>
+  </div>
+
+  <!-- ===== SERVICE CONTRACTS ===== -->
+  <div id="paneServices" class="hidden">
+    <div id="servicesList">
+      <div class="toolbar">
+        <div class="search-box"><input type="text" id="svcSearch" placeholder="Tìm nhà cung cấp, phạm vi..." oninput="renderServices()"></div>
+        <select style="padding:10px 14px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;background:white;" id="svcTypeF" onchange="renderServices()">
+          <option value="all">Tất cả dịch vụ</option>
+          <option value="fumigation">Khử trùng</option>
+          <option value="inspection">Giám định</option>
+          <option value="cfc">CFC</option>
+          <option value="vcc">VCC</option>
+          <option value="transport">Vận tải/Forwarder</option>
+          <option value="customs">Hải quan</option>
+          <option value="other">Khác</option>
+        </select>
+        <select style="padding:10px 14px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;background:white;" id="svcSrcF" onchange="renderServices()">
+          <option value="all">TTD + Tham khảo</option>
+          <option value="ttd">TTD đang dùng</option>
+          <option value="ref">Tham khảo</option>
+        </select>
+        <button class="btn" onclick="openCompare()">⚖️ So sánh giá</button>
+        <button class="btn btn-primary" onclick="openServiceModal()">+ Thêm HĐ dịch vụ</button>
+        <button class="btn" onclick="loadServices()">🔄</button>
+      </div>
+      <div class="card-grid" id="serviceGrid"></div>
+    </div>
+    <div id="serviceDetail" class="hidden">
+      <button class="back-btn" onclick="backToServices()">← Danh sách HĐ dịch vụ</button>
+      <div id="serviceDetailContent"></div>
     </div>
   </div>
 </div>
@@ -260,6 +293,54 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   </div>
 </div>
 
+<!-- MODAL: Service Contract -->
+<div class="modal-backdrop hidden" id="serviceModal">
+  <div class="modal">
+    <h2 id="serviceModalTitle">Thêm HĐ dịch vụ</h2>
+    <input type="hidden" id="svEditId">
+    <div class="form-row">
+      <div class="form-group"><label>Nhà cung cấp *</label><input type="text" id="svVendor" placeholder="VD: Vinacontrol / SGS / Cty Khử trùng VN"></div>
+      <div class="form-group"><label>Loại dịch vụ</label>
+        <select id="svType"><option value="fumigation">Khử trùng</option><option value="inspection">Giám định</option><option value="cfc">CFC</option><option value="vcc">VCC</option><option value="transport">Vận tải/Forwarder</option><option value="customs">Hải quan</option><option value="other">Khác</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Nguồn</label>
+        <select id="svSource"><option value="ttd">TTD đang dùng</option><option value="ref">Tham khảo (bên khác)</option></select>
+      </div>
+      <div class="form-group"><label>Trạng thái</label>
+        <select id="svStatus"><option value="active">Đang hiệu lực</option><option value="expired">Hết hạn</option><option value="draft">Nháp</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Đơn giá</label><input type="number" step="0.01" id="svPrice" placeholder="VD: 25"></div>
+      <div class="form-group"><label>Đơn vị</label><input type="text" id="svUnit" list="svUnitList" placeholder="USD/cont, VNĐ/tấn, /lô, %"><datalist id="svUnitList"><option>USD/cont</option><option>USD/tấn</option><option>VNĐ/tấn</option><option>VNĐ/cont</option><option>VNĐ/lô</option><option>%</option></datalist></div>
+    </div>
+    <div class="form-group"><label>Phạm vi áp dụng</label><input type="text" id="svScope" placeholder="VD: tuyến/cảng/mặt hàng áp dụng"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Hiệu lực từ</label><input type="date" id="svFrom"></div>
+      <div class="form-group"><label>Đến</label><input type="date" id="svTo"></div>
+    </div>
+    <div class="form-group"><label>Ghi chú</label><textarea id="svNotes" rows="2" placeholder="Điều khoản chính, liên hệ..."></textarea></div>
+    <div id="svError" style="color:#c0392b;font-size:13px;display:none;"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('serviceModal')">Hủy</button>
+      <button class="btn btn-primary" onclick="saveService()" id="svSaveBtn">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: So sánh giá -->
+<div class="modal-backdrop hidden" id="compareModal">
+  <div class="modal" style="max-width:720px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h2 style="margin:0;">⚖️ So sánh giá dịch vụ</h2>
+      <button class="btn" onclick="closeModal('compareModal')">✕</button>
+    </div>
+    <div id="compareContent" style="margin-top:12px;"></div>
+  </div>
+</div>
+
 <!-- PREVIEW -->
 <div class="preview-backdrop hidden" id="previewBackdrop">
   <button class="preview-close" onclick="closePreview()">✕</button>
@@ -297,6 +378,10 @@ let currentUser=null, activeTab='reports';
 let allReports=[], currentReport=null;
 let allBuyers=[], currentBuyer=null;
 let allCountries=[], currentCountry=null;
+let allServices=[], currentService=null;
+const SVC_TYPES={fumigation:'Khử trùng',inspection:'Giám định',cfc:'CFC',vcc:'VCC',transport:'Vận tải/Forwarder',customs:'Hải quan',other:'Khác'};
+const SVC_SRC={ttd:'TTD đang dùng',ref:'Tham khảo'};
+const SVC_ST={active:'Đang hiệu lực',expired:'Hết hạn',draft:'Nháp'};
 let uploadTarget=null; // {kind:'report'|'buyer'|'country', id}
 let viewMode='list'; // 'card' | 'list' — mặc định danh sách
 function lastDoc(arr){arr=arr||[];let t=0;arr.forEach(d=>{if(d&&d.time&&d.time>t)t=d.time;});return t?fmtDate(t):'—';}
@@ -336,16 +421,18 @@ function showMainApp(){
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('mainApp').classList.remove('hidden');
   document.getElementById('userBadge').textContent=`${currentUser.name} · ${isAdmin()?'👑 Admin':DEPTS[currentUser.role]||currentUser.role}`;
-  loadReports();loadBuyers();loadCountries();
+  loadReports();loadBuyers();loadCountries();loadServices();
 }
 function switchTab(t){
   activeTab=t;
   document.getElementById('tab-reports').classList.toggle('active',t==='reports');
   document.getElementById('tab-buyers').classList.toggle('active',t==='buyers');
   document.getElementById('tab-countries').classList.toggle('active',t==='countries');
+  document.getElementById('tab-services').classList.toggle('active',t==='services');
   document.getElementById('paneReports').classList.toggle('hidden',t!=='reports');
   document.getElementById('paneBuyers').classList.toggle('hidden',t!=='buyers');
   document.getElementById('paneCountries').classList.toggle('hidden',t!=='countries');
+  document.getElementById('paneServices').classList.toggle('hidden',t!=='services');
 }
 
 // ===== FILE UPLOAD (chung) =====
@@ -354,6 +441,7 @@ document.getElementById('fileInput').addEventListener('change',e=>{handleFiles(e
 function kindCfg(kind){
   if(kind==='report')return{obj:currentReport,table:'coffee_reports',key:'attachments',nameField:'title',render:renderReportDetail};
   if(kind==='country')return{obj:currentCountry,table:'country_profiles',key:'documents',nameField:'name',render:renderCountryDetail};
+  if(kind==='service')return{obj:currentService,table:'service_contracts',key:'documents',nameField:'vendor',render:renderServiceDetail};
   return{obj:currentBuyer,table:'buyer_profiles',key:'documents',nameField:'name',render:renderBuyerDetail};
 }
 async function handleFiles(files){
@@ -711,6 +799,135 @@ async function deleteCountry(id){
     for(const d of (c.documents||[]))if(d.fileId)await driveDelete(d.fileId);
     await sb.from('country_profiles').delete().eq('id',id);backToCountries();await loadCountries();
   }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
+}
+
+// ===== SERVICE CONTRACTS =====
+function fmtPrice(p,u){if(p===null||p===undefined||p==='')return'—';const n=Number(p);const s=isNaN(n)?p:n.toLocaleString('vi-VN');return s+(u?(' '+u):'');}
+function daysLeft(to){if(!to)return null;const d=Math.ceil((new Date(to).getTime()-Date.now())/86400000);return d;}
+function svcExpiry(c){const dl=daysLeft(c.valid_to);if(dl===null)return'';if(dl<0)return`<span class="pill" style="background:#fee2e2;color:#b91c1c;">Hết hạn</span>`;if(dl<=30)return`<span class="pill" style="background:#fef3c7;color:#92400e;">Còn ${dl} ngày</span>`;return`<span class="pill" style="background:#dcfce7;color:#166534;">Còn hiệu lực</span>`;}
+function srcPill(s){return s==='ref'?`<span class="pill" style="background:#ede9fe;color:#6d28d9;">Tham khảo</span>`:`<span class="pill" style="background:#dbeafe;color:#1e40af;">TTD</span>`;}
+
+async function loadServices(){
+  try{const{data,error}=await sb.from('service_contracts').select('*').order('svc_type').order('price');if(error)throw error;allServices=data||[];renderServices();}
+  catch(e){document.getElementById('serviceGrid').innerHTML=`<div class="empty-state"><p>Lỗi: ${e.message}</p></div>`;}
+}
+function svcFilter(){
+  const s=(document.getElementById('svcSearch').value||'').toLowerCase();
+  const tf=document.getElementById('svcTypeF').value, sf=document.getElementById('svcSrcF').value;
+  return allServices.filter(c=>(tf==='all'||c.svc_type===tf)&&(sf==='all'||c.source===sf)&&(!s||[c.vendor,c.scope,c.price_unit].some(v=>(v||'').toLowerCase().includes(s))));
+}
+function renderServices(){
+  const g=document.getElementById('serviceGrid');const list=svcFilter();
+  g.style.display=viewMode==='list'?'block':'';
+  if(!list.length){g.innerHTML='<div class="empty-state"><div class="ico">🛠️</div><p>Chưa có hợp đồng dịch vụ</p></div>';return;}
+  if(viewMode==='list'){
+    g.innerHTML=`<table class="th-table"><thead><tr><th>Nhà cung cấp</th><th>Dịch vụ</th><th>Nguồn</th><th class="num">Đơn giá</th><th>Hiệu lực đến</th><th>Tình trạng</th><th>Ngày upload TL</th><th>📎</th></tr></thead><tbody>${list.map(c=>`
+      <tr onclick="openService('${c.id}')"><td style="font-weight:600;">${esc(c.vendor)}</td><td><span class="cat-pill">${SVC_TYPES[c.svc_type]||c.svc_type}</span></td><td>${srcPill(c.source)}</td><td class="num" style="font-weight:600;">${esc(fmtPrice(c.price,c.price_unit))}</td><td>${fmtDate(c.valid_to)||'—'}</td><td>${svcExpiry(c)}</td><td>${lastDoc(c.documents)}</td><td>${(c.documents||[]).length||''}</td></tr>`).join('')}</tbody></table>`;
+    return;
+  }
+  g.innerHTML=list.map(c=>`
+    <div class="item-card" onclick="openService('${c.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">
+        <span class="cat-pill">${SVC_TYPES[c.svc_type]||c.svc_type}</span>${srcPill(c.source)}
+      </div>
+      <div style="font-size:16px;font-weight:700;color:#333;">${esc(c.vendor)}</div>
+      <div style="font-size:15px;font-weight:700;color:#0f766e;margin-top:4px;">${esc(fmtPrice(c.price,c.price_unit))}</div>
+      ${c.scope?`<div style="font-size:12px;color:#888;margin-top:4px;">${esc(c.scope)}</div>`:''}
+      <div style="margin-top:8px;">${svcExpiry(c)}</div>
+    </div>`).join('');
+}
+function openService(id){currentService=allServices.find(c=>c.id===id);if(!currentService)return;document.getElementById('servicesList').classList.add('hidden');document.getElementById('serviceDetail').classList.remove('hidden');renderServiceDetail();}
+function backToServices(){document.getElementById('serviceDetail').classList.add('hidden');document.getElementById('servicesList').classList.remove('hidden');currentService=null;}
+function renderServiceDetail(){
+  const c=currentService;
+  const docs=(c.documents||[]).map((d,i)=>docRow(d,'service',i)).join('')||'<span style="color:#aaa;font-size:13px;">Chưa có tài liệu</span>';
+  document.getElementById('serviceDetailContent').innerHTML=`
+    <div class="detail-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+        <div>
+          <div style="font-size:24px;font-weight:700;">${esc(c.vendor)}</div>
+          <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><span class="cat-pill">${SVC_TYPES[c.svc_type]||c.svc_type}</span>${srcPill(c.source)}${svcExpiry(c)}</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn" onclick="openServiceModal('${c.id}')">✏️ Sửa</button>
+          ${isAdmin()?`<button class="btn btn-danger" onclick="deleteService('${c.id}')">🗑️ Xóa</button>`:''}
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">
+        <div><div style="font-size:11px;color:#999;">Đơn giá</div><div style="font-size:18px;font-weight:700;color:#0f766e;">${esc(fmtPrice(c.price,c.price_unit))}</div></div>
+        <div><div style="font-size:11px;color:#999;">Trạng thái</div><div>${SVC_ST[c.status]||c.status||'—'}</div></div>
+        <div><div style="font-size:11px;color:#999;">Hiệu lực</div><div>${fmtDate(c.valid_from)||'—'} → ${fmtDate(c.valid_to)||'—'}</div></div>
+        <div><div style="font-size:11px;color:#999;">Phạm vi</div><div>${esc(c.scope||'—')}</div></div>
+      </div>
+      ${c.notes?`<div style="margin-top:12px;padding:12px 14px;background:#f0fdfa;border-left:3px solid #0f766e;border-radius:6px;font-size:13px;white-space:pre-wrap;">${esc(c.notes)}</div>`:''}
+    </div>
+    <div class="detail-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:600;color:#0f766e;text-transform:uppercase;letter-spacing:.5px;">📎 Hợp đồng / báo giá đính kèm</div>
+        <button class="btn-mini" onclick="triggerUpload('service','${c.id}')">+ Tải tài liệu lên</button>
+      </div>
+      <div class="drop-zone" id="svcDrop" onclick="triggerUpload('service','${c.id}')">
+        <div style="font-size:28px;">📤</div>
+        <div style="font-size:13px;color:#0f766e;font-weight:600;margin-top:4px;">Bấm hoặc kéo tài liệu vào đây</div>
+        <div style="font-size:11px;color:#999;margin-top:2px;">PDF, ảnh, Word, Excel · tối đa 20MB</div>
+      </div>
+      <div class="doc-list" style="margin-top:12px;">${docs}</div>
+    </div>`;
+  const drop=document.getElementById('svcDrop');
+  if(drop){drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag');});drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');uploadTarget={kind:'service',id:c.id};handleFiles(e.dataTransfer.files);});}
+}
+function openServiceModal(id){
+  document.getElementById('svError').style.display='none';
+  if(id){const c=allServices.find(x=>x.id===id);document.getElementById('serviceModalTitle').textContent='Sửa HĐ dịch vụ';document.getElementById('svEditId').value=id;
+    document.getElementById('svVendor').value=c.vendor||'';document.getElementById('svType').value=c.svc_type||'other';document.getElementById('svSource').value=c.source||'ttd';
+    document.getElementById('svStatus').value=c.status||'active';document.getElementById('svPrice').value=(c.price??'');document.getElementById('svUnit').value=c.price_unit||'';
+    document.getElementById('svScope').value=c.scope||'';document.getElementById('svFrom').value=c.valid_from||'';document.getElementById('svTo').value=c.valid_to||'';
+    document.getElementById('svNotes').value=c.notes||'';document.getElementById('svSaveBtn').textContent='Cập nhật';
+  }else{document.getElementById('serviceModalTitle').textContent='Thêm HĐ dịch vụ';document.getElementById('svEditId').value='';
+    ['svVendor','svPrice','svUnit','svScope','svFrom','svTo','svNotes'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('svType').value='fumigation';document.getElementById('svSource').value='ttd';document.getElementById('svStatus').value='active';document.getElementById('svSaveBtn').textContent='Lưu';}
+  document.getElementById('serviceModal').classList.remove('hidden');
+}
+async function saveService(){
+  const err=document.getElementById('svError');err.style.display='none';
+  const vendor=document.getElementById('svVendor').value.trim();
+  if(!vendor){err.textContent='Vui lòng nhập nhà cung cấp';err.style.display='block';return;}
+  const pv=document.getElementById('svPrice').value;
+  const payload={vendor,svc_type:document.getElementById('svType').value,source:document.getElementById('svSource').value,status:document.getElementById('svStatus').value,
+    price:pv===''?null:Number(pv),price_unit:document.getElementById('svUnit').value.trim()||null,scope:document.getElementById('svScope').value.trim()||null,
+    valid_from:document.getElementById('svFrom').value||null,valid_to:document.getElementById('svTo').value||null,notes:document.getElementById('svNotes').value.trim()||null,
+    updated_by:currentUser.name,updated_at:new Date().toISOString()};
+  const id=document.getElementById('svEditId').value;const btn=document.getElementById('svSaveBtn');btn.disabled=true;showLoading('Đang lưu...');
+  try{
+    if(id){await sb.from('service_contracts').update(payload).eq('id',id);}
+    else{payload.id='svc_'+Date.now()+'_'+Math.floor(Math.random()*9999);payload.created_by=currentUser.name;payload.created_at=new Date().toISOString();payload.documents=[];await sb.from('service_contracts').insert(payload);}
+    closeModal('serviceModal');await loadServices();
+    if(id){currentService=allServices.find(x=>x.id===id);if(!document.getElementById('serviceDetail').classList.contains('hidden'))renderServiceDetail();}
+  }catch(e){err.textContent='Lỗi: '+e.message;err.style.display='block';}finally{btn.disabled=false;hideLoading();}
+}
+async function deleteService(id){
+  if(!isAdmin()){alert('Chỉ Admin được xóa');return;}
+  const c=allServices.find(x=>x.id===id);if(!confirm(`Xóa HĐ dịch vụ của "${c?.vendor}"?`))return;
+  showLoading('Đang xóa...');
+  try{for(const d of (c.documents||[]))if(d.fileId)await driveDelete(d.fileId);
+    await sb.from('service_contracts').delete().eq('id',id);backToServices();await loadServices();
+  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
+}
+// So sánh giá theo từng loại dịch vụ (rẻ nhất tô xanh)
+function openCompare(){
+  const types=Object.keys(SVC_TYPES);
+  let html='';
+  types.forEach(t=>{
+    const rows=allServices.filter(c=>c.svc_type===t&&c.price!=null).sort((a,b)=>Number(a.price)-Number(b.price));
+    if(!rows.length)return;
+    const min=Number(rows[0].price);
+    html+=`<div style="margin-bottom:16px;"><div style="font-weight:700;margin-bottom:6px;">${SVC_TYPES[t]}</div>
+      <table class="th-table"><thead><tr><th>Nhà cung cấp</th><th>Nguồn</th><th class="num">Đơn giá</th><th>Phạm vi</th></tr></thead><tbody>${rows.map(c=>{
+        const cheapest=Number(c.price)===min;
+        return`<tr style="${cheapest?'background:#dcfce7;':''}"><td style="font-weight:600;">${esc(c.vendor)}${cheapest?' 🏆':''}</td><td>${srcPill(c.source)}</td><td class="num" style="font-weight:700;${cheapest?'color:#166534;':''}">${esc(fmtPrice(c.price,c.price_unit))}</td><td style="color:#888;">${esc(c.scope||'—')}</td></tr>`;}).join('')}</tbody></table></div>`;
+  });
+  document.getElementById('compareContent').innerHTML=html||'<div class="muted" style="color:#999;">Chưa có dữ liệu giá để so sánh. Thêm HĐ dịch vụ kèm đơn giá trước.</div>';
+  document.getElementById('compareModal').classList.remove('hidden');
 }
 
 // ===== INIT =====
