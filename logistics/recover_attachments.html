@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Khôi phục đính kèm Logistics</title>
+<style>
+  :root{--bg:#f4f5f7;--fg:#1f2937;--mut:#6b7280;--line:#e5e7eb;--pri:#4f46e5;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif;padding:24px;}
+  .wrap{max-width:860px;margin:0 auto;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:16px;}
+  h1{font-size:20px;margin:0 0 4px;}
+  .mut{color:var(--mut);font-size:13px;}
+  button{background:var(--pri);color:#fff;border:0;border-radius:8px;padding:11px 18px;font-size:15px;font-weight:600;cursor:pointer;}
+  button:disabled{opacity:.5;cursor:not-allowed;}
+  .btn2{background:#fff;color:var(--pri);border:1px solid var(--pri);}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{color:var(--mut);font-weight:600;}
+  .ok{color:#15803d;}.warn{color:#b45309;}.err{color:#b91c1c;}
+  #log{white-space:pre-wrap;font:12px/1.5 ui-monospace,Consolas,monospace;background:#0b1020;color:#d1d5db;border-radius:8px;padding:12px;max-height:280px;overflow:auto;margin-top:12px;}
+  .pill{display:inline-block;background:#eef2ff;color:#4338ca;border-radius:20px;padding:1px 9px;font-size:12px;font-weight:600;}
+</style></head>
+<body><div class="wrap">
+  <div class="card">
+    <h1>🔄 Khôi phục đính kèm Logistics từ Google Drive</h1>
+    <p class="mut">Công cụ 1 lần: quét folder "TTD Logistics" trên Drive, gắn lại link file vào đúng lô (khớp theo mã lô). Không tải lại/không xóa file nào trên Drive — chỉ cập nhật cột <code>attachments</code> trong database.</p>
+    <p class="mut">Yêu cầu: đã dán lại <b>apps_script_logistics.gs</b> (có action <code>scan</code>) và <b>triển khai phiên bản mới</b>.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+      <button id="btnScan">1 · Quét thử (xem trước)</button>
+      <button id="btnApply" class="btn2" disabled>2 · Khôi phục vào hệ thống</button>
+    </div>
+    <div class="mut" id="status" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="card" id="previewCard" style="display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+      <b>Khớp dự kiến</b>
+      <span class="mut"><span class="pill" id="sumMatched">0</span> lô khớp · <span class="pill" id="sumFiles">0</span> file · <span class="pill" id="sumUnmatched">0</span> folder không khớp</span>
+    </div>
+    <div style="overflow:auto;"><table id="tbl"><thead><tr><th>Folder trên Drive</th><th>Mã lô</th><th>→ Lô (id)</th><th>Số file</th><th>Trạng thái</th></tr></thead><tbody></tbody></table></div>
+  </div>
+
+  <div class="card"><b>Nhật ký</b><div id="log"></div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://fyjinbtabsentsvnkqzg.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5amluYnRhYnNlbnRzdm5rcXpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MTAxNTUsImV4cCI6MjA5NDI4NjE1NX0.m1H8bOT7gUXJxPoQT6bDqtRUjo4nCSxb4A1rth7Eols';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbyMr_B-sJ8r6mpGFIOphsTOxxh-oHADNNRNRrac54HDIltWHC0i1LRddVRFH_t-LRFmAw/exec';
+const UPLOAD_SECRET='ttd_th_2026';
+const DOC_KEYS=['invoice','pl','bl','co','phyto','ico','fumi','weight','quality','customs']; // số 1..10
+
+let PLAN=null; // kết quả khớp để áp dụng
+
+function log(m,cls){const el=document.getElementById('log');el.innerHTML+=(cls?`<span class="${cls}">${m}</span>`:m)+'\n';el.scrollTop=el.scrollHeight;}
+function setStatus(m){document.getElementById('status').textContent=m;}
+
+// Tách "MÃ LÔ - id" -> {lot, oldId}
+function parseFolder(name){
+  const i=name.lastIndexOf(' - ');
+  if(i<0) return {lot:name.trim(), oldId:''};
+  return {lot:name.slice(0,i).trim(), oldId:name.slice(i+3).trim()};
+}
+// suy ra doc key từ số đứng đầu tên file (1..10)
+function docKeyFromName(name){
+  const m=String(name||'').match(/^\s*0*(\d+)/);
+  if(!m) return null;
+  const n=parseInt(m[1],10);
+  return (n>=1&&n<=DOC_KEYS.length)?DOC_KEYS[n-1]:null;
+}
+function attItem(f){
+  return {title:f.name,url:f.url,previewUrl:f.previewUrl,fileId:f.fileId,mime:'',size:f.size||0,
+          user:'(khôi phục từ Drive)',time:Date.now(),doc:docKeyFromName(f.name)};
+}
+
+async function scanDrive(){
+  const res=await fetch(APPS_SCRIPT_URL,{method:'POST',body:JSON.stringify({secret:UPLOAD_SECRET,action:'scan'})});
+  const j=await res.json();
+  if(!j.ok) throw new Error(j.error||'scan lỗi');
+  return (j.folders||[]).filter(f=>f.files&&f.files.length);
+}
+
+async function buildPlan(){
+  log('Đang lấy danh sách lô từ database...');
+  const {data:rows,error}=await sb.from('logistics_shipments').select('id,lot_code,attachments,doc_status');
+  if(error) throw error;
+  log('  → '+rows.length+' lô trong hệ thống.');
+  log('Đang quét Drive...');
+  const folders=await scanDrive();
+  log('  → '+folders.length+' thư mục có file trên Drive.');
+
+  // index rows theo id và theo lot_code
+  const byId={}; const byLot={};
+  rows.forEach(r=>{byId[r.id]=r;(byLot[(r.lot_code||'').trim()]=byLot[(r.lot_code||'').trim()]||[]).push(r);});
+  const used=new Set();
+  const plan=[]; // {folder, lot, files, row, status}
+
+  // chuẩn hoá: mỗi folder 1 bản ghi
+  const parsed=folders.map(f=>({raw:f, ...parseFolder(f.folder)}));
+
+  // Pass 1: khớp theo oldId === id hiện tại
+  parsed.forEach(p=>{
+    if(p.oldId && byId[p.oldId] && !used.has(p.oldId)){
+      used.add(p.oldId); p.row=byId[p.oldId]; p.status='id';
+    }
+  });
+  // Pass 2: khớp theo mã lô (lô chưa dùng)
+  parsed.forEach(p=>{
+    if(p.row) return;
+    const cands=(byLot[p.lot]||[]).filter(r=>!used.has(r.id));
+    if(cands.length){ used.add(cands[0].id); p.row=cands[0]; p.status='lot'; }
+  });
+  // Pass 3: cùng mã lô nhưng mọi lô đã dùng -> gộp vào lô đầu tiên
+  parsed.forEach(p=>{
+    if(p.row) return;
+    const cands=byLot[p.lot]||[];
+    if(cands.length){ p.row=cands[0]; p.status='merge'; }
+    else { p.status='none'; }
+  });
+
+  parsed.forEach(p=>plan.push(p));
+  return {rows,plan};
+}
+
+function renderPlan(plan){
+  const tb=document.querySelector('#tbl tbody');tb.innerHTML='';
+  let matched=0,files=0,unmatched=0;
+  plan.forEach(p=>{
+    const nf=p.raw.files.length; files+=nf;
+    let st,cls;
+    if(p.status==='id'){st='khớp theo id';cls='ok';matched++;}
+    else if(p.status==='lot'){st='khớp theo mã lô';cls='ok';matched++;}
+    else if(p.status==='merge'){st='gộp (mã lô trùng)';cls='warn';matched++;}
+    else {st='KHÔNG tìm thấy lô';cls='err';unmatched++;}
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${p.raw.folder}</td><td>${p.lot||'—'}</td><td>${p.row?p.row.id:'—'}</td><td>${nf}</td><td class="${cls}">${st}</td>`;
+    tb.appendChild(tr);
+  });
+  document.getElementById('sumMatched').textContent=matched;
+  document.getElementById('sumFiles').textContent=files;
+  document.getElementById('sumUnmatched').textContent=unmatched;
+  document.getElementById('previewCard').style.display='';
+}
+
+async function applyPlan(plan){
+  // gộp file theo row.id (nhiều folder có thể trỏ cùng 1 lô)
+  const perRow={}; // id -> {row, files:[]}
+  plan.forEach(p=>{ if(!p.row) return; const e=perRow[p.row.id]=perRow[p.row.id]||{row:p.row,files:[]}; e.files.push(...p.raw.files); });
+  const ids=Object.keys(perRow);
+  log('Bắt đầu khôi phục cho '+ids.length+' lô...');
+  let done=0,errs=0;
+  for(const id of ids){
+    const {row,files}=perRow[id];
+    // không ghi đè file đã có (so theo fileId)
+    const existing=Array.isArray(row.attachments)?row.attachments:[];
+    const haveIds=new Set(existing.map(a=>a&&a.fileId).filter(Boolean));
+    const add=files.filter(f=>!haveIds.has(f.fileId)).map(attItem);
+    const merged=existing.concat(add);
+    // dựng lại doc_status cho các mục chứng từ nhận ra được
+    const ds=Object.assign({},row.doc_status||{});
+    merged.forEach(a=>{ if(a.doc && DOC_KEYS.includes(a.doc)) ds[a.doc]=true; });
+    try{
+      const {error}=await sb.from('logistics_shipments').update({attachments:merged,doc_status:ds}).eq('id',id);
+      if(error) throw error;
+      done++; log('  ✔ '+row.lot_code+' ('+id+'): +'+add.length+' file','ok');
+    }catch(e){ errs++; log('  ✘ '+id+': '+e.message,'err'); }
+  }
+  setStatus('Xong: '+done+' lô khôi phục, '+errs+' lỗi.');
+  log('HOÀN TẤT. Mở lại module Logistics và kiểm tra.', errs?'warn':'ok');
+}
+
+document.getElementById('btnScan').onclick=async()=>{
+  const b=document.getElementById('btnScan');b.disabled=true;setStatus('Đang quét...');
+  try{
+    const {plan}=await buildPlan();
+    PLAN=plan; renderPlan(plan);
+    document.getElementById('btnApply').disabled=false;
+    setStatus('Quét xong. Kiểm tra bảng khớp rồi bấm bước 2 để khôi phục.');
+  }catch(e){ log('LỖI quét: '+e.message,'err'); setStatus('Lỗi: '+e.message+' (kiểm tra đã triển khai bản mới của Apps Script chưa).'); }
+  finally{ b.disabled=false; }
+};
+document.getElementById('btnApply').onclick=async()=>{
+  if(!PLAN){return;}
+  if(!confirm('Khôi phục link đính kèm vào hệ thống cho các lô đã khớp?')) return;
+  const b=document.getElementById('btnApply');b.disabled=true;setStatus('Đang khôi phục...');
+  try{ await applyPlan(PLAN); }catch(e){ log('LỖI: '+e.message,'err'); }
+  finally{ b.disabled=false; }
+};
+</script>
+</body></html>
