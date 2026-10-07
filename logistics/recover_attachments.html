@@ -157,6 +157,8 @@ async function applyPlan(plan){
     const {row,files}=perRow[id];
     // không ghi đè file đã có (so theo fileId)
     const existing=Array.isArray(row.attachments)?row.attachments:[];
+    // phân loại lại file đã khôi phục trước đó: nếu doc còn trống thì suy ra (.zip -> _zip, số -> ô chứng từ)
+    existing.forEach(a=>{ if(a && !a.doc){ const dk=docKeyFromName(a.title); if(dk) a.doc=dk; } });
     const haveIds=new Set(existing.map(a=>a&&a.fileId).filter(Boolean));
     const add=files.filter(f=>!haveIds.has(f.fileId)).map(attItem);
     const merged=existing.concat(add);
