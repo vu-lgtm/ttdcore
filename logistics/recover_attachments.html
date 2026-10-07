@@ -65,7 +65,9 @@ function parseFolder(name){
 }
 // suy ra doc key từ số đứng đầu tên file (1..10)
 function docKeyFromName(name){
-  const m=String(name||'').match(/^\s*0*(\d+)/);
+  const nm=String(name||'');
+  if(/\.zip$/i.test(nm)) return '_zip';            // file .zip -> mục "Bộ tài liệu nén"
+  const m=nm.match(/^\s*0*(\d+)/);
   if(!m) return null;
   const n=parseInt(m[1],10);
   return (n>=1&&n<=DOC_KEYS.length)?DOC_KEYS[n-1]:null;
