@@ -122,6 +122,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <button class="tab" id="tab-buyers" onclick="switchTab('buyers')">🧑‍💼 Buyer Profile</button>
     <button class="tab" id="tab-countries" onclick="switchTab('countries')">🌍 Country Profile</button>
     <button class="tab" id="tab-services" onclick="switchTab('services')">🛠️ Hợp đồng dịch vụ</button>
+    <button class="tab" id="tab-quality" onclick="switchTab('quality')">✅ Quality</button>
   </div>
 
   <!-- ===== COFFEE REPORTS ===== -->
@@ -219,6 +220,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div id="serviceDetail" class="hidden">
       <button class="back-btn" onclick="backToServices()">← Danh sách HĐ dịch vụ</button>
       <div id="serviceDetailContent"></div>
+    </div>
+  </div>
+
+  <!-- ===== QUALITY STANDARDS ===== -->
+  <div id="paneQuality" class="hidden">
+    <div id="qualityList">
+      <div class="toolbar">
+        <div class="search-box"><input type="text" id="qSearch" placeholder="Tìm công ty, sản phẩm..." oninput="renderQuality()"></div>
+        <div class="view-toggle"><button class="vt-card" onclick="setView('card')" title="Dạng thẻ">⊞</button><button class="vt-list active" onclick="setView('list')" title="Dạng danh sách">☰</button></div>
+        <button class="btn btn-primary" onclick="openQualityModal()">+ Thêm chuẩn chất lượng</button>
+        <button class="btn" onclick="loadQuality()">🔄</button>
+      </div>
+      <div class="card-grid" id="qualityGrid"></div>
+    </div>
+    <div id="qualityDetail" class="hidden">
+      <button class="back-btn" onclick="backToQuality()">← Danh sách chuẩn chất lượng</button>
+      <div id="qualityDetailContent"></div>
     </div>
   </div>
 </div>
@@ -330,6 +348,33 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   </div>
 </div>
 
+<!-- MODAL: Quality standard -->
+<div class="modal-backdrop hidden" id="qualityModal">
+  <div class="modal">
+    <h2 id="qualityModalTitle">Thêm chuẩn chất lượng</h2>
+    <input type="hidden" id="qEditId">
+    <div class="form-row">
+      <div class="form-group"><label>Tên công ty *</label><input type="text" id="qCompany" placeholder="VD: STRAUSS / ICONA / CAPICONIC"></div>
+      <div class="form-group"><label>Sản phẩm</label><input type="text" id="qProduct" placeholder="VD: Robusta G1 / Arabica"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Độ ẩm</label><input type="text" id="qMoisture" placeholder="VD: max 12.5%"></div>
+      <div class="form-group"><label>Đen & vỡ</label><input type="text" id="qBlack" placeholder="VD: max 0.5%"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Tạp chất</label><input type="text" id="qForeign" placeholder="VD: max 0.1%"></div>
+      <div class="form-group"><label>Cỡ sàng</label><input type="text" id="qScreen" placeholder="VD: S16 / S18"></div>
+    </div>
+    <div class="form-group"><label>Lỗi / tiêu chí khác</label><input type="text" id="qDefects" placeholder="VD: defects max 5/300g..."></div>
+    <div class="form-group"><label>Ghi chú</label><textarea id="qNotes" rows="2" placeholder="Yêu cầu riêng, cách lấy mẫu, dung sai..."></textarea></div>
+    <div id="qError" style="color:#c0392b;font-size:13px;display:none;"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('qualityModal')">Hủy</button>
+      <button class="btn btn-primary" onclick="saveQuality()" id="qSaveBtn">Lưu</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: So sánh giá -->
 <div class="modal-backdrop hidden" id="compareModal">
   <div class="modal" style="max-width:720px;">
@@ -379,6 +424,7 @@ let allReports=[], currentReport=null;
 let allBuyers=[], currentBuyer=null;
 let allCountries=[], currentCountry=null;
 let allServices=[], currentService=null;
+let allQuality=[], currentQuality=null;
 const SVC_TYPES={fumigation:'Khử trùng',inspection:'Giám định',cfc:'CFC',vcc:'VCC',transport:'Vận tải/Forwarder',customs:'Hải quan',other:'Khác'};
 const SVC_SRC={ttd:'TTD đang dùng',ref:'Tham khảo'};
 const SVC_ST={active:'Đang hiệu lực',expired:'Hết hạn',draft:'Nháp'};
@@ -421,7 +467,7 @@ function showMainApp(){
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('mainApp').classList.remove('hidden');
   document.getElementById('userBadge').textContent=`${currentUser.name} · ${isAdmin()?'👑 Admin':DEPTS[currentUser.role]||currentUser.role}`;
-  loadReports();loadBuyers();loadCountries();loadServices();
+  loadReports();loadBuyers();loadCountries();loadServices();loadQuality();
 }
 function switchTab(t){
   activeTab=t;
@@ -429,10 +475,12 @@ function switchTab(t){
   document.getElementById('tab-buyers').classList.toggle('active',t==='buyers');
   document.getElementById('tab-countries').classList.toggle('active',t==='countries');
   document.getElementById('tab-services').classList.toggle('active',t==='services');
+  document.getElementById('tab-quality').classList.toggle('active',t==='quality');
   document.getElementById('paneReports').classList.toggle('hidden',t!=='reports');
   document.getElementById('paneBuyers').classList.toggle('hidden',t!=='buyers');
   document.getElementById('paneCountries').classList.toggle('hidden',t!=='countries');
   document.getElementById('paneServices').classList.toggle('hidden',t!=='services');
+  document.getElementById('paneQuality').classList.toggle('hidden',t!=='quality');
 }
 
 // ===== FILE UPLOAD (chung) =====
@@ -442,6 +490,7 @@ function kindCfg(kind){
   if(kind==='report')return{obj:currentReport,table:'coffee_reports',key:'attachments',nameField:'title',render:renderReportDetail};
   if(kind==='country')return{obj:currentCountry,table:'country_profiles',key:'documents',nameField:'name',render:renderCountryDetail};
   if(kind==='service')return{obj:currentService,table:'service_contracts',key:'documents',nameField:'vendor',render:renderServiceDetail};
+  if(kind==='quality')return{obj:currentQuality,table:'quality_standards',key:'documents',nameField:'company',render:renderQualityDetail};
   return{obj:currentBuyer,table:'buyer_profiles',key:'documents',nameField:'name',render:renderBuyerDetail};
 }
 async function handleFiles(files){
@@ -928,6 +977,101 @@ function openCompare(){
   });
   document.getElementById('compareContent').innerHTML=html||'<div class="muted" style="color:#999;">Chưa có dữ liệu giá để so sánh. Thêm HĐ dịch vụ kèm đơn giá trước.</div>';
   document.getElementById('compareModal').classList.remove('hidden');
+}
+
+// ===== QUALITY STANDARDS =====
+async function loadQuality(){
+  try{const{data,error}=await sb.from('quality_standards').select('*').order('company');if(error)throw error;allQuality=data||[];renderQuality();}
+  catch(e){document.getElementById('qualityGrid').innerHTML=`<div class="empty-state"><p>Lỗi: ${e.message}</p></div>`;}
+}
+function renderQuality(){
+  const g=document.getElementById('qualityGrid');
+  const s=(document.getElementById('qSearch').value||'').toLowerCase();
+  let list=allQuality.filter(c=>!s||[c.company,c.product].some(v=>(v||'').toLowerCase().includes(s)));
+  g.style.display=viewMode==='list'?'block':'';
+  if(!list.length){g.innerHTML='<div class="empty-state"><div class="ico">✅</div><p>Chưa có chuẩn chất lượng nào</p></div>';return;}
+  if(viewMode==='list'){
+    g.innerHTML=`<table class="th-table"><thead><tr><th>Công ty</th><th>Sản phẩm</th><th>Độ ẩm</th><th>Cỡ sàng</th><th>Ngày upload TL</th><th>📎</th></tr></thead><tbody>${list.map(c=>`
+      <tr onclick="openQuality('${c.id}')"><td style="font-weight:600;">${esc(c.company)}</td><td>${esc(c.product||'—')}</td><td>${esc(c.moisture||'—')}</td><td>${esc(c.screen_size||'—')}</td><td>${lastDoc(c.documents)}</td><td>${(c.documents||[]).length||''}</td></tr>`).join('')}</tbody></table>`;
+    return;
+  }
+  g.innerHTML=list.map(c=>`
+    <div class="item-card" onclick="openQuality('${c.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;"><span style="font-size:20px;">✅</span>${c.product?`<span class="cat-pill">${esc(c.product)}</span>`:''}</div>
+      <div style="font-size:16px;font-weight:700;color:#333;">${esc(c.company)}</div>
+      <div style="font-size:12px;color:#888;margin-top:6px;">${c.moisture?('Ẩm: '+esc(c.moisture)):''}${c.screen_size?(' · Sàng: '+esc(c.screen_size)):''}</div>
+      <div style="font-size:11px;color:#aaa;margin-top:10px;">${(c.documents||[]).length?`📎 ${(c.documents||[]).length} tài liệu`:'Chưa có tài liệu'}</div>
+    </div>`).join('');
+}
+function openQuality(id){currentQuality=allQuality.find(c=>c.id===id);if(!currentQuality)return;document.getElementById('qualityList').classList.add('hidden');document.getElementById('qualityDetail').classList.remove('hidden');renderQualityDetail();}
+function backToQuality(){document.getElementById('qualityDetail').classList.add('hidden');document.getElementById('qualityList').classList.remove('hidden');currentQuality=null;}
+function renderQualityDetail(){
+  const c=currentQuality;
+  const docs=(c.documents||[]).map((d,i)=>docRow(d,'quality',i)).join('')||'<span style="color:#aaa;font-size:13px;">Chưa có tài liệu</span>';
+  const spec=(lb,v)=>v?`<div><div style="font-size:11px;color:#999;">${lb}</div><div style="font-weight:600;">${esc(v)}</div></div>`:'';
+  document.getElementById('qualityDetailContent').innerHTML=`
+    <div class="detail-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+        <div><div style="font-size:24px;font-weight:700;">✅ ${esc(c.company)}</div>
+          ${c.product?`<div style="margin-top:6px;"><span class="cat-pill">${esc(c.product)}</span></div>`:''}</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn" onclick="openQualityModal('${c.id}')">✏️ Sửa</button>
+          ${isAdmin()?`<button class="btn btn-danger" onclick="deleteQuality('${c.id}')">🗑️ Xóa</button>`:''}
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;">
+        ${spec('Độ ẩm',c.moisture)}${spec('Đen & vỡ',c.black_broken)}${spec('Tạp chất',c.foreign_matter)}${spec('Cỡ sàng',c.screen_size)}${spec('Lỗi/khác',c.defects)}
+      </div>
+      ${c.notes?`<div style="margin-top:12px;padding:12px 14px;background:#f0fdfa;border-left:3px solid #0f766e;border-radius:6px;font-size:13px;white-space:pre-wrap;">${esc(c.notes)}</div>`:''}
+    </div>
+    <div class="detail-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:600;color:#0f766e;text-transform:uppercase;letter-spacing:.5px;">📎 File chuẩn chất lượng</div>
+        <button class="btn-mini" onclick="triggerUpload('quality','${c.id}')">+ Tải tài liệu lên</button>
+      </div>
+      <div class="drop-zone" id="qDrop" onclick="triggerUpload('quality','${c.id}')">
+        <div style="font-size:28px;">📤</div>
+        <div style="font-size:13px;color:#0f766e;font-weight:600;margin-top:4px;">Bấm hoặc kéo tài liệu vào đây</div>
+        <div style="font-size:11px;color:#999;margin-top:2px;">PDF, ảnh, Word, Excel · tối đa 20MB</div>
+      </div>
+      <div class="doc-list" style="margin-top:12px;">${docs}</div>
+    </div>`;
+  const drop=document.getElementById('qDrop');
+  if(drop){drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag');});drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');uploadTarget={kind:'quality',id:c.id};handleFiles(e.dataTransfer.files);});}
+}
+function openQualityModal(id){
+  document.getElementById('qError').style.display='none';
+  const f=['qCompany','qProduct','qMoisture','qBlack','qForeign','qScreen','qDefects','qNotes'];
+  if(id){const c=allQuality.find(x=>x.id===id);document.getElementById('qualityModalTitle').textContent='Sửa chuẩn chất lượng';document.getElementById('qEditId').value=id;
+    document.getElementById('qCompany').value=c.company||'';document.getElementById('qProduct').value=c.product||'';document.getElementById('qMoisture').value=c.moisture||'';
+    document.getElementById('qBlack').value=c.black_broken||'';document.getElementById('qForeign').value=c.foreign_matter||'';document.getElementById('qScreen').value=c.screen_size||'';
+    document.getElementById('qDefects').value=c.defects||'';document.getElementById('qNotes').value=c.notes||'';document.getElementById('qSaveBtn').textContent='Cập nhật';
+  }else{document.getElementById('qualityModalTitle').textContent='Thêm chuẩn chất lượng';document.getElementById('qEditId').value='';f.forEach(x=>document.getElementById(x).value='');document.getElementById('qSaveBtn').textContent='Lưu';}
+  document.getElementById('qualityModal').classList.remove('hidden');
+}
+async function saveQuality(){
+  const err=document.getElementById('qError');err.style.display='none';
+  const company=document.getElementById('qCompany').value.trim();
+  if(!company){err.textContent='Vui lòng nhập tên công ty';err.style.display='block';return;}
+  const payload={company,product:document.getElementById('qProduct').value.trim()||null,moisture:document.getElementById('qMoisture').value.trim()||null,
+    black_broken:document.getElementById('qBlack').value.trim()||null,foreign_matter:document.getElementById('qForeign').value.trim()||null,
+    screen_size:document.getElementById('qScreen').value.trim()||null,defects:document.getElementById('qDefects').value.trim()||null,
+    notes:document.getElementById('qNotes').value.trim()||null,updated_by:currentUser.name,updated_at:new Date().toISOString()};
+  const id=document.getElementById('qEditId').value;const btn=document.getElementById('qSaveBtn');btn.disabled=true;showLoading('Đang lưu...');
+  try{
+    if(id){await sb.from('quality_standards').update(payload).eq('id',id);}
+    else{payload.id='qty_'+Date.now()+'_'+Math.floor(Math.random()*9999);payload.created_by=currentUser.name;payload.created_at=new Date().toISOString();payload.documents=[];await sb.from('quality_standards').insert(payload);}
+    closeModal('qualityModal');await loadQuality();
+    if(id){currentQuality=allQuality.find(x=>x.id===id);if(!document.getElementById('qualityDetail').classList.contains('hidden'))renderQualityDetail();}
+  }catch(e){err.textContent='Lỗi: '+e.message;err.style.display='block';}finally{btn.disabled=false;hideLoading();}
+}
+async function deleteQuality(id){
+  if(!isAdmin()){alert('Chỉ Admin được xóa');return;}
+  const c=allQuality.find(x=>x.id===id);if(!confirm(`Xóa chuẩn chất lượng của "${c?.company}"?`))return;
+  showLoading('Đang xóa...');
+  try{for(const d of (c.documents||[]))if(d.fileId)await driveDelete(d.fileId);
+    await sb.from('quality_standards').delete().eq('id',id);backToQuality();await loadQuality();
+  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
 }
 
 // ===== INIT =====
