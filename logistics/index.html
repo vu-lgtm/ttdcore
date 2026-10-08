@@ -1,789 +1,120 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Logistics — TTDCore</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#ff7043 0%,#e64a19 100%);min-height:100vh;padding:20px;color:#333;}
-.container{max-width:1280px;margin:0 auto;background:white;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.1);padding:30px;}
-.hidden{display:none !important;}
-.login-box{max-width:480px;margin:40px auto;text-align:center;}
-.login-box h1{font-size:28px;margin-bottom:8px;}
-.login-box p{color:#666;margin-bottom:28px;font-size:14px;}
-.top-bar{display:flex;justify-content:space-between;align-items:center;padding-bottom:18px;border-bottom:1px solid #eee;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
-.top-bar h1{font-size:22px;}
-.top-bar p{color:#888;font-size:13px;margin-top:2px;}
-.user-info{display:flex;align-items:center;gap:12px;}
-.user-badge{background:linear-gradient(135deg,#ff7043,#e64a19);color:white;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;}
-.btn{padding:9px 18px;border:2px solid #e0e0e0;background:white;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500;transition:all 0.2s;color:#555;}
-.btn:hover{border-color:#ff7043;color:#ff7043;}
-.btn:disabled{opacity:0.5;cursor:not-allowed;}
-.btn-primary{background:linear-gradient(135deg,#ff7043,#e64a19);border-color:transparent;color:white;}
-.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(255,112,67,0.3);color:white;}
-.btn-danger{color:#c0392b;border-color:#f8d7da;}
-.btn-danger:hover{border-color:#c0392b;}
-.btn-mini{padding:4px 10px;font-size:11px;border:1px solid #e0e0e0;background:white;border-radius:5px;cursor:pointer;color:#ff7043;font-weight:500;}
-.btn-mini:hover{background:#ff7043;color:white;border-color:#ff7043;}
-.form-group{margin-bottom:14px;}
-.form-group label{display:block;font-size:13px;font-weight:500;color:#555;margin-bottom:6px;}
-.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;background:white;font-family:inherit;}
-.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#ff7043;}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:22px;}
-.stat-card{background:linear-gradient(135deg,#ff7043,#e64a19);padding:18px;border-radius:10px;color:white;}
-.stat-card.blue{background:linear-gradient(135deg,#1976d2,#1565c0);}
-.stat-card.green{background:linear-gradient(135deg,#43a047,#2e7d32);}
-.stat-card.purple{background:linear-gradient(135deg,#8e24aa,#6a1b9a);}
-.stat-label{font-size:12px;opacity:0.9;margin-bottom:6px;}
-.stat-value{font-size:26px;font-weight:700;}
-.toolbar{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
-.search-box{flex:1;min-width:200px;position:relative;}
-.search-box input{width:100%;padding:10px 14px 10px 38px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;}
-.search-box input:focus{outline:none;border-color:#ff7043;}
-.search-box::before{content:"🔍";position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;}
-.view-toggle{display:flex;border:2px solid #e0e0e0;border-radius:8px;overflow:hidden;}
-.view-toggle button{padding:8px 12px;border:none;background:white;cursor:pointer;font-size:15px;color:#888;}
-.view-toggle button.active{background:#ff7043;color:white;}
-.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
-.item-card{border:2px solid #eee;border-radius:10px;padding:16px;cursor:pointer;transition:all .18s;background:white;}
-.item-card:hover{border-color:#ff7043;transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,112,67,0.1);}
-.ship-table{width:100%;border-collapse:collapse;background:white;border:2px solid #eee;border-radius:10px;overflow:hidden;}
-.ship-table th{background:#fff3e0;padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:#e65100;border-bottom:2px solid #ffe0b2;white-space:nowrap;}
-.ship-table td{padding:11px 14px;border-bottom:1px solid #f0f0f0;font-size:13px;vertical-align:middle;}
-.ship-table tr:last-child td{border-bottom:none;}
-.ship-table tr:hover td{background:#fffaf5;cursor:pointer;}
-.status-pill{font-size:11px;padding:4px 10px;border-radius:12px;font-weight:600;white-space:nowrap;}
-.st-booking{background:#e3f2fd;color:#1565c0;}
-.st-loading{background:#fff3cd;color:#856404;}
-.st-customs{background:#f3e5f5;color:#6a1b9a;}
-.st-shipped{background:#e8f5e9;color:#2e7d32;}
-.st-done{background:#d4edda;color:#155724;}
-.type-badge{font-size:11px;padding:3px 8px;border-radius:4px;font-weight:600;}
-.type-robusta{background:#4e342e;color:white;}
-.type-arabica{background:#2e7d32;color:white;}
-.type-other{background:#5c6bc0;color:white;}
-.detail-card{background:#fafafa;border:1px solid #eee;border-radius:10px;padding:20px;margin-bottom:16px;}
-.detail-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
-.detail-item .d-label{font-size:11px;color:#888;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;}
-.detail-item .d-value{font-size:14px;color:#333;font-weight:500;}
-.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;}
-.doc-item{display:flex;align-items:center;gap:8px;padding:10px 12px;border:2px solid #eee;border-radius:8px;cursor:pointer;transition:all .15s;background:white;}
-.doc-item:hover{border-color:#ff7043;}
-.doc-item.checked{background:#e8f5e9;border-color:#a5d6a7;}
-.doc-check{width:18px;height:18px;border-radius:4px;border:2px solid #ccc;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.doc-item.checked .doc-check{background:#43a047;border-color:#43a047;color:white;}
-.doc-label{font-size:13px;color:#333;}
-.doc-item.checked .doc-label{color:#2e7d32;font-weight:600;}
-.doc2{border:2px solid #eee;border-radius:8px;padding:10px 12px;background:white;transition:all .15s;}
-.doc2.checked{background:#e8f5e9;border-color:#a5d6a7;}
-.doc2-head{display:flex;align-items:center;gap:8px;}
-.doc2-check{width:18px;height:18px;border-radius:4px;border:2px solid #ccc;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;font-size:12px;}
-.doc2.checked .doc2-check{background:#43a047;border-color:#43a047;color:white;}
-.doc2-num{width:20px;height:20px;border-radius:50%;background:#fff3e0;color:#e65100;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.doc2-label{flex:1;font-size:13px;color:#333;}
-.doc2.checked .doc2-label{color:#2e7d32;font-weight:600;}
-.doc2-add{border:1px solid #ffcc80;background:#fff8f0;color:#e65100;border-radius:5px;cursor:pointer;font-size:12px;padding:2px 7px;flex-shrink:0;}
-.doc2-add:hover{background:#ff7043;color:white;border-color:#ff7043;}
-.doc2-files{margin-top:8px;display:flex;flex-direction:column;gap:4px;padding-left:28px;}
-.doc2-file{display:flex;align-items:center;gap:6px;font-size:11px;background:#f8f9fc;border:1px solid #eee;border-radius:5px;padding:3px 7px;}
-.doc2-fname{flex:1;color:#1976d2;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.doc2-fname:hover{text-decoration:underline;}
-.doc-grid.drag{outline:2px dashed #ff7043;outline-offset:4px;border-radius:10px;}
-.att-list{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
-.att-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8f9fc;border:1px solid #eee;border-radius:8px;}
-.att-thumb{width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #eee;font-size:20px;}
-.att-thumb img{width:100%;height:100%;object-fit:cover;}
-.att-name{flex:1;font-size:13px;color:#1976d2;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;}
-.att-name:hover{text-decoration:underline;}
-.att-meta{font-size:11px;color:#999;white-space:nowrap;}
-.fee-table{width:100%;border-collapse:collapse;margin-top:6px;}
-.fee-table td{padding:7px 8px;border-bottom:1px solid #f0f0f0;font-size:13px;vertical-align:middle;}
-.fee-sec td{background:#fff3e0;color:#e65100;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.4px;padding:8px;}
-.fee-paid{background:#f1f8f2;}
-.fee-name{color:#333;}
-.fee-en{font-size:11px;color:#999;}
-.fee-amt{width:150px;text-align:right;}
-.fee-amt input{width:100%;padding:6px 8px;border:2px solid #e0e0e0;border-radius:6px;font-size:13px;text-align:right;font-family:inherit;}
-.fee-amt input:focus{outline:none;border-color:#ff7043;}
-.fee-del{width:28px;text-align:center;}
-.fee-del button{border:none;background:none;color:#c0392b;cursor:pointer;font-size:14px;opacity:.5;}
-.fee-del button:hover{opacity:1;}
-.fee-total td{font-weight:700;color:#e65100;border-top:2px solid #ffe0b2;font-size:14px;padding:10px 8px;}
-.drop-zone{border:2px dashed #ffcc80;border-radius:10px;padding:18px;text-align:center;background:#fff8f0;cursor:pointer;margin-top:12px;}
-.drop-zone:hover{border-color:#ff7043;background:#fff3e0;}
-.drop-zone.drag{border-color:#ff7043;background:#ffe0b2;}
-.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;}
-.modal{background:white;border-radius:12px;padding:28px;max-width:720px;width:100%;max-height:92vh;overflow-y:auto;}
-.modal h2{font-size:20px;margin-bottom:18px;}
-.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
-.section-title{font-size:13px;font-weight:600;color:#e65100;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;}
-.preview-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;display:flex;align-items:center;justify-content:center;}
-.preview-backdrop iframe{width:90vw;height:88vh;border:none;border-radius:8px;background:white;}
-.preview-backdrop img{max-width:90vw;max-height:85vh;border-radius:8px;}
-.preview-close{position:absolute;top:16px;right:20px;color:white;font-size:32px;cursor:pointer;background:none;border:none;}
-.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,0.85);z-index:250;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
-.spinner{width:40px;height:40px;border:4px solid #e0e0e0;border-top-color:#ff7043;border-radius:50%;animation:spin 0.8s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
-.loading-text{font-size:14px;color:#666;}
-.empty-state{text-align:center;padding:60px 20px;color:#999;}
-.empty-state .ico{font-size:48px;margin-bottom:12px;}
-.back-btn{padding:9px 18px;border:2px solid #e0e0e0;background:white;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500;color:#555;margin-bottom:16px;}
-@media(max-width:768px){.container{padding:16px;}.stats{grid-template-columns:1fr 1fr;}.detail-grid{grid-template-columns:1fr 1fr;}.form-row,.form-row-3{grid-template-columns:1fr;}}
-::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-thumb{background:#ffcc80;border-radius:4px;}
-</style>
-</head>
-<body>
-<div class="loading-overlay hidden" id="loadingOverlay"><div class="spinner"></div><div class="loading-text" id="loadingText">Đang tải...</div></div>
+/**
+ * ===== TTD LOGISTICS — DRIVE UPLOADER (Apps Script + Drive RIÊNG) =====
+ * Lưu file logistics vào: <TTD Logistics> / <mã lô> / ...
+ *
+ * CÀI ĐẶT:
+ * 1. Tạo 1 folder Drive mới, vd "TTD Logistics". Mở folder → copy ID trên URL
+ *    (drive.google.com/drive/folders/<ID NÀY>) → dán vào ROOT_ID bên dưới.
+ * 2. script.google.com → Dự án mới → dán toàn bộ file này → Lưu.
+ * 3. Triển khai → Lần triển khai mới → ⚙️ Ứng dụng web
+ *      - Thực thi với tư cách: Tôi
+ *      - Ai có quyền truy cập: Bất kỳ ai
+ *    → Triển khai → Ủy quyền → Cho phép.
+ * 4. Copy URL .../exec → gửi cho Claude để dán vào logistics/index.html.
+ *
+ * ***** QUAN TRỌNG: sau khi dán lại file này phải TRIỂN KHAI PHIÊN BẢN MỚI *****
+ * (Triển khai → Quản lý các lần triển khai → ✏️ → Phiên bản: Mới → Triển khai)
+ * thì action 'scan' (khôi phục đính kèm) mới hoạt động. URL .../exec giữ nguyên.
+ */
 
-<!-- LOGIN -->
-<div class="container" id="loginScreen">
-  <div class="login-box">
-    <h1>🚢 Logistics</h1>
-    <p>Theo dõi lô hàng xuất khẩu · Bộ chứng từ</p>
-    <div id="loginError" style="color:#c0392b;font-size:13px;margin-bottom:16px;display:none;"></div>
-    <button class="btn btn-primary" style="width:100%;padding:14px;font-size:15px;display:flex;align-items:center;justify-content:center;gap:10px;" onclick="loginWithGoogle()" id="loginBtn">
-      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 33.1 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.3-.1-2.7-.1-4z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.1 18.9 12 24 12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5l-6.2-5.2C29.4 35.5 26.8 36 24 36c-5.2 0-9.6-2.9-11.3-7.1l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.5-2.6 4.6-4.8 6l6.2 5.2C40.5 36.2 44 30.5 44 24c0-1.3-.1-2.7-.4-4z"/></svg>
-      Đăng nhập với Google
-    </button>
-    <p style="margin-top:16px;font-size:12px;color:#aaa;">Chỉ tài khoản <strong>@ttdglobal.vn</strong></p>
-  </div>
-</div>
+const UPLOAD_SECRET = 'ttd_th_2026';                 // giữ nguyên, khớp với logistics/index.html
+const ROOT_ID       = '1kjC4SZreyB1ACW_dzZps9ynINls78G7Y'; // ID folder "TTD Logistics" riêng
 
-<!-- MAIN -->
-<div class="container hidden" id="mainApp">
-  <div class="top-bar">
-    <div><h1>🚢 Logistics</h1><p>Theo dõi lô hàng xuất khẩu · Booking · Chứng từ</p></div>
-    <div class="user-info"><span class="user-badge" id="userBadge"></span><button class="btn" onclick="logout()">Đăng xuất</button></div>
-  </div>
+function doPost(e) {
+  try {
+    const b = JSON.parse(e.postData.contents);
+    if (b.secret !== UPLOAD_SECRET) return out({ ok: false, error: 'Sai khóa bảo mật' });
 
-  <div id="viewList">
-    <div class="stats" id="statsBar"></div>
-    <div class="toolbar">
-      <div class="search-box"><input type="text" id="searchInput" placeholder="Tìm mã lô, hợp đồng, tàu, container..." oninput="renderList()"></div>
-      <select style="padding:10px 14px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;background:white;" id="filterStatus" onchange="renderList()">
-        <option value="all">Tất cả trạng thái</option>
-        <option value="booking">Booking</option><option value="loading">Đóng hàng</option><option value="customs">Thông quan</option><option value="shipped">Đã xuất</option><option value="done">Hoàn tất</option>
-      </select>
-      <div class="view-toggle"><button class="vt-card" onclick="setView('card')" title="Dạng thẻ">⊞</button><button class="vt-list active" onclick="setView('list')" title="Dạng danh sách">☰</button></div>
-      <button class="btn btn-primary hidden" onclick="openModal()" id="btnAdd">+ Thêm lô hàng</button>
-      <button class="btn" onclick="loadData()">🔄</button>
-    </div>
-    <div class="card-grid" id="listContainer"></div>
-  </div>
-
-  <div id="viewDetail" class="hidden">
-    <button class="back-btn" onclick="showList()">← Danh sách</button>
-    <div id="detailContent"></div>
-  </div>
-</div>
-
-<!-- MODAL -->
-<div class="modal-backdrop hidden" id="shipModal">
-  <div class="modal">
-    <h2 id="modalTitle">Thêm lô hàng</h2>
-    <input type="hidden" id="editId">
-    <div class="section-title">📦 Thông tin lô</div>
-    <div class="form-row">
-      <div class="form-group"><label>Mã lô *</label><input type="text" id="fLot" placeholder="VD: LOT-2610-R2"></div>
-      <div class="form-group"><label>Incoterm</label><select id="fIncoterms"><option value="">—</option><option>EXW</option><option>FCA</option><option>FAS</option><option>FOB</option><option>CFR</option><option>CIF</option><option>CPT</option><option>CIP</option><option>DAP</option><option>DPU</option><option>DDP</option></select></div>
-    </div>
-    <div class="form-row-3">
-      <div class="form-group"><label>Loại cà phê</label><select id="fType"><option value="robusta_r2">Robusta R2</option><option value="robusta_r1">Robusta R1</option><option value="arabica">Arabica</option><option value="other">Khác</option></select></div>
-      <div class="form-group"><label>Số lượng (MT)</label><input type="text" id="fQty" placeholder="VD: 38.4"></div>
-      <div class="form-group"><label>Trạng thái</label><select id="fStatus"><option value="booking">Booking</option><option value="loading">Đóng hàng</option><option value="customs">Thông quan</option><option value="shipped">Đã xuất</option><option value="done">Hoàn tất</option></select></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Khách hàng</label><input type="text" id="fCustomer" placeholder="VD: BEST RETURNS FZCO"></div>
-      <div class="form-group"><label>NCC / Mua từ</label><input type="text" id="fSupplier" placeholder="VD: Tín Thành Đạt"></div>
-    </div>
-    <div class="section-title" style="margin-top:12px;">🚢 Vận chuyển</div>
-    <div class="form-row-3">
-      <div class="form-group"><label>Booking No.</label><input type="text" id="fBooking"></div>
-      <div class="form-group"><label>Tên tàu</label><input type="text" id="fVessel"></div>
-      <div class="form-group"><label>Container No.</label><input type="text" id="fContainer"></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>ETD (tàu chạy)</label><input type="date" id="fEtd"></div>
-      <div class="form-group"><label>ETA (ngày đến)</label><input type="date" id="fEta"></div>
-      <div class="form-group"><label>Ngày xong chứng từ gốc</label><input type="date" id="fDocsDone"></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Cảng đi</label><input type="text" id="fPortLoad" placeholder="VD: Cát Lái"></div>
-      <div class="form-group"><label>Cảng đến</label><input type="text" id="fPortDisch" placeholder="VD: Jebel Ali"></div>
-    </div>
-    <div class="form-group"><label>Ghi chú</label><textarea id="fNotes" rows="2"></textarea></div>
-    <div id="modalError" style="color:#c0392b;font-size:13px;display:none;"></div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal()">Hủy</button>
-      <button class="btn btn-primary" onclick="saveShip()" id="saveBtn">Lưu</button>
-    </div>
-  </div>
-</div>
-
-<!-- PREVIEW -->
-<div class="preview-backdrop hidden" id="previewBackdrop"><button class="preview-close" onclick="closePreview()">✕</button><div id="previewContent"></div></div>
-<input type="file" id="fileInput" multiple style="display:none;">
-
-<script>
-const SUPABASE_URL='https://fyjinbtabsentsvnkqzg.supabase.co';
-const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5amluYnRhYnNlbnRzdm5rcXpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MTAxNTUsImV4cCI6MjA5NDI4NjE1NX0.m1H8bOT7gUXJxPoQT6bDqtRUjo4nCSxb4A1rth7Eols';
-const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const GRACE_EMAIL='grace@ttdglobal.vn';
-// Drive upload qua Apps Script (dùng chung với Trading Hub)
-const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbyMr_B-sJ8r6mpGFIOphsTOxxh-oHADNNRNRrac54HDIltWHC0i1LRddVRFH_t-LRFmAw/exec';
-const UPLOAD_SECRET='ttd_th_2026';
-function fileToBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});}
-async function driveUpload(itemId,itemName,file){
-  const dataBase64=await fileToBase64(file);
-  const res=await fetch(APPS_SCRIPT_URL,{method:'POST',body:JSON.stringify({secret:UPLOAD_SECRET,action:'upload',kind:'logistics',itemId,itemName,fileName:file.name,mimeType:file.type,dataBase64})});
-  const j=await res.json();if(!j.ok)throw new Error(j.error||'Upload thất bại');return j;
-}
-async function driveDelete(fileId){if(!fileId)return;try{await fetch(APPS_SCRIPT_URL,{method:'POST',body:JSON.stringify({secret:UPLOAD_SECRET,action:'delete',fileId})});}catch(_){}}
-
-const DEPTS={viewer:'Chỉ xem',sale:'Sale',ketoan:'Kế toán',thumua:'Thu mua',logistics:'Logistics',admin:'Ban Giám Đốc',sale_admin:'Sale Admin'};
-const TYPE_LABELS={robusta_r2:'Robusta R2',robusta_r1:'Robusta R1',arabica:'Arabica',other:'Khác'};
-const TYPE_CLASS={robusta_r2:'robusta',robusta_r1:'robusta',arabica:'arabica',other:'other'};
-function typeBadge(ct){if(!ct)return'';return`<span class="type-badge type-${TYPE_CLASS[ct]||'other'}">${TYPE_LABELS[ct]||ct}</span>`;}
-const STATUS_LABELS={booking:'Booking',loading:'Đóng hàng',customs:'Thông quan',shipped:'Đã xuất',done:'Hoàn tất'};
-const STATUS_CLASS={booking:'st-booking',loading:'st-loading',customs:'st-customs',shipped:'st-shipped',done:'st-done'};
-const DOC_LIST=[
-  {key:'invoice',label:'Commercial Invoice'},{key:'pl',label:'Packing List'},{key:'bl',label:'Bill of Lading'},
-  {key:'co',label:'C/O'},{key:'phyto',label:'Phytosanitary'},{key:'ico',label:'ICO'},
-  {key:'fumi',label:'Fumigation'},{key:'weight',label:'Weight Cert'},{key:'quality',label:'Quality Cert'},
-  {key:'customs',label:'Tờ khai thông quan'}
-];
-// Checklist chi phí — 2 nhóm
-const COST_GROUPS=[
-  {title:'CÁC LOẠI PHÍ CỐ ĐỊNH',items:[
-    {key:'bl',label:'Phí phát hành vận đơn',en:'B/L (Bill of Lading)'},
-    {key:'seal',label:'Phí niêm phong chì',en:'Seal Fee'},
-    {key:'thc',label:'Phí xếp dỡ tại cảng',en:'THC (Terminal Handling Charge)'},
-    {key:'ens',label:'Khai báo an ninh hàng nhập EU',en:'ENS (Entry Summary Declaration)'},
-    {key:'quality',label:'Giám định chất lượng',en:'Quality Inspection'},
-    {key:'weight',label:'Giám định trọng lượng',en:'Weight Inspection'},
-    {key:'fumi',label:'Khử trùng hàng hóa',en:'Fumigation Fee'},
-    {key:'co',label:'Chứng nhận xuất xứ hàng hóa',en:'C/O (Certificate of Origin)'},
-    {key:'ico',label:'Chứng nhận cà phê quốc tế',en:'ICO Certificate'},
-    {key:'phyto',label:'Giám sát kiểm dịch tại cảng',en:'Phytosanitary Supervision'}
-  ]},
-  {title:'CÁC LOẠI PHÍ PHÁT SINH THEO LÔ HÀNG',items:[
-    {key:'freight',label:'Cước vận chuyển quốc tế',en:'Ocean / Air Freight'},
-    {key:'insurance',label:'Bảo hiểm hàng hóa xuất khẩu',en:'Cargo Insurance'},
-    {key:'sample',label:'Phí phân tích mẫu',en:'Sample Testing / Analysis'},
-    {key:'telex',label:'Phí làm điện giao hàng',en:'Telex Release / Surrender Fee'},
-    {key:'courier',label:'Phí chuyển phát nhanh',en:'Courier Fee'},
-    {key:'awb',label:'Phí vận chuyển theo AWB',en:'Air Freight / AWB Fee'},
-    {key:'vgm',label:'Phí khai trọng lượng điện tử',en:'VGM điện tử'},
-    {key:'detention',label:'Phí lưu vỏ container',en:'Container Detention Fee'},
-    {key:'storage',label:'Phí lưu container tại kho riêng',en:'Private Warehouse Storage'},
-    {key:'handling',label:'Làm hàng',en:'Handling'}
-  ]}
-];
-const COST_CURRENCIES=['VND','USD','EUR'];
-function fmtMoney(n){n=parseFloat(n)||0;return n.toLocaleString('vi-VN');}
-// Danh sách phí mặc định (có thể sửa/thêm/xóa ngay trên web cho khớp lô của bạn)
-const DEFAULT_FEES=[
-  // I — CÁC LOẠI PHÍ CỐ ĐỊNH
-  {sec:'I',label:'Phí phát hành vận đơn',en:'B/L (Bill of Lading)'},
-  {sec:'I',label:'Phí niêm phong chì',en:'Seal Fee'},
-  {sec:'I',label:'Phí xử lý chứng từ',en:'Doc Fee'},
-  {sec:'I',label:'Phí xếp dỡ tại cảng',en:'THC (Terminal Handling Charge)'},
-  {sec:'I',label:'Phí mất cân bằng container',en:'CIC'},
-  {sec:'I',label:'Phí vệ sinh container',en:'Cleaning Fee'},
-  {sec:'I',label:'Phí hạ tầng cảng biển',en:'Infrastructure Fee'},
-  {sec:'I',label:'Phí khai manifest',en:'AMS / ENS'},
-  {sec:'I',label:'Phí điện giao hàng',en:'Telex Release'},
-  {sec:'I',label:'Phí dịch vụ hải quan',en:'Customs Clearance'},
-  // II — CÁC LOẠI PHÍ PHÁT SINH THEO LÔ HÀNG
-  {sec:'II',label:'Vận chuyển nội địa (kéo cont)',en:'Trucking / Drayage'},
-  {sec:'II',label:'Nâng hạ container',en:'LO/LO'},
-  {sec:'II',label:'Lưu container / lưu bãi',en:'Demurrage / Detention'},
-  {sec:'II',label:'Kiểm dịch thực vật',en:'Phytosanitary'},
-  {sec:'II',label:'Hun trùng',en:'Fumigation'},
-  {sec:'II',label:'Giám định khối lượng / chất lượng',en:'Inspection'},
-  {sec:'II',label:'Phí cấp C/O',en:'C/O Fee'},
-  {sec:'II',label:'Phí chứng thư ICO',en:'ICO Certificate'},
-  {sec:'II',label:'Lấy mẫu / phân tích',en:'Sampling'},
-  {sec:'II',label:'Làm hàng (bốc xếp, đóng hàng)',en:'Handling'}
-];
-const SEC_NAME={I:'I. CÁC LOẠI PHÍ CỐ ĐỊNH',II:'II. CÁC LOẠI PHÍ PHÁT SINH THEO LÔ HÀNG'};
-const MAX_FILE=20*1024*1024;
-
-let currentUser=null, allShips=[], currentId=null, currentShip=null, viewMode='list';
-let activeSupplier=null; // null = màn chọn NCC; có giá trị = đang xem lô của NCC đó
-function openSupplier(k){activeSupplier=k;renderList();}
-function backSuppliers(){activeSupplier=null;renderList();}
-
-function esc(s){if(s==null)return'';return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function showLoading(t='Đang tải...'){document.getElementById('loadingText').textContent=t;document.getElementById('loadingOverlay').classList.remove('hidden');}
-function hideLoading(){document.getElementById('loadingOverlay').classList.add('hidden');}
-function isAdmin(){return currentUser&&(currentUser.role==='admin'||currentUser.email===GRACE_EMAIL);}
-function canEdit(){return !!currentUser;} // mọi nhân viên đăng nhập đều sửa được
-function fmtSize(b){if(!b)return'';if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB';}
-function fmtDate(d){return d?new Date(d).toLocaleDateString('vi-VN'):'';}
-function fmtVND(n){n=Number(n)||0;return n.toLocaleString('vi-VN')+' ₫';}
-// Lấy danh sách phí của lô; lần đầu chưa có thì nạp mặc định (chưa lưu DB tới khi người dùng sửa)
-function getFees(s){
-  const c=s.costs;
-  if(c&&Array.isArray(c.items)&&c.items.length)return c.items;
-  return DEFAULT_FEES.map((f,i)=>({id:'fee_'+i,sec:f.sec,label:f.label,en:f.en,amount:0}));
-}
-function feesTotal(items){return items.reduce((a,f)=>a+(Number(f.amount)||0),0);}
-function costProgress(s){const items=getFees(s);const paid=items.filter(f=>Number(f.amount)>0).length;return{paid,total:items.length,sum:feesTotal(items)};}
-function setView(m){viewMode=m;document.querySelectorAll('.vt-card').forEach(b=>b.classList.toggle('active',m==='card'));document.querySelectorAll('.vt-list').forEach(b=>b.classList.toggle('active',m==='list'));renderList();}
-
-// ===== AUTH =====
-async function loginWithGoogle(){
-  const errEl=document.getElementById('loginError'),btn=document.getElementById('loginBtn');
-  errEl.style.display='none';btn.disabled=true;showLoading('Đang chuyển hướng...');
-  try{const{error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.href,queryParams:{prompt:'select_account'}}});if(error)throw error;}
-  catch(e){errEl.textContent='Lỗi: '+e.message;errEl.style.display='block';btn.disabled=false;hideLoading();}
-}
-async function loadCurrentUser(authUser){
-  let profile=null;
-  const{data:byId}=await sb.from('profiles').select('*').eq('id',authUser.id).single();
-  if(byId){profile=byId;}else{const{data:byEmail}=await sb.from('profiles').select('*').eq('email',authUser.email).maybeSingle();if(byEmail){await sb.from('profiles').update({id:authUser.id}).eq('email',authUser.email);profile=byEmail;}}
-  if(!profile){await sb.auth.signOut();alert('Tài khoản chưa được cấu hình.');return;}
-  currentUser={id:authUser.id,email:authUser.email,name:profile.name,role:profile.role};
-  showMainApp();
-}
-async function logout(){await sb.auth.signOut();currentUser=null;document.getElementById('mainApp').classList.add('hidden');document.getElementById('loginScreen').classList.remove('hidden');}
-function showMainApp(){
-  document.getElementById('loginScreen').classList.add('hidden');
-  document.getElementById('mainApp').classList.remove('hidden');
-  document.getElementById('userBadge').textContent=`${currentUser.name} · ${isAdmin()?'👑 Admin':DEPTS[currentUser.role]||currentUser.role}`;
-  if(canEdit())document.getElementById('btnAdd').classList.remove('hidden');
-  loadData();
-}
-
-// ===== DATA =====
-async function loadData(){
-  showLoading('Đang tải lô hàng...');
-  try{const{data,error}=await sb.from('logistics_shipments').select('*').order('created_at',{ascending:false});if(error)throw error;allShips=data||[];renderStats();renderList();}
-  catch(e){document.getElementById('listContainer').innerHTML=`<div class="empty-state"><p>Lỗi: ${e.message}</p><p style="font-size:12px;color:#aaa;margin-top:8px;">Nếu bảng chưa tồn tại, chạy SQL tạo bảng logistics_shipments.</p></div>`;}
-  finally{hideLoading();}
-}
-function renderStats(){
-  const t=allShips.length;
-  const active=allShips.filter(s=>['booking','loading','customs'].includes(s.status)).length;
-  const shipped=allShips.filter(s=>s.status==='shipped').length;
-  const done=allShips.filter(s=>s.status==='done').length;
-  document.getElementById('statsBar').innerHTML=`
-    <div class="stat-card blue"><div class="stat-label">Tổng lô</div><div class="stat-value">${t}</div></div>
-    <div class="stat-card"><div class="stat-label">Đang xử lý</div><div class="stat-value">${active}</div></div>
-    <div class="stat-card green"><div class="stat-label">Đã xuất</div><div class="stat-value">${shipped}</div></div>
-    <div class="stat-card purple"><div class="stat-label">Hoàn tất</div><div class="stat-value">${done}</div></div>`;
-}
-function docProgress(s){const d=s.doc_status||{};const done=DOC_LIST.filter(x=>d[x.key]).length;return`${done}/${DOC_LIST.length}`;}
-// 1 thẻ lô
-function shipCard(s){
-  const att=(s.attachments||[]).length;const etd=fmtDate(s.etd);
-  return`<div class="item-card" onclick="openDetail('${s.id}')">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">
-      ${typeBadge(s.coffee_type)}
-      <span class="status-pill ${STATUS_CLASS[s.status]||'st-booking'}">${STATUS_LABELS[s.status]||s.status}</span>
-    </div>
-    <div style="font-size:16px;font-weight:700;color:#333;">${esc(s.lot_code)}</div>
-    <div style="font-size:12px;color:#666;margin-top:3px;">👤 ${esc(s.customer||'—')}</div>
-    ${s.vessel?`<div style="font-size:12px;color:#888;margin-top:2px;">🚢 ${esc(s.vessel)}${etd?' · '+etd:''}</div>`:''}
-    <div style="font-size:11px;color:#aaa;margin-top:10px;">📄 ${docProgress(s)} chứng từ${att?` · 📎 ${att}`:''}${costTotal(s)>0?` · 💵 ${fmtMoney(costTotal(s))} ${s.cost_currency||'VND'}`:''}</div>
-  </div>`;
-}
-// 1 dòng bảng
-function shipRow(s){
-  return`<tr onclick="openDetail('${s.id}')"><td style="font-weight:600;">${esc(s.lot_code)}</td><td style="font-size:12px;color:#666;">${esc(s.incoterms||'—')}</td><td>${typeBadge(s.coffee_type)}</td><td style="font-size:12px;">${esc(s.customer||'—')}</td><td style="font-size:12px;">${esc(s.vessel||'—')}</td><td style="font-size:12px;">${fmtDate(s.etd)||'—'}</td><td style="font-size:12px;">📄 ${docProgress(s)}</td><td>${(s.attachments||[]).length||''}</td><td><span class="status-pill ${STATUS_CLASS[s.status]||'st-booking'}">${STATUS_LABELS[s.status]||s.status}</span></td></tr>`;
-}
-function supKey(s){return (s.supplier||'').trim()||'(Chưa phân loại NCC)';}
-function renderList(){
-  const c=document.getElementById('listContainer');
-  c.className='';c.style.display='block';
-  const search=(document.getElementById('searchInput').value||'').toLowerCase();
-  const fs=document.getElementById('filterStatus').value;
-  const base=allShips.filter(s=>fs==='all'||s.status===fs);
-  const tHead=`<thead><tr><th>Mã lô</th><th>Incoterm</th><th>Loại</th><th>Khách hàng</th><th>Tàu</th><th>ETD</th><th>Chứng từ</th><th>📎</th><th>Trạng thái</th></tr></thead>`;
-
-  // ---- MÀN FOLDER: mỗi NCC là 1 ô ----
-  if(activeSupplier===null){
-    const groups={};
-    base.forEach(s=>{const k=supKey(s);(groups[k]=groups[k]||[]).push(s);});
-    let keys=Object.keys(groups).sort((a,b)=>{if(a[0]==='(')return 1;if(b[0]==='(')return -1;return a.localeCompare(b,'vi');});
-    if(search)keys=keys.filter(k=>k.toLowerCase().includes(search));
-    if(!keys.length){c.innerHTML='<div class="empty-state"><div class="ico">🏭</div><p>Chưa có nhà cung cấp nào</p></div>';return;}
-    c.innerHTML=`<div class="card-grid">`+keys.map(k=>{
-      const items=groups[k];
-      const shipped=items.filter(s=>['shipped','done'].includes(s.status)).length;
-      const proc=items.filter(s=>['booking','loading','customs'].includes(s.status)).length;
-      return`<div class="item-card" data-k="${esc(k)}" onclick="openSupplier(this.dataset.k)">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="font-size:34px;line-height:1;">🏭</div>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:16px;font-weight:700;color:#333;word-break:break-word;">${esc(k)}</div>
-            <div style="font-size:12px;color:#888;margin-top:3px;">${items.length} lô</div>
-          </div>
-          <div style="font-size:20px;color:#c5c5e6;">›</div>
-        </div>
-        <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;">
-          <span style="font-size:11px;background:#fff3e0;color:#e65100;border-radius:10px;padding:2px 9px;font-weight:600;">⚙ Đang xử lý ${proc}</span>
-          <span style="font-size:11px;background:#e8f5e9;color:#2e7d32;border-radius:10px;padding:2px 9px;font-weight:600;">✅ Đã xuất ${shipped}</span>
-        </div>
-      </div>`;
-    }).join('')+`</div>`;
-    return;
-  }
-
-  // ---- TRONG 1 NCC ----
-  let list=base.filter(s=>supKey(s)===activeSupplier);
-  if(search)list=list.filter(s=>[s.lot_code,s.incoterms,s.vessel,s.container_no,s.customer].some(v=>(v||'').toLowerCase().includes(search)));
-  const header=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
-    <button class="btn" onclick="backSuppliers()">← Tất cả NCC</button>
-    <span style="font-weight:700;color:#e65100;font-size:16px;">🏭 ${esc(activeSupplier)}</span>
-    <span style="font-size:12px;background:#ff7043;color:white;border-radius:12px;padding:2px 10px;font-weight:600;">${list.length} lô</span>
-  </div>`;
-  if(!list.length){c.innerHTML=header+'<div class="empty-state"><div class="ico">🚢</div><p>Không có lô nào</p></div>';return;}
-  const body=viewMode==='list'
-    ? `<table class="ship-table">${tHead}<tbody>${list.map(shipRow).join('')}</tbody></table>`
-    : `<div class="card-grid">${list.map(shipCard).join('')}</div>`;
-  c.innerHTML=header+body;
-}
-
-// ===== DETAIL =====
-function openDetail(id){const s=allShips.find(x=>x.id===id);if(!s)return;currentId=id;currentShip=s;editingCosts=false;document.getElementById('viewList').classList.add('hidden');document.getElementById('viewDetail').classList.remove('hidden');renderDetail();}
-function showList(){document.getElementById('viewDetail').classList.add('hidden');document.getElementById('viewList').classList.remove('hidden');currentId=null;currentShip=null;}
-function renderDetail(){
-  const s=currentShip;
-  const docs=s.doc_status||{};
-  const allAtt=s.attachments||[];
-  // Mỗi ô chứng từ: số thứ tự, tick, nút đính file riêng, danh sách file của ô
-  const docHtml=DOC_LIST.map((d,di)=>{
-    const on=!!docs[d.key];
-    const files=allAtt.map((a,i)=>({a,i})).filter(x=>x.a.doc===d.key);
-    const chips=files.map(({a,i})=>`<div class="doc2-file"><span class="doc2-fname" onclick="previewDoc('${esc(a.previewUrl||a.url)}','${esc(a.url||'')}')">${esc(a.title)}</span>${canEdit()?`<button onclick="removeAtt(${i})" style="border:none;background:none;color:#c0392b;cursor:pointer;font-size:11px;">✕</button>`:''}</div>`).join('');
-    return`<div class="doc2 ${on?'checked':''}">
-      <div class="doc2-head">
-        <div class="doc2-check" ${canEdit()?`onclick="toggleDoc('${d.key}')"`:''}>${on?'✓':''}</div>
-        <div class="doc2-num">${di+1}</div>
-        <div class="doc2-label">${d.label}</div>
-        ${canEdit()?`<button class="doc2-add" onclick="triggerDocUpload('${s.id}','${d.key}')" title="Đính file cho mục này">📎${files.length?' '+files.length:''}</button>`:''}
-      </div>
-      ${files.length?`<div class="doc2-files">${chips}</div>`:''}
-    </div>`;
-  }).join('');
-  // File đính kèm chung (không gắn mã chứng từ nào)
-  const genFiles=allAtt.map((a,i)=>({a,i})).filter(x=>!x.a.doc);
-  // Bộ tài liệu nén .zip (doc==='_zip')
-  const zipFiles=allAtt.map((a,i)=>({a,i})).filter(x=>x.a.doc==='_zip');
-  const zipHtml=zipFiles.map(({a,i})=>`<div class="att-row"><div class="att-thumb">🗜️</div><span class="att-name" onclick="downloadDriveFile('${esc(a.fileId||'')}')">${esc(a.title)}</span><span class="att-meta">${a.size?fmtSize(a.size):''}${a.user?' · '+esc(a.user):''}</span><button class="btn-mini" onclick="downloadDriveFile('${esc(a.fileId||'')}')">⬇ Tải</button>${canEdit()?`<button class="btn-mini" style="color:#c0392b;" onclick="removeAtt(${i})">✕</button>`:''}</div>`).join('')||'<span style="color:#aaa;font-size:13px;">Chưa có file nén</span>';
-  const attHtml=genFiles.map(({a,i})=>{
-    const isImg=(a.mime||'').startsWith('image/')||/\.(jpg|jpeg|png|gif|webp)$/i.test(a.title||'');
-    const isPdf=(a.mime==='application/pdf')||/\.pdf$/i.test(a.title||'');
-    const thumb=isImg&&a.url?`<img src="${esc(a.url)}">`:isPdf?'📕':/\.(docx?|rtf)$/i.test(a.title||'')?'📄':/\.(xlsx?|csv)$/i.test(a.title||'')?'📊':'📎';
-    return`<div class="att-row"><div class="att-thumb">${thumb}</div><span class="att-name" onclick="previewDoc('${esc(a.previewUrl||a.url)}','${esc(a.url||'')}')">${esc(a.title)}</span><span class="att-meta">${a.size?fmtSize(a.size):''}${a.user?' · '+esc(a.user):''}</span>${canEdit()?`<button class="btn-mini" style="color:#c0392b;" onclick="removeAtt(${i})">✕</button>`:''}</div>`;
-  }).join('')||'<span style="color:#aaa;font-size:13px;">Chưa có file</span>';
-  const etd=fmtDate(s.etd)||'—', eta=fmtDate(s.eta)||'—';
-  document.getElementById('detailContent').innerHTML=`
-    <div class="detail-card">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
-        <div><div style="font-size:22px;font-weight:700;">${esc(s.lot_code)}</div>
-          <div style="margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            ${typeBadge(s.coffee_type)}
-            <span class="status-pill ${STATUS_CLASS[s.status]||'st-booking'}">${STATUS_LABELS[s.status]||s.status}</span>
-          </div></div>
-        <div style="display:flex;gap:8px;">
-          ${canEdit()?`<button class="btn" onclick="openModal('${s.id}')">✏️ Sửa</button>`:''}
-          ${isAdmin()?`<button class="btn btn-danger" onclick="deleteShip('${s.id}')">🗑️ Xóa</button>`:''}
-        </div>
-      </div>
-      <div class="detail-grid">
-        <div class="detail-item"><div class="d-label">Incoterm</div><div class="d-value">${esc(s.incoterms||'—')}</div></div>
-        <div class="detail-item"><div class="d-label">Khách hàng</div><div class="d-value">${esc(s.customer||'—')}</div></div>
-        <div class="detail-item"><div class="d-label">NCC</div><div class="d-value">${esc(s.supplier||'—')}</div></div>
-        <div class="detail-item"><div class="d-label">Số lượng</div><div class="d-value">${s.quantity?s.quantity+' MT':'—'}</div></div>
-        <div class="detail-item"><div class="d-label">Booking</div><div class="d-value">${esc(s.booking_no||'—')}</div></div>
-        <div class="detail-item"><div class="d-label">Tàu</div><div class="d-value">${esc(s.vessel||'—')}</div></div>
-        <div class="detail-item"><div class="d-label">Container</div><div class="d-value">${esc(s.container_no||'—')}</div></div>
-        <div class="detail-item"><div class="d-label">ETD</div><div class="d-value">🚢 ${etd}</div></div>
-        <div class="detail-item"><div class="d-label">ETA</div><div class="d-value">🏁 ${eta}</div></div>
-        <div class="detail-item"><div class="d-label">Chứng từ gốc xong</div><div class="d-value">📄 ${fmtDate(s.docs_done_date)||'—'}</div></div>
-        <div class="detail-item"><div class="d-label">Cảng đi</div><div class="d-value">${esc(s.port_load||'—')}</div></div>
-        <div class="detail-item"><div class="d-label">Cảng đến</div><div class="d-value">${esc(s.port_disch||'—')}</div></div>
-      </div>
-      ${s.notes?`<div style="margin-top:12px;padding:12px 14px;background:#fff8f0;border-left:3px solid #ff7043;border-radius:6px;font-size:13px;white-space:pre-wrap;">${esc(s.notes)}</div>`:''}
-    </div>
-    <div class="detail-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px;">
-        <div class="section-title" style="margin:0;">📄 Bộ chứng từ xuất khẩu (${docProgress(s)})</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          ${canEdit()?`<button class="btn-mini" style="background:#2e7d32;color:white;border-color:#2e7d32;" onclick="toggleAllDocs()">${DOC_LIST.every(x=>docs[x.key])?'↩ Bỏ tick tất cả':'✓ Hoàn thành tất cả'}</button>`:''}
-          <button class="btn-mini" onclick="downloadAllDocs()">⬇ Tải nguyên bộ (.zip)</button>
-          ${canEdit()?`<button class="btn-mini" style="background:#ff7043;color:white;border-color:#ff7043;" onclick="triggerBulkUpload('${s.id}')">⬆ Upload hàng loạt (tự nhận theo số)</button>`:''}
-        </div>
-      </div>
-      <div style="font-size:11px;color:#999;margin-bottom:12px;">Đặt tên file bắt đầu bằng số thứ tự mục (VD: <b>1</b> Invoice.pdf, <b>3</b>_BL.pdf, <b>07</b> phyto.pdf) rồi kéo cả xấp vào ô bên dưới — hệ thống tự xếp đúng mục, tự tick xanh. File nhiều số cùng mục đều được.</div>
-      <div class="doc-grid" id="docBulkZone">${docHtml}</div>
-    </div>
-    <div class="detail-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:8px;"><div class="section-title" style="margin:0;">📦 Bộ tài liệu nén (.zip)</div>${canEdit()?`<button class="btn-mini" onclick="triggerZipUpload('${s.id}')">+ Tải file .zip lên</button>`:''}</div>
-      <div style="font-size:11px;color:#999;margin-bottom:8px;">Gói sẵn nhiều tài liệu thành 1 file .zip ở máy rồi tải lên đây. Tự tick tay các mục chứng từ ở trên. Tải lại nguyên file .zip bất cứ lúc nào.</div>
-      <div class="att-list">${zipHtml}</div>
-    </div>
-    ${renderFeeCard(s)}
-    <div class="detail-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div class="section-title" style="margin:0;">📎 File đính kèm chung</div><button class="btn-mini" onclick="triggerUpload('${s.id}')">+ Tải file lên</button></div>
-      <div style="font-size:11px;color:#999;margin-bottom:8px;">File không thuộc mục chứng từ nào (ảnh container, email, ghi chú...)</div>
-      <div class="drop-zone" id="dropZone" onclick="triggerUpload('${s.id}')"><div style="font-size:28px;">📤</div><div style="font-size:13px;color:#e65100;font-weight:600;margin-top:4px;">Bấm hoặc kéo file vào đây</div><div style="font-size:11px;color:#999;">PDF, ảnh, Word, Excel · tối đa 20MB</div></div>
-      <div class="att-list">${attHtml}</div>
-    </div>`;
-  const drop=document.getElementById('dropZone');
-  if(drop){drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag');});drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');uploadCtx={id:s.id,mode:'general'};handleFiles(e.dataTransfer.files);});}
-  const bulk=document.getElementById('docBulkZone');
-  if(bulk){bulk.addEventListener('dragover',e=>{e.preventDefault();bulk.classList.add('drag');});bulk.addEventListener('dragleave',()=>bulk.classList.remove('drag'));bulk.addEventListener('drop',e=>{e.preventDefault();bulk.classList.remove('drag');uploadCtx={id:s.id,mode:'bulk'};handleFiles(e.dataTransfer.files);});}
-}
-
-// ===== CHI PHÍ LÔ HÀNG =====
-let editingCosts=false;
-function costTotal(s){const c=s.costs||{};let t=0;COST_GROUPS.forEach(g=>g.items.forEach(it=>{t+=parseFloat(c[it.key])||0;}));return t;}
-function groupTotal(s,g){const c=s.costs||{};let t=0;g.items.forEach(it=>{t+=parseFloat(c[it.key])||0;});return t;}
-function renderFeeCard(s){
-  const c=s.costs||{};const cur=s.cost_currency||'VND';const total=costTotal(s);
-  let stt=0;
-  const groupsHtml=COST_GROUPS.map((g,gi)=>{
-    const rows=g.items.map(it=>{stt++;const val=c[it.key];
-      const cell=editingCosts
-        ?`<input type="number" step="any" min="0" id="cost_${it.key}" value="${val!=null&&val!==''?val:''}" placeholder="0" style="width:140px;padding:6px 8px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;text-align:right;">`
-        :`<span style="font-weight:${val?'600':'400'};color:${val?'#333':'#bbb'};">${val?fmtMoney(val):'—'}</span>`;
-      return`<tr>
-        <td style="text-align:center;color:#aaa;font-size:12px;">${stt}</td>
-        <td style="font-size:13px;">${it.label}</td>
-        <td style="font-size:12px;color:#888;">${it.en}</td>
-        <td style="text-align:right;">${cell}</td>
-      </tr>`;
-    }).join('');
-    const gt=groupTotal(s,g);
-    return`<tr style="background:#fff3e0;"><td colspan="3" style="font-weight:700;color:#e65100;font-size:12px;padding:8px 14px;">${['I','II','III','IV'][gi]||(gi+1)}. ${g.title}</td><td style="text-align:right;font-weight:700;color:#e65100;padding:8px 14px;">${gt?fmtMoney(gt)+' '+cur:''}</td></tr>${rows}`;
-  }).join('');
-  const curSel=editingCosts?`<select id="costCurrency" style="padding:5px 8px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:12px;">${COST_CURRENCIES.map(x=>`<option value="${x}" ${x===cur?'selected':''}>${x}</option>`).join('')}</select>`:`<span style="font-size:12px;color:#888;">${cur}</span>`;
-  return`<div class="detail-card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-      <div class="section-title" style="margin:0;">💵 Chi phí lô hàng ${curSel}</div>
-      ${editingCosts
-        ?`<div style="display:flex;gap:8px;"><button class="btn-mini" style="background:#ff7043;color:white;border-color:#ff7043;" onclick="saveCosts()">💾 Lưu</button><button class="btn-mini" style="color:#c0392b;" onclick="editingCosts=false;renderDetail();">Hủy</button></div>`
-        :(canEdit()?`<button class="btn-mini" onclick="editingCosts=true;renderDetail();">✏️ Nhập chi phí</button>`:'')}
-    </div>
-    <table class="ship-table">
-      <thead><tr><th style="width:40px;text-align:center;">STT</th><th>Tên loại chi phí</th><th>Viết tắt / English</th><th style="text-align:right;">Số tiền đã chi</th></tr></thead>
-      <tbody>${groupsHtml}</tbody>
-      <tfoot><tr style="background:#fbe9e7;"><td colspan="3" style="font-weight:700;color:#bf360c;padding:12px 14px;font-size:14px;">TỔNG CHI PHÍ</td><td style="text-align:right;font-weight:700;color:#bf360c;padding:12px 14px;font-size:15px;">${fmtMoney(total)} ${cur}</td></tr></tfoot>
-    </table>
-  </div>`;
-}
-async function saveCosts(){
-  const costs={};
-  COST_GROUPS.forEach(g=>g.items.forEach(it=>{const el=document.getElementById('cost_'+it.key);const v=el?el.value.trim():'';if(v!=='')costs[it.key]=parseFloat(v)||0;}));
-  const cost_currency=document.getElementById('costCurrency')?.value||'VND';
-  showLoading('Đang lưu chi phí...');
-  try{
-    const{error}=await sb.from('logistics_shipments').update({costs,cost_currency,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',currentId);
-    if(error)throw error;
-    currentShip.costs=costs;currentShip.cost_currency=cost_currency;
-    const idx=allShips.findIndex(x=>x.id===currentId);if(idx>=0){allShips[idx].costs=costs;allShips[idx].cost_currency=cost_currency;}
-    editingCosts=false;renderDetail();
-  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
-}
-
-// ===== DOC CHECKLIST =====
-async function toggleAllDocs(){
-  if(!canEdit()||!currentShip)return;
-  const allDone=DOC_LIST.every(x=>(currentShip.doc_status||{})[x.key]);
-  const d={...(currentShip.doc_status||{})};DOC_LIST.forEach(x=>{d[x.key]=!allDone;});
-  showLoading(allDone?'Đang bỏ tick...':'Đang hoàn thành...');
-  try{const{error}=await sb.from('logistics_shipments').update({doc_status:d,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',currentId);if(error)throw error;
-    currentShip.doc_status=d;const idx=allShips.findIndex(x=>x.id===currentId);if(idx>=0)allShips[idx].doc_status=d;renderDetail();
-  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
-}
-async function toggleDoc(key){
-  if(!canEdit())return;
-  const d={...(currentShip.doc_status||{})};d[key]=!d[key];
-  showLoading('Đang lưu...');
-  try{const{error}=await sb.from('logistics_shipments').update({doc_status:d,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',currentId);if(error)throw error;
-    currentShip.doc_status=d;const idx=allShips.findIndex(x=>x.id===currentId);if(idx>=0)allShips[idx].doc_status=d;renderDetail();
-  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
-}
-
-// ===== UPLOAD (Drive) =====
-// uploadCtx = {id, mode:'general'|'doc'|'bulk', docKey?}
-let uploadCtx=null;
-document.getElementById('fileInput').addEventListener('change',e=>{handleFiles(e.target.files);e.target.value='';});
-function triggerUpload(id){uploadCtx={id,mode:'general'};document.getElementById('fileInput').click();}       // đính kèm chung
-function triggerDocUpload(id,docKey){uploadCtx={id,mode:'doc',docKey};document.getElementById('fileInput').click();} // đính cho 1 mục
-function triggerBulkUpload(id){uploadCtx={id,mode:'bulk'};document.getElementById('fileInput').click();}         // hàng loạt theo số
-function triggerZipUpload(id){uploadCtx={id,mode:'doc',docKey:'_zip'};document.getElementById('fileInput').click();} // file nén .zip
-function downloadDriveFile(fileId){if(!fileId)return;window.open('https://drive.google.com/uc?export=download&id='+fileId,'_blank');}
-// Tải nguyên bộ chứng từ: nén tất cả file các mục thành 1 zip
-async function downloadAllDocs(){
-  const atts=(currentShip.attachments||[]).filter(a=>a.doc&&a.fileId);
-  if(!atts.length){alert('Chưa có file chứng từ nào để tải.');return;}
-  const files=atts.map(a=>{
-    const di=DOC_LIST.findIndex(d=>d.key===a.doc);
-    const prefix=di>=0?String(di+1).padStart(2,'0')+' - '+DOC_LIST[di].label+' - ':'';
-    return {fileId:a.fileId,name:prefix+(a.title||'file')};
-  });
-  const zipName=(currentShip.lot_code||'lo-hang')+' - Bo chung tu';
-  showLoading('Đang nén bộ chứng từ...');
-  try{
-    const res=await fetch(APPS_SCRIPT_URL,{method:'POST',body:JSON.stringify({secret:UPLOAD_SECRET,action:'zip',files,zipName})});
-    const j=await res.json();
-    if(!j.ok)throw new Error(j.error||'Nén thất bại');
-    const bin=atob(j.zipBase64);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
-    const blob=new Blob([arr],{type:'application/zip'});
-    const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=j.zipName;link.click();URL.revokeObjectURL(url);
-  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
-}
-async function handleFiles(files){
-  if(!uploadCtx||!currentShip)return;
-  const newDocStatus={...(currentShip.doc_status||{})};
-  const warn=[];
-  for(const file of [...files]){
-    if(file.size>MAX_FILE){alert(`File "${file.name}" quá 20MB, bỏ qua.`);continue;}
-    // Xác định mục chứng từ cho file này
-    let docKey=null;
-    if(uploadCtx.mode==='doc'){docKey=uploadCtx.docKey;}
-    else if(uploadCtx.mode==='bulk'){
-      const m=(file.name||'').match(/^\s*0*(\d+)/);   // số đứng đầu tên file
-      const n=m?parseInt(m[1]):0;
-      if(n>=1&&n<=DOC_LIST.length){docKey=DOC_LIST[n-1].key;}
-      else{warn.push(file.name);}                      // không có số hợp lệ → đính kèm chung
+    if (b.action === 'delete') {
+      if (b.fileId) { try { DriveApp.getFileById(b.fileId).setTrashed(true); } catch (_) {} }
+      return out({ ok: true });
     }
-    showLoading(`Đang tải lên Drive: ${file.name}...`);
-    try{
-      const r=await driveUpload(currentShip.id,currentShip.lot_code||'',file);
-      const docItem={title:r.name||file.name,url:r.url,previewUrl:r.previewUrl,fileId:r.fileId,mime:file.type,size:r.size||file.size,user:currentUser.name,time:Date.now(),doc:docKey};
-      const list=[...(currentShip.attachments||[]),docItem];
-      await sb.from('logistics_shipments').update({attachments:list}).eq('id',currentShip.id);
-      currentShip.attachments=list;
-      if(docKey&&DOC_LIST.some(d=>d.key===docKey))newDocStatus[docKey]=true; // chỉ auto-tick mục chứng từ thật (bỏ qua _zip)
-    }catch(e){alert(`Lỗi tải "${file.name}": ${e.message}`);}
-  }
-  // cập nhật tick nếu có thay đổi
-  if(JSON.stringify(newDocStatus)!==JSON.stringify(currentShip.doc_status||{})){
-    currentShip.doc_status=newDocStatus;
-    await sb.from('logistics_shipments').update({doc_status:newDocStatus,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',currentShip.id);
-  }
-  const idx=allShips.findIndex(x=>x.id===currentShip.id);if(idx>=0){allShips[idx].attachments=currentShip.attachments;allShips[idx].doc_status=currentShip.doc_status;}
-  hideLoading();renderDetail();
-  if(warn.length)alert(`${warn.length} file không có số đầu hợp lệ (1–${DOC_LIST.length}) → đã đưa vào "File đính kèm chung":\n\n`+warn.join('\n'));
-}
-async function removeAtt(i){
-  const a=(currentShip.attachments||[])[i];if(!a)return;
-  if(!confirm(`Xóa "${a.title}"?`))return;
-  showLoading('Đang xóa...');
-  try{if(a.fileId)await driveDelete(a.fileId);
-    const list=[...currentShip.attachments];list.splice(i,1);
-    await sb.from('logistics_shipments').update({attachments:list,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',currentShip.id);
-    currentShip.attachments=list;const idx=allShips.findIndex(x=>x.id===currentShip.id);if(idx>=0)allShips[idx].attachments=list;renderDetail();
-  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
-}
-function previewDoc(previewUrl,openUrl){if(!previewUrl){if(openUrl)window.open(openUrl,'_blank');return;}document.getElementById('previewContent').innerHTML=`<iframe src="${esc(previewUrl)}"></iframe>`;document.getElementById('previewBackdrop').classList.remove('hidden');}
-function closePreview(){document.getElementById('previewBackdrop').classList.add('hidden');document.getElementById('previewContent').innerHTML='';}
 
-// ===== MODAL =====
-function closeModal(){document.getElementById('shipModal').classList.add('hidden');}
-function openModal(id){
-  document.getElementById('modalError').style.display='none';
-  if(id){const s=allShips.find(x=>x.id===id);document.getElementById('modalTitle').textContent='Sửa · '+s.lot_code;document.getElementById('editId').value=id;
-    document.getElementById('fLot').value=s.lot_code||'';document.getElementById('fIncoterms').value=s.incoterms||'';document.getElementById('fType').value=s.coffee_type||'robusta_r2';
-    document.getElementById('fQty').value=s.quantity||'';document.getElementById('fStatus').value=s.status||'booking';document.getElementById('fCustomer').value=s.customer||'';
-    document.getElementById('fSupplier').value=s.supplier||'';document.getElementById('fBooking').value=s.booking_no||'';document.getElementById('fVessel').value=s.vessel||'';
-    document.getElementById('fContainer').value=s.container_no||'';document.getElementById('fEtd').value=s.etd||'';document.getElementById('fEta').value=s.eta||'';document.getElementById('fDocsDone').value=s.docs_done_date||'';
-    document.getElementById('fPortLoad').value=s.port_load||'';document.getElementById('fPortDisch').value=s.port_disch||'';document.getElementById('fNotes').value=s.notes||'';
-    document.getElementById('saveBtn').textContent='Cập nhật';
-  }else{document.getElementById('modalTitle').textContent='Thêm lô hàng';document.getElementById('editId').value='';
-    ['fLot','fIncoterms','fQty','fCustomer','fSupplier','fBooking','fVessel','fContainer','fEtd','fEta','fDocsDone','fPortLoad','fPortDisch','fNotes'].forEach(x=>document.getElementById(x).value='');
-    document.getElementById('fType').value='robusta_r2';document.getElementById('fStatus').value='booking';document.getElementById('saveBtn').textContent='Lưu';}
-  document.getElementById('shipModal').classList.remove('hidden');
-}
-async function saveShip(){
-  const err=document.getElementById('modalError');err.style.display='none';
-  const lot=document.getElementById('fLot').value.trim();
-  if(!lot){err.textContent='Vui lòng nhập mã lô';err.style.display='block';return;}
-  const payload={lot_code:lot,incoterms:document.getElementById('fIncoterms').value||null,coffee_type:document.getElementById('fType').value,
-    quantity:document.getElementById('fQty').value.trim()||null,status:document.getElementById('fStatus').value,customer:document.getElementById('fCustomer').value.trim()||null,
-    supplier:document.getElementById('fSupplier').value.trim()||null,booking_no:document.getElementById('fBooking').value.trim()||null,vessel:document.getElementById('fVessel').value.trim()||null,
-    container_no:document.getElementById('fContainer').value.trim()||null,etd:document.getElementById('fEtd').value||null,eta:document.getElementById('fEta').value||null,
-    port_load:document.getElementById('fPortLoad').value.trim()||null,port_disch:document.getElementById('fPortDisch').value.trim()||null,notes:document.getElementById('fNotes').value.trim()||null,
-    docs_done_date:document.getElementById('fDocsDone').value||null,
-    updated_by:currentUser.name,updated_at:new Date().toISOString()};
-  const id=document.getElementById('editId').value;const btn=document.getElementById('saveBtn');btn.disabled=true;showLoading(id?'Đang cập nhật...':'Đang lưu...');
-  try{
-    if(id){await sb.from('logistics_shipments').update(payload).eq('id',id);}
-    else{payload.id='ls_'+Date.now()+'_'+Math.floor(Math.random()*9999);payload.created_by=currentUser.name;payload.created_at=new Date().toISOString();payload.doc_status={};payload.attachments=[];payload.costs={};payload.cost_currency='VND';await sb.from('logistics_shipments').insert(payload);}
-    closeModal();await loadData();
-    if(id){currentShip=allShips.find(x=>x.id===id);if(!document.getElementById('viewDetail').classList.contains('hidden'))renderDetail();}
-  }catch(e){err.textContent='Lỗi: '+e.message;err.style.display='block';}finally{btn.disabled=false;hideLoading();}
-}
-async function deleteShip(id){
-  if(!isAdmin()){alert('Chỉ Admin được xóa');return;}
-  const s=allShips.find(x=>x.id===id);if(!confirm(`Xóa lô "${s?.lot_code}" và toàn bộ file?`))return;
-  showLoading('Đang xóa...');
-  try{for(const a of (s.attachments||[]))if(a.fileId)await driveDelete(a.fileId);
-    await sb.from('logistics_shipments').delete().eq('id',id);showList();await loadData();
-  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
-}
-
-// ===== INIT =====
-(async function init(){
-  showLoading('Đang khởi động...');
-  try{const{data:{session}}=await sb.auth.getSession();if(session?.user)await loadCurrentUser(session.user);}
-  catch(e){console.error(e);}finally{hideLoading();}
-  sb.auth.onAuthStateChange(async(event,session)=>{
-    if(event==='SIGNED_IN'&&session?.user&&!currentUser){await loadCurrentUser(session.user);}
-    if(event==='SIGNED_OUT'){currentUser=null;document.getElementById('mainApp').classList.add('hidden');document.getElementById('loginScreen').classList.remove('hidden');}
-  });
-})();
-</script>
-<!-- ===== TTD READ-ONLY GUARD — tài khoản chỉ xem (lsdinh@gmail.com) =====
-     Tự kích hoạt: nếu người đăng nhập nằm trong VIEWERS thì khóa mọi thao tác
-     ghi dữ liệu (checkbox, select trạng thái, nút Lưu/Thêm/Xóa/Duyệt/Upload…),
-     vẫn cho phép xem, mở chi tiết, lọc, tìm kiếm và đăng xuất.
-     Dán nguyên khối này ngay trước thẻ </body> của mỗi trang. -->
-<script>
-(function(){
-  var VIEWERS=['lsdinh@gmail.com'];   // thêm email chỉ-xem khác vào đây nếu cần
-  function viewer(){try{var u=window.currentUser;return !!(u&&u.email&&VIEWERS.indexOf(String(u.email).toLowerCase())>-1);}catch(e){return false;}}
-  var on=false;
-  function lock(){
-    if(!viewer())return;
-    document.querySelectorAll('input[type=checkbox]:not([disabled]),input[type=radio]:not([disabled])').forEach(function(el){el.disabled=true;});
-    document.querySelectorAll('select:not([disabled])').forEach(function(s){
-      var oc=s.getAttribute('onchange')||'';
-      if(/save|update|set|toggle|status|insert|trang\s*th/i.test(oc))s.disabled=true;
-    });
-  }
-  function start(){
-    if(on||!viewer())return;on=true;
-    lock();
-    try{new MutationObserver(lock).observe(document.body,{childList:true,subtree:true});}catch(e){}
-    document.addEventListener('click',function(e){
-      var el=e.target.closest&&e.target.closest('button,[onclick],label,a');
-      if(!el)return;
-      var s=((el.getAttribute&&el.getAttribute('onclick'))||'')+' '+(el.className||'')+' '+(el.id||'')+' '+String(el.textContent||'').slice(0,50);
-      if(/save|delete|remove|upload|submit|approve|duy|th[eê]m|x[oó]a|s[uử]a|l[uư]u|toggle|insert|\bnew\b|\badd\b|t[aạ]o|g[uử]i|c[aậ]p\s*nh[aậ]t/i.test(s)){
-        e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();
-        alert('👁️ Tài khoản chỉ xem — không thể thao tác chỉnh sửa.');
-        return false;
+    // ----- QUÉT TOÀN BỘ: trả về danh sách thư mục + file để KHÔI PHỤC đính kèm -----
+    if (b.action === 'scan') {
+      const root = DriveApp.getFolderById(ROOT_ID);
+      const folders = root.getFolders();
+      const result = [];
+      while (folders.hasNext()) {
+        const f = folders.next();
+        const files = [];
+        const it = f.getFiles();
+        while (it.hasNext()) {
+          const file = it.next();
+          const id = file.getId();
+          files.push({
+            fileId: id,
+            name: file.getName(),
+            size: file.getSize(),
+            url: 'https://drive.google.com/file/d/' + id + '/view',
+            previewUrl: 'https://drive.google.com/file/d/' + id + '/preview'
+          });
+        }
+        result.push({ folder: f.getName(), files: files });
       }
-    },true);
-    if(!document.getElementById('roBanner')){
-      var b=document.createElement('div');b.id='roBanner';b.textContent='👁️ Chế độ CHỈ XEM';
-      b.style.cssText='position:fixed;bottom:12px;right:12px;z-index:999999;background:#111827;color:#fff;font:600 12px sans-serif;padding:6px 12px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none;';
-      document.body.appendChild(b);
+      return out({ ok: true, folders: result });
     }
+
+    // ----- Nén nhiều file thành 1 zip để tải về -----
+    if (b.action === 'zip') {
+      const files = b.files || [];
+      const blobs = [];
+      files.forEach(function(f){
+        try {
+          const bl = DriveApp.getFileById(f.fileId).getBlob();
+          if (f.name) bl.setName(f.name);
+          blobs.push(bl);
+        } catch (_) {}
+      });
+      if (!blobs.length) return out({ ok: false, error: 'Không có file để nén' });
+      const zipName = (b.zipName || 'chung_tu') + '.zip';
+      const zip = Utilities.zip(blobs, zipName);
+      return out({ ok: true, zipBase64: Utilities.base64Encode(zip.getBytes()), zipName: zipName });
+    }
+
+    const { itemId, itemName, fileName, mimeType, dataBase64 } = b;
+    if (!itemId || !fileName || !dataBase64) return out({ ok: false, error: 'Thiếu tham số' });
+
+    const root = DriveApp.getFolderById(ROOT_ID);
+    const displayName = (itemName ? itemName + ' - ' : '') + itemId;
+    const itemFolder = getOrCreateItem(root, itemId, displayName);
+
+    const bytes = Utilities.base64Decode(dataBase64);
+    const blob  = Utilities.newBlob(bytes, mimeType || 'application/octet-stream', fileName);
+    const file  = itemFolder.createFile(blob);
+    try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.EDIT); } catch (_) {}
+
+    const id = file.getId();
+    return out({ ok: true, fileId: id, name: file.getName(), size: file.getSize(),
+      url: 'https://drive.google.com/file/d/' + id + '/view',
+      previewUrl: 'https://drive.google.com/file/d/' + id + '/preview' });
+  } catch (err) { return out({ ok: false, error: String(err) }); }
+}
+function getOrCreate(parent, name) {
+  const it = parent.getFoldersByName(name);
+  return it.hasNext() ? it.next() : parent.createFolder(name);
+}
+function getOrCreateItem(parent, id, displayName) {
+  const all = parent.getFolders();
+  while (all.hasNext()) { const f = all.next(); if (f.getName() === displayName || f.getName().endsWith(id)) return f; }
+  return parent.createFolder(displayName);
+}
+function out(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
+
+// ===== CHẠY 1 LẦN: mở quyền CHỈNH SỬA cho MỌI file đã upload trước đó =====
+function setAllEditable() {
+  var root = DriveApp.getFolderById(ROOT_ID);
+  var count = openEditRecursive_(root);
+  return 'Đã mở quyền sửa cho ' + count + ' file.';
+}
+function openEditRecursive_(folder) {
+  var n = 0;
+  var files = folder.getFiles();
+  while (files.hasNext()) {
+    var f = files.next();
+    try { f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.EDIT); n++; } catch (_) {}
   }
-  setInterval(start,400);
-})();
-</script>
-</body>
-</html>
+  var subs = folder.getFolders();
+  while (subs.hasNext()) { n += openEditRecursive_(subs.next()); }
+  return n;
+}
