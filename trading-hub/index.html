@@ -124,6 +124,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <button class="tab" id="tab-services" onclick="switchTab('services')">🛠️ Hợp đồng dịch vụ</button>
     <button class="tab" id="tab-quality" onclick="switchTab('quality')">✅ Quality</button>
     <button class="tab" id="tab-weather" onclick="switchTab('weather')">🌦️ Weather Report</button>
+    <button class="tab" id="tab-saleskit" onclick="switchTab('saleskit')">📦 Sales Kit</button>
   </div>
 
   <!-- ===== COFFEE REPORTS ===== -->
@@ -287,6 +288,32 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <div id="weatherDetailContent"></div>
     </div>
   </div>
+
+  <!-- ===== SALES KIT ===== -->
+  <div id="paneSaleskit" class="hidden">
+    <div id="saleskitList">
+      <div class="toolbar">
+        <div class="search-box"><input type="text" id="skSearch" placeholder="Tìm tiêu đề, kỳ..." oninput="renderSaleskit()"></div>
+        <select style="padding:10px 14px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;background:white;" id="skCatF" onchange="renderSaleskit()">
+          <option value="all">Tất cả loại</option>
+          <option value="company">Giới thiệu công ty</option>
+          <option value="catalogue">Catalogue/Brochure</option>
+          <option value="pricing">Bảng giá</option>
+          <option value="presentation">Pitch/Slide</option>
+          <option value="sample">Mẫu/Chào hàng</option>
+          <option value="other">Khác</option>
+        </select>
+        <div class="view-toggle"><button class="vt-card" onclick="setView('card')" title="Dạng thẻ">⊞</button><button class="vt-list active" onclick="setView('list')" title="Dạng danh sách">☰</button></div>
+        <button class="btn btn-primary" onclick="openSaleskitModal()">+ Thêm tài liệu</button>
+        <button class="btn" onclick="loadSaleskit()">🔄</button>
+      </div>
+      <div class="card-grid" id="skGrid"></div>
+    </div>
+    <div id="saleskitDetail" class="hidden">
+      <button class="back-btn" onclick="backToSaleskit()">← Danh sách Sales Kit</button>
+      <div id="saleskitDetailContent"></div>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL: Report -->
@@ -396,6 +423,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   </div>
 </div>
 
+<!-- MODAL: Sales Kit -->
+<div class="modal-backdrop hidden" id="saleskitModal">
+  <div class="modal">
+    <h2 id="saleskitModalTitle">Thêm tài liệu Sales Kit</h2>
+    <input type="hidden" id="skEditId">
+    <div class="form-row">
+      <div class="form-group"><label>Tiêu đề *</label><input type="text" id="skTitle" placeholder="VD: Company Profile TTD Global 2026"></div>
+      <div class="form-group"><label>Kỳ / phiên bản</label><input type="text" id="skPeriod" placeholder="VD: 2026 / v2"></div>
+    </div>
+    <div class="form-group"><label>Loại</label>
+      <select id="skCat"><option value="company">Giới thiệu công ty</option><option value="catalogue">Catalogue/Brochure</option><option value="pricing">Bảng giá</option><option value="presentation">Pitch/Slide</option><option value="sample">Mẫu/Chào hàng</option><option value="other">Khác</option></select>
+    </div>
+    <div class="form-group"><label>Tóm tắt</label><textarea id="skSummary" rows="2" placeholder="Tóm tắt ngắn..."></textarea></div>
+    <div class="form-group"><label>Nội dung văn bản (tùy chọn)</label><textarea id="skContent" rows="7" placeholder="Nội dung chào hàng, điểm bán hàng chính..."></textarea></div>
+    <div id="skError" style="color:#c0392b;font-size:13px;display:none;"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('saleskitModal')">Hủy</button>
+      <button class="btn btn-primary" onclick="saveSaleskit()" id="skSaveBtn">Lưu</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: Weather report -->
 <div class="modal-backdrop hidden" id="weatherModal">
   <div class="modal">
@@ -493,6 +542,8 @@ let allCountries=[], currentCountry=null;
 let allServices=[], currentService=null;
 let allQuality=[], currentQuality=null;
 let allWeather=[], currentWeather=null;
+let allSaleskit=[], currentSaleskit=null;
+const SK_CAT={company:'Giới thiệu công ty',catalogue:'Catalogue/Brochure',pricing:'Bảng giá',presentation:'Pitch/Slide',sample:'Mẫu/Chào hàng',other:'Khác'};
 const SVC_TYPES={fumigation:'Khử trùng',inspection:'Giám định',cfc:'CFC',vcc:'VCC',transport:'Vận tải/Forwarder',customs:'Hải quan',other:'Khác'};
 const SVC_SRC={ttd:'TTD đang dùng',ref:'Tham khảo'};
 const SVC_ST={active:'Đang hiệu lực',expired:'Hết hạn',draft:'Nháp'};
@@ -535,7 +586,7 @@ function showMainApp(){
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('mainApp').classList.remove('hidden');
   document.getElementById('userBadge').textContent=`${currentUser.name} · ${isAdmin()?'👑 Admin':DEPTS[currentUser.role]||currentUser.role}`;
-  loadReports();loadBuyers();loadCountries();loadServices();loadQuality();loadWeather();
+  loadReports();loadBuyers();loadCountries();loadServices();loadQuality();loadWeather();loadSaleskit();
 }
 function switchTab(t){
   activeTab=t;
@@ -545,12 +596,14 @@ function switchTab(t){
   document.getElementById('tab-services').classList.toggle('active',t==='services');
   document.getElementById('tab-quality').classList.toggle('active',t==='quality');
   document.getElementById('tab-weather').classList.toggle('active',t==='weather');
+  document.getElementById('tab-saleskit').classList.toggle('active',t==='saleskit');
   document.getElementById('paneReports').classList.toggle('hidden',t!=='reports');
   document.getElementById('paneBuyers').classList.toggle('hidden',t!=='buyers');
   document.getElementById('paneCountries').classList.toggle('hidden',t!=='countries');
   document.getElementById('paneServices').classList.toggle('hidden',t!=='services');
   document.getElementById('paneQuality').classList.toggle('hidden',t!=='quality');
   document.getElementById('paneWeather').classList.toggle('hidden',t!=='weather');
+  document.getElementById('paneSaleskit').classList.toggle('hidden',t!=='saleskit');
 }
 
 // ===== FILE UPLOAD (chung) =====
@@ -562,6 +615,7 @@ function kindCfg(kind){
   if(kind==='service')return{obj:currentService,table:'service_contracts',key:'documents',nameField:'vendor',render:renderServiceDetail};
   if(kind==='quality')return{obj:currentQuality,table:'quality_standards',key:'documents',nameField:'company',render:renderQualityDetail};
   if(kind==='weather')return{obj:currentWeather,table:'weather_reports',key:'attachments',nameField:'title',render:renderWeatherDetail};
+  if(kind==='saleskit')return{obj:currentSaleskit,table:'sales_kit',key:'attachments',nameField:'title',render:renderSaleskitDetail};
   return{obj:currentBuyer,table:'buyer_profiles',key:'documents',nameField:'name',render:renderBuyerDetail};
 }
 async function handleFiles(files){
@@ -1231,6 +1285,100 @@ async function deleteWeather(id){
   showLoading('Đang xóa...');
   try{for(const d of (c.attachments||[]))if(d.fileId)await driveDelete(d.fileId);
     await sb.from('weather_reports').delete().eq('id',id);backToWeather();await loadWeather();
+  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
+}
+
+// ===== SALES KIT (ruột giống Coffee Report) =====
+async function loadSaleskit(){
+  try{const{data,error}=await sb.from('sales_kit').select('*').order('created_at',{ascending:false});if(error)throw error;allSaleskit=data||[];renderSaleskit();}
+  catch(e){document.getElementById('skGrid').innerHTML=`<div class="empty-state"><p>Lỗi: ${e.message}</p></div>`;}
+}
+function renderSaleskit(){
+  const g=document.getElementById('skGrid');
+  const s=(document.getElementById('skSearch').value||'').toLowerCase();
+  const cat=document.getElementById('skCatF').value;
+  let list=allSaleskit.filter(r=>(!s||[r.title,r.period,r.summary].some(v=>(v||'').toLowerCase().includes(s)))&&(cat==='all'||r.category===cat));
+  g.style.display=viewMode==='list'?'block':'';
+  if(!list.length){g.innerHTML='<div class="empty-state"><div class="ico">📦</div><p>Chưa có tài liệu nào</p></div>';return;}
+  if(viewMode==='list'){
+    g.innerHTML=`<table class="th-table"><thead><tr><th>Tiêu đề</th><th>Loại</th><th>Kỳ/phiên bản</th><th>Người tạo</th><th>Ngày tạo</th><th>Ngày upload TL</th><th>📎</th></tr></thead><tbody>${list.map(r=>`
+      <tr onclick="openSaleskit('${r.id}')"><td style="font-weight:600;">${esc(r.title)}</td><td><span class="cat-pill">${SK_CAT[r.category]||r.category}</span></td><td>${esc(r.period||'—')}</td><td>${esc(r.author||'?')}</td><td>${fmtDate(r.created_at)}</td><td>${lastDoc(r.attachments)}</td><td>${(r.attachments||[]).length||''}</td></tr>`).join('')}</tbody></table>`;
+    return;
+  }
+  g.innerHTML=list.map(r=>{
+    const n=(r.attachments||[]).length;
+    return`<div class="item-card" onclick="openSaleskit('${r.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">
+        <span class="cat-pill">${SK_CAT[r.category]||r.category}</span>
+        <span style="font-size:11px;color:#aaa;">${fmtDate(r.created_at)}</span>
+      </div>
+      <div style="font-size:15px;font-weight:700;color:#333;line-height:1.3;">${esc(r.title)}</div>
+      ${r.period?`<div style="font-size:12px;color:#0f766e;margin-top:3px;">🗓 ${esc(r.period)}</div>`:''}
+      ${r.summary?`<div style="font-size:12px;color:#888;margin-top:6px;line-height:1.5;max-height:54px;overflow:hidden;">${esc(r.summary)}</div>`:''}
+      <div style="font-size:11px;color:#aaa;margin-top:10px;">👤 ${esc(r.author||'?')}${n?` · 📎 ${n} file`:''}</div>
+    </div>`;
+  }).join('');
+}
+function openSaleskit(id){currentSaleskit=allSaleskit.find(r=>r.id===id);if(!currentSaleskit)return;document.getElementById('saleskitList').classList.add('hidden');document.getElementById('saleskitDetail').classList.remove('hidden');renderSaleskitDetail();}
+function backToSaleskit(){document.getElementById('saleskitDetail').classList.add('hidden');document.getElementById('saleskitList').classList.remove('hidden');currentSaleskit=null;}
+function renderSaleskitDetail(){
+  const r=currentSaleskit;
+  const docs=(r.attachments||[]).map((d,i)=>docRow(d,'saleskit',i)).join('')||'<span style="color:#aaa;font-size:13px;">Chưa có file đính kèm</span>';
+  document.getElementById('saleskitDetailContent').innerHTML=`
+    <div class="detail-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+        <div>
+          <span class="cat-pill">${SK_CAT[r.category]||r.category}</span>
+          <div style="font-size:22px;font-weight:700;margin-top:8px;">${esc(r.title)}</div>
+          <div style="font-size:13px;color:#666;margin-top:4px;">${r.period?'🗓 '+esc(r.period)+' · ':''}👤 ${esc(r.author||'?')} · ${fmtDate(r.created_at)}</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn" onclick="openSaleskitModal('${r.id}')">✏️ Sửa</button>
+          ${isAdmin()?`<button class="btn btn-danger" onclick="deleteSaleskit('${r.id}')">🗑️ Xóa</button>`:''}
+        </div>
+      </div>
+      ${r.summary?`<div style="margin-top:14px;padding:12px 14px;background:#f0fdfa;border-left:3px solid #0f766e;border-radius:6px;font-size:13px;color:#444;">${esc(r.summary)}</div>`:''}
+    </div>
+    ${r.content?`<div class="detail-card"><div style="font-size:12px;font-weight:600;color:#0f766e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">📝 Nội dung</div><div class="content-box">${esc(r.content)}</div></div>`:''}
+    <div class="detail-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:600;color:#0f766e;text-transform:uppercase;letter-spacing:.5px;">📎 File đính kèm</div>
+        <button class="btn-mini" onclick="triggerUpload('saleskit','${r.id}')">+ Tải file lên</button>
+      </div>
+      <div class="doc-list">${docs}</div>
+    </div>`;
+}
+function openSaleskitModal(id){
+  document.getElementById('skError').style.display='none';
+  if(id){const r=allSaleskit.find(x=>x.id===id);document.getElementById('saleskitModalTitle').textContent='Sửa tài liệu';document.getElementById('skEditId').value=id;
+    document.getElementById('skTitle').value=r.title||'';document.getElementById('skPeriod').value=r.period||'';document.getElementById('skCat').value=r.category||'company';
+    document.getElementById('skSummary').value=r.summary||'';document.getElementById('skContent').value=r.content||'';document.getElementById('skSaveBtn').textContent='Cập nhật';
+  }else{document.getElementById('saleskitModalTitle').textContent='Thêm tài liệu Sales Kit';document.getElementById('skEditId').value='';
+    ['skTitle','skPeriod','skSummary','skContent'].forEach(x=>document.getElementById(x).value='');document.getElementById('skCat').value='company';document.getElementById('skSaveBtn').textContent='Lưu';}
+  document.getElementById('saleskitModal').classList.remove('hidden');
+}
+async function saveSaleskit(){
+  const err=document.getElementById('skError');err.style.display='none';
+  const title=document.getElementById('skTitle').value.trim();
+  if(!title){err.textContent='Vui lòng nhập tiêu đề';err.style.display='block';return;}
+  const payload={title,period:document.getElementById('skPeriod').value.trim()||null,category:document.getElementById('skCat').value,
+    summary:document.getElementById('skSummary').value.trim()||null,content:document.getElementById('skContent').value.trim()||null,
+    updated_by:currentUser.name,updated_at:new Date().toISOString()};
+  const id=document.getElementById('skEditId').value;
+  const btn=document.getElementById('skSaveBtn');btn.disabled=true;showLoading('Đang lưu...');
+  try{
+    if(id){await sb.from('sales_kit').update(payload).eq('id',id);}
+    else{payload.id='skt_'+Date.now()+'_'+Math.floor(Math.random()*9999);payload.author=currentUser.name;payload.author_email=currentUser.email;payload.created_at=new Date().toISOString();payload.attachments=[];await sb.from('sales_kit').insert(payload);}
+    closeModal('saleskitModal');await loadSaleskit();
+    if(id){currentSaleskit=allSaleskit.find(x=>x.id===id);if(!document.getElementById('saleskitDetail').classList.contains('hidden'))renderSaleskitDetail();}
+  }catch(e){err.textContent='Lỗi: '+e.message;err.style.display='block';}finally{btn.disabled=false;hideLoading();}
+}
+async function deleteSaleskit(id){
+  if(!isAdmin()){alert('Chỉ Admin được xóa');return;}
+  const r=allSaleskit.find(x=>x.id===id);if(!confirm(`Xóa tài liệu "${r?.title}"?`))return;
+  showLoading('Đang xóa...');
+  try{for(const d of (r.attachments||[]))if(d.fileId)await driveDelete(d.fileId);
+    await sb.from('sales_kit').delete().eq('id',id);backToSaleskit();await loadSaleskit();
   }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
 }
 
