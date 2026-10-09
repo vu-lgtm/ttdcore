@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tra cứu ETA – TTDCore</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#f5f3ee;--panel:#fff;--ink:#1f1d1a;--muted:#6f6a61;--line:#e3dfd6;
+  --brand:#5b3a1e;--brand-ink:#fff;--accent:#c8873a;
+  --ok:#2f7d4f;--ok-bg:#e6f2ea;--eta:#1f5f99;--eta-bg:#e4eef8;--warn:#9a6a00;--warn-bg:#fbf1d9;
+  --err:#a33a2b;--err-bg:#f8e5e1;--gray-bg:#efede8;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Be Vietnam Pro",Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+header{background:var(--brand);color:var(--brand-ink);padding:14px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+header h1{font-size:17px;margin:0;font-weight:600;letter-spacing:.2px}
+header .sub{opacity:.75;font-size:12.5px}
+header .sp{flex:1}
+header button{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.4)}
+main{padding:16px 20px;max-width:1500px;margin:0 auto}
+button{font:inherit;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 12px;border-radius:7px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button.sm{padding:4px 8px;font-size:12.5px}
+button:disabled{opacity:.5;cursor:default}
+input,select,textarea{font:inherit;border:1px solid var(--line);border-radius:7px;padding:6px 9px;background:#fff;color:var(--ink)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.bar .sp{flex:1}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-width:120px;cursor:pointer}
+.stat b{display:block;font-size:20px}
+.stat span{color:var(--muted);font-size:12.5px}
+.stat.on{outline:2px solid var(--accent)}
+.wrap{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;min-width:1150px}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle;white-space:nowrap}
+th{background:#faf8f4;font-weight:600;font-size:12.5px;color:var(--muted);position:sticky;top:0;z-index:1}
+td.wrapc{white-space:normal;min-width:180px;max-width:280px;font-size:12.5px;color:var(--muted)}
+tr.arrived td{background:var(--ok-bg)}
+tr.in_transit td{background:var(--eta-bg)}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:13px}
+.pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600}
+.p-arrived{background:var(--ok);color:#fff}.p-in_transit{background:var(--eta);color:#fff}
+.p-pending,.p-manual{background:var(--gray-bg);color:var(--muted)}.p-not_found{background:var(--warn-bg);color:var(--warn)}
+.p-error{background:var(--err-bg);color:var(--err)}
+.date{font-weight:600}.date.eta{color:var(--eta)}
+.carrier{font-size:11.5px;font-weight:700;letter-spacing:.3px;padding:2px 6px;border-radius:5px;background:var(--gray-bg)}
+.carrier.auto{background:#efe2d1;color:var(--brand)}
+td input.inline{width:118px;padding:3px 6px;font-size:12.5px}
+td input.txt{width:150px;padding:3px 6px;font-size:12.5px}
+dialog{border:none;border-radius:12px;padding:0;width:min(720px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.25)}
+dialog .hd{padding:14px 18px;border-bottom:1px solid var(--line);font-weight:600}
+dialog .bd{padding:14px 18px;display:grid;gap:10px}
+dialog .ft{padding:12px 18px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+dialog textarea{width:100%;min-height:230px;font-family:ui-monospace,Consolas,monospace;font-size:12.5px}
+.hint{color:var(--muted);font-size:12.5px}
+#login{max-width:420px;margin:12vh auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:28px;text-align:center}
+#toast{position:fixed;right:18px;bottom:18px;background:var(--ink);color:#fff;padding:10px 14px;border-radius:8px;display:none;max-width:420px}
+.changes{margin-top:16px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+.changes h3{margin:0 0 8px;font-size:14px}
+.changes li{font-size:13px;margin:3px 0}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+@media (max-width:700px){main{padding:12px}header{padding:12px}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Tra cứu ngày đến cảng đích</h1><div class="sub">TTDCore · Evergreen & MSC tự cập nhật mỗi sáng</div></div>
+  <div class="sp"></div>
+  <span id="who" class="sub"></span>
+  <button id="btnLogout" hidden>Đăng xuất</button>
+</header>
+
+<div id="login" hidden>
+  <h2 style="margin-top:0">Đăng nhập</h2>
+  <p class="hint">Dùng tài khoản Google @ttdglobal.vn</p>
+  <button class="primary" id="btnLogin">Đăng nhập với Google</button>
+</div>
+
+<main id="app" hidden>
+  <div class="stats" id="stats"></div>
+  <div class="bar">
+    <select id="fBatch"><option value="">Tất cả đợt</option></select>
+    <select id="fCarrier"><option value="">Tất cả hãng</option></select>
+    <input id="fSearch" placeholder="Tìm B/L, POD, shipping line…" style="min-width:230px">
+    <div class="sp"></div>
+    <button id="btnPaste">+ Dán danh sách B/L</button>
+    <button id="btnRefresh" class="primary">Cập nhật tự động</button>
+    <button id="btnExport">Xuất Excel</button>
+  </div>
+  <div class="wrap"><table>
+    <thead><tr>
+      <th>#</th><th>Shipping Line</th><th>B/L No</th><th>Hãng</th><th>Master B/L / Cont</th>
+      <th>Cảng đích</th><th>Ngày đến</th><th>Trạng thái</th><th>Sự kiện / Ghi chú</th><th>Cập nhật</th><th></th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table></div>
+  <div class="changes"><h3>Thay đổi ETA gần đây</h3><ul id="changes" style="margin:0;padding-left:18px"></ul></div>
+</main>
+
+<dialog id="dlg">
+  <div class="hd">Dán danh sách B/L</div>
+  <div class="bd">
+    <div class="hint">Copy 2 cột <b>Shipping Line</b> và <b>B/L No</b> từ Excel rồi dán vào đây (mỗi dòng 1 lô). Chỉ có cột B/L cũng được. Thứ tự dán được giữ nguyên.</div>
+    <input id="pBatch" placeholder="Tên đợt, vd: GRAB T9.2026">
+    <textarea id="pText" placeholder="EVERGREEN&#9;235600753162&#10;CROSS OCEAN LINE via MSC&#9;MEDUXT584604"></textarea>
+    <div class="hint" id="pPreview"></div>
+  </div>
+  <div class="ft"><button id="pCancel">Huỷ</button><button class="primary" id="pSave">Lưu & tra ngay</button></div>
+</dialog>
+<div id="toast"></div>
+
+<script>
+// ===== Cấu hình: lấy từ module khác trong TTDCore =====
+const SUPABASE_URL = "https://fyjinbtabsentsvnkqzg.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5amluYnRhYnNlbnRzdm5rcXpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MTAxNTUsImV4cCI6MjA5NDI4NjE1NX0.m1H8bOT7gUXJxPoQT6bDqtRUjo4nCSxb4A1rth7Eols";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const AUTO = ["EVERGREEN","MSC"];
+const CARRIER_NAME = {EVERGREEN:"Evergreen",MSC:"MSC",ONE:"ONE",CMA:"CMA CGM",HLC:"Hapag-Lloyd",MAERSK:"Maersk",ZIM:"ZIM",YML:"Yang Ming",FORWARDER:"Forwarder",OTHER:"Khác"};
+const STATUS = {arrived:"Đã đến",in_transit:"Đang đi",pending:"Chờ tra",manual:"Nhập tay",not_found:"Không thấy",error:"Lỗi"};
+const trackUrl = (c,b)=>({
+  EVERGREEN:"https://ct.shipmentlink.com/servlet/TDB1_CargoTracking.do",
+  MSC:`https://www.msc.com/en/track-a-shipment?trackingNumber=${b}`,
+  ONE:`https://www.one-line.com/one-ecom/manage-shipment/cargo-tracking?trakNoParam=${b.replace(/^ONEY/,"")}&trakNoTpCdParam=B`,
+  CMA:`https://www.cma-cgm.com/ebusiness/tracking/search?SearchBy=BL&Reference=${b}`,
+  HLC:`https://www.hapag-lloyd.com/en/online-business/track/track-by-booking-solution.html?blno=${b}`,
+  MAERSK:`https://www.maersk.com/tracking/${b}`,
+  ZIM:`https://www.zim.com/tools/track-a-shipment?consnumber=${b}`,
+  YML:"https://www.yangming.com/e-service/track_trace/track_trace_cargo_tracking.aspx",
+}[c]);
+
+function detectCarrier(bl,line=""){
+  const b=bl.trim().toUpperCase(), l=line.toUpperCase();
+  if(/^TPZ/.test(b))return"FORWARDER";
+  if(/^\d{12}$/.test(b))return"EVERGREEN";
+  if(/^MEDU/.test(b))return"MSC";
+  if(/^HLCU/.test(b))return"HLC";
+  if(/^ZIMU/.test(b))return"ZIM";
+  if(/^YMLU/.test(b))return"YML";
+  if(/^ONEY/.test(b)||/^SGN[A-Z]/.test(b))return"ONE";
+  if(/^SGN\d/.test(b)||/^CMAU/.test(b))return"CMA";
+  if(/^\d{9}$/.test(b))return"MAERSK";
+  if(/KUEHNE|K\+N|TOPAZ/.test(l))return"FORWARDER";
+  if(/EVERGREEN/.test(l))return"EVERGREEN";
+  if(/MSC/.test(l))return"MSC";
+  if(/ONE LINE/.test(l))return"ONE";
+  if(/CMA/.test(l))return"CMA";
+  if(/HAPAG|HAPAD/.test(l))return"HLC";
+  if(/MAERSK/.test(l))return"MAERSK";
+  if(/ZIM/.test(l))return"ZIM";
+  if(/YML|YANG/.test(l))return"YML";
+  return"OTHER";
+}
+
+let rows=[], user=null, statusFilter="";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=d=>d?d.split("-").reverse().join("/"):"";
+const ago=t=>{if(!t)return"";const m=Math.round((Date.now()-new Date(t))/60000);return m<60?`${m} phút trước`:m<1440?`${Math.round(m/60)} giờ trước`:fmt(t.slice(0,10));};
+function toast(msg,ms=3500){const t=$("toast");t.textContent=msg;t.style.display="block";clearTimeout(t._h);t._h=setTimeout(()=>t.style.display="none",ms);}
+
+// ===== Auth =====
+async function initAuth(){
+  const {data:{session}}=await sb.auth.getSession();
+  setUser(session?.user);
+  sb.auth.onAuthStateChange((_e,s)=>setUser(s?.user));
+}
+function setUser(u){
+  if(u&&!u.email.endsWith("@ttdglobal.vn")){toast("Chỉ dùng tài khoản @ttdglobal.vn");sb.auth.signOut();u=null;}
+  const changed=(user?.id)!==(u?.id); user=u||null;
+  $("login").hidden=!!user; $("app").hidden=!user; $("btnLogout").hidden=!user;
+  $("who").textContent=user?user.email:"";
+  if(user&&changed)load();
+}
+$("btnLogin").onclick=()=>sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.href,queryParams:{hd:"ttdglobal.vn"}}});
+$("btnLogout").onclick=()=>sb.auth.signOut();
+
+// ===== Data =====
+async function load(){
+  const {data,error}=await sb.from("shipment_tracking").select("*").order("sort_order");
+  if(error){toast("Lỗi tải dữ liệu: "+error.message);return;}
+  rows=data; fillFilters(); render(); loadChanges();
+}
+async function loadChanges(){
+  const {data}=await sb.from("shipment_eta_changes").select("*").order("changed_at",{ascending:false}).limit(15);
+  $("changes").innerHTML=(data||[]).map(c=>c.new_status==="arrived"&&c.old_status!=="arrived"
+    ?`<li><span class="mono">${esc(c.bl_no)}</span> đã đến cảng · ${ago(c.changed_at)}</li>`
+    :`<li><span class="mono">${esc(c.bl_no)}</span> ETA ${fmt(c.old_eta)||"—"} → <b>${fmt(c.new_eta)||"—"}</b> · ${ago(c.changed_at)}</li>`).join("")||`<li class="hint">Chưa có thay đổi.</li>`;
+}
+function fillFilters(){
+  const keep=(sel,vals,label)=>{const v=sel.value;sel.innerHTML=`<option value="">${label}</option>`+vals.map(x=>`<option value="${esc(x)}">${esc(CARRIER_NAME[x]||x)}</option>`).join("");sel.value=vals.includes(v)?v:"";};
+  keep($("fBatch"),[...new Set(rows.map(r=>r.batch).filter(Boolean))],"Tất cả đợt");
+  keep($("fCarrier"),[...new Set(rows.map(r=>r.carrier))],"Tất cả hãng");
+}
+function filtered(){
+  const b=$("fBatch").value,c=$("fCarrier").value,q=$("fSearch").value.trim().toLowerCase();
+  return rows.filter(r=>(!b||r.batch===b)&&(!c||r.carrier===c)&&(!statusFilter||r.status===statusFilter||(statusFilter==="pending"&&r.status==="manual"))
+    &&(!q||[r.bl_no,r.master_bl,r.pod,r.shipping_line,r.container_no].join(" ").toLowerCase().includes(q)));
+}
+function render(){
+  const base=rows.filter(r=>(!$("fBatch").value||r.batch===$("fBatch").value));
+  const cnt=k=>base.filter(r=>r.status===k).length;
+  const st=[["","Tổng",base.length],["arrived","Đã đến",cnt("arrived")],["in_transit","Đang đi",cnt("in_transit")],
+    ["pending","Chờ tra / nhập tay",cnt("pending")+cnt("manual")],["not_found","Không thấy",cnt("not_found")]];
+  $("stats").innerHTML=st.map(([k,l,n])=>`<div class="stat ${statusFilter===k?"on":""}" data-k="${k}"><b>${n}</b><span>${l}</span></div>`).join("");
+  document.querySelectorAll(".stat").forEach(e=>e.onclick=()=>{statusFilter=statusFilter===e.dataset.k?"":e.dataset.k;render();});
+
+  const list=filtered();
+  if(!list.length){$("tbody").innerHTML=`<tr><td colspan="11" class="empty">Chưa có lô nào. Bấm “+ Dán danh sách B/L”.</td></tr>`;return;}
+  $("tbody").innerHTML=list.map((r,i)=>{
+    const auto=r.auto&&AUTO.includes(r.carrier);
+    const ref=r.master_bl||r.bl_no;
+    const url=trackUrl(r.master_bl?detectCarrier(r.master_bl):r.carrier,ref);
+    const dateCell=auto
+      ?(r.ata?`<span class="date">${fmt(r.ata)}</span>`:r.eta?`<span class="date eta">ETA ${fmt(r.eta)}</span>`:"")
+      :`<div style="display:grid;gap:3px"><label class="hint">ETA <input type="date" class="inline" data-f="eta" data-id="${r.id}" value="${r.eta||""}"></label>
+         <label class="hint">ATA <input type="date" class="inline" data-f="ata" data-id="${r.id}" value="${r.ata||""}"></label></div>`;
+    return `<tr class="${r.status}">
+      <td>${i+1}</td>
+      <td>${esc(r.shipping_line)}</td>
+      <td class="mono">${esc(r.bl_no)}</td>
+      <td><span class="carrier ${auto?"auto":""}" title="${auto?"Tự cập nhật":"Nhập tay"}">${esc(CARRIER_NAME[r.carrier]||r.carrier)}</span></td>
+      <td><input class="txt mono" data-f="master_bl" data-id="${r.id}" value="${esc(r.master_bl||"")}" placeholder="${r.carrier==="FORWARDER"?"Nhập Master B/L":"—"}"></td>
+      <td>${auto?esc(r.pod||""):`<input class="txt" data-f="pod" data-id="${r.id}" value="${esc(r.pod||"")}" placeholder="Cảng đích">`}</td>
+      <td>${dateCell}</td>
+      <td><span class="pill p-${r.status}">${STATUS[r.status]||r.status}</span></td>
+      <td class="wrapc">${esc(r.last_event||"")}${r.vessel?`<br>${esc(r.vessel)}`:""}
+        <input class="txt" style="width:100%;margin-top:3px" data-f="note" data-id="${r.id}" value="${esc(r.note||"")}" placeholder="Ghi chú"></td>
+      <td class="hint">${ago(r.last_checked)}</td>
+      <td>${url?`<a href="${url}" target="_blank" rel="noopener"><button class="sm">Tra web</button></a>`:""}
+        ${auto?`<button class="sm" data-act="one" data-id="${r.id}">↻</button>`:""}
+        <button class="sm" data-act="del" data-id="${r.id}" title="Xoá">✕</button></td>
+    </tr>`;}).join("");
+
+  document.querySelectorAll("#tbody input[data-f]").forEach(el=>el.onchange=()=>saveField(el.dataset.id,el.dataset.f,el.value));
+  document.querySelectorAll("#tbody button[data-act]").forEach(el=>el.onclick=()=>el.dataset.act==="del"?delRow(el.dataset.id):refresh([el.dataset.id]));
+}
+
+async function saveField(id,f,v){
+  const r=rows.find(x=>x.id===id); const upd={[f]:v||null};
+  if(f==="master_bl"){ // gắn Master B/L hãng tàu → nếu là Evergreen/MSC thì chuyển sang tự động
+    const c=v?detectCarrier(v):(r.carrier); if(v&&AUTO.includes(c)){upd.auto=true;upd.status="pending";}
+  }
+  if(!r.auto&&(f==="eta"||f==="ata")){
+    const eta=f==="eta"?v:r.eta, ata=f==="ata"?v:r.ata;
+    upd.status=ata?"arrived":eta?"in_transit":"manual";
+  }
+  const {error}=await sb.from("shipment_tracking").update(upd).eq("id",id);
+  if(error)return toast("Lỗi lưu: "+error.message);
+  Object.assign(r,upd); render(); if(f==="eta"||f==="ata")loadChanges();
+  if(upd.auto)refresh([id]);
+}
+async function delRow(id){
+  if(!confirm("Xoá lô này khỏi danh sách theo dõi?"))return;
+  const {error}=await sb.from("shipment_tracking").delete().eq("id",id);
+  if(error)return toast("Lỗi xoá: "+error.message);
+  rows=rows.filter(r=>r.id!==id); render();
+}
+
+async function refresh(ids){
+  const btn=$("btnRefresh"); btn.disabled=true; const old=btn.textContent; btn.textContent="Đang tra…";
+  try{
+    const {data,error}=await sb.functions.invoke("track-shipments",{body:ids?{ids}:{}});
+    if(error)throw error;
+    const fail=(data.results||[]).filter(x=>!x.ok).length;
+    toast(`Đã tra ${data.checked} lô${fail?`, ${fail} lỗi`:""}.`);
+    await load();
+  }catch(e){toast("Lỗi khi tra: "+(e.message||e));}
+  finally{btn.disabled=false;btn.textContent=old;}
+}
+$("btnRefresh").onclick=()=>refresh();
+
+// ===== Dán danh sách =====
+function parsePaste(txt){
+  return txt.split(/\r?\n/).map(l=>l.split("\t").map(s=>s.trim())).filter(c=>c.some(Boolean)).map(c=>{
+    const bl=c.length>1?c[c.length-1]:c[0], line=c.length>1?c.slice(0,-1).join(" "):"";
+    return {shipping_line:line||null,bl_no:bl};
+  }).filter(r=>r.bl_no&&!/^B\/?L/i.test(r.bl_no));
+}
+$("btnPaste").onclick=()=>{$("pText").value="";$("pPreview").textContent="";$("dlg").showModal();};
+$("pCancel").onclick=()=>$("dlg").close();
+$("pText").oninput=()=>{const p=parsePaste($("pText").value);
+  const auto=p.filter(r=>AUTO.includes(detectCarrier(r.bl_no,r.shipping_line||""))).length;
+  $("pPreview").textContent=p.length?`${p.length} lô · ${auto} lô tự cập nhật (Evergreen/MSC) · ${p.length-auto} lô nhập tay`:"";};
+$("pSave").onclick=async()=>{
+  const p=parsePaste($("pText").value); if(!p.length)return toast("Chưa có B/L nào.");
+  const start=rows.reduce((m,r)=>Math.max(m,r.sort_order||0),0)+1, batch=$("pBatch").value.trim()||null;
+  const recs=p.map((r,i)=>{const c=detectCarrier(r.bl_no,r.shipping_line||"");
+    return {...r,batch,carrier:c,auto:AUTO.includes(c),status:AUTO.includes(c)?"pending":"manual",sort_order:start+i};});
+  const {error}=await sb.from("shipment_tracking").upsert(recs,{onConflict:"bl_no",ignoreDuplicates:true});
+  if(error)return toast("Lỗi lưu: "+error.message);
+  $("dlg").close(); await load();
+  if(recs.some(r=>r.auto))refresh();
+};
+
+// ===== Xuất Excel =====
+$("btnExport").onclick=()=>{
+  const data=filtered().map((r,i)=>({"STT":i+1,"Shipping Line":r.shipping_line||"","B/L No":r.bl_no,"Hãng":CARRIER_NAME[r.carrier]||r.carrier,
+    "Master B/L":r.master_bl||"","Cảng đích":r.pod||"","ETA":fmt(r.eta),"Ngày đến (ATA)":fmt(r.ata),
+    "Trạng thái":STATUS[r.status]||r.status,"Sự kiện cuối":r.last_event||"","Ghi chú":r.note||"","Cập nhật lúc":r.last_checked?new Date(r.last_checked).toLocaleString("vi-VN"):""}));
+  const ws=XLSX.utils.json_to_sheet(data); ws["!cols"]=[6,30,20,12,18,24,12,14,12,40,30,18].map(w=>({wch:w}));
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"ETA");
+  XLSX.writeFile(wb,`ETA_${new Date().toISOString().slice(0,10)}.xlsx`);
+};
+["fBatch","fCarrier"].forEach(id=>$(id).onchange=render); $("fSearch").oninput=render;
+
+initAuth();
+</script>
+</body>
+</html>
