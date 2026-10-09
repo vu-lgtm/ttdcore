@@ -347,8 +347,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <div class="form-group"><label>Tên buyer *</label><input type="text" id="bName" placeholder="VD: BEST RETURNS FZCO"></div>
       <div class="form-group"><label>Quốc gia</label><input type="text" id="bCountry" placeholder="VD: UAE"></div>
     </div>
-    <div class="form-row-3">
-      <div class="form-group"><label>Người liên hệ</label><input type="text" id="bContact" placeholder="Tên người LH"></div>
+    <div class="form-row">
+      <div class="form-group"><label>PIC (phụ trách bên mình)</label><input type="text" id="bPic" placeholder="Nhân sự TTD phụ trách buyer này"></div>
+      <div class="form-group"><label>Người liên hệ (phía khách)</label><input type="text" id="bContact" placeholder="Tên người LH bên buyer"></div>
+    </div>
+    <div class="form-row">
       <div class="form-group"><label>Email</label><input type="text" id="bEmail" placeholder="email@..."></div>
       <div class="form-group"><label>Điện thoại</label><input type="text" id="bPhone" placeholder="+971..."></div>
     </div>
@@ -777,14 +780,14 @@ function renderBuyers(){
   const s=(document.getElementById('buyerSearch').value||'').toLowerCase();
   const st=document.getElementById('buyerStatus').value;
   let list=allBuyers.filter(b=>{
-    const ms=!s||[b.name,b.country,b.contact_person].some(v=>(v||'').toLowerCase().includes(s));
+    const ms=!s||[b.name,b.country,b.contact_person,b.pic].some(v=>(v||'').toLowerCase().includes(s));
     return ms&&(st==='all'||b.status===st);
   });
   g.style.display=viewMode==='list'?'block':'';
   if(!list.length){g.innerHTML='<div class="empty-state"><div class="ico">🧑‍💼</div><p>Chưa có buyer nào</p></div>';return;}
   if(viewMode==='list'){
-    g.innerHTML=`<table class="th-table"><thead><tr><th>Tên buyer</th><th>Quốc gia</th><th>Người liên hệ</th><th>Trạng thái</th><th>Ngày upload TL</th><th>📎</th></tr></thead><tbody>${list.map(b=>`
-      <tr onclick="openBuyer('${b.id}')"><td style="font-weight:600;">${esc(b.name)}</td><td>${esc(b.country||'—')}</td><td>${esc(b.contact_person||'—')}</td><td><span class="status-pill ${BSTATUS_CLASS[b.status]||'st-active'}">${BSTATUS_LABELS[b.status]||b.status}</span></td><td>${lastDoc(b.documents)}</td><td>${(b.documents||[]).length||''}</td></tr>`).join('')}</tbody></table>`;
+    g.innerHTML=`<table class="th-table"><thead><tr><th>Tên buyer</th><th>Quốc gia</th><th>PIC (bên mình)</th><th>Người liên hệ (khách)</th><th>Trạng thái</th><th>Ngày upload TL</th><th>📎</th></tr></thead><tbody>${list.map(b=>`
+      <tr onclick="openBuyer('${b.id}')"><td style="font-weight:600;">${esc(b.name)}</td><td>${esc(b.country||'—')}</td><td>${esc(b.pic||'—')}</td><td>${esc(b.contact_person||'—')}</td><td><span class="status-pill ${BSTATUS_CLASS[b.status]||'st-active'}">${BSTATUS_LABELS[b.status]||b.status}</span></td><td>${lastDoc(b.documents)}</td><td>${(b.documents||[]).length||''}</td></tr>`).join('')}</tbody></table>`;
     return;
   }
   g.innerHTML=list.map(b=>{
@@ -795,7 +798,8 @@ function renderBuyers(){
         ${b.country?`<span style="font-size:12px;color:#888;">🌐 ${esc(b.country)}</span>`:''}
       </div>
       <div style="font-size:16px;font-weight:700;color:#333;line-height:1.3;">${esc(b.name)}</div>
-      ${b.contact_person?`<div style="font-size:12px;color:#666;margin-top:4px;">👤 ${esc(b.contact_person)}</div>`:''}
+      ${b.pic?`<div style="font-size:12px;color:#0f766e;margin-top:4px;">🧑‍💼 PIC: ${esc(b.pic)}</div>`:''}
+      ${b.contact_person?`<div style="font-size:12px;color:#666;margin-top:2px;">👤 LH: ${esc(b.contact_person)}</div>`:''}
       <div style="font-size:11px;color:#aaa;margin-top:10px;">${n?`📎 ${n} giấy tờ`:'Chưa có giấy tờ'}</div>
     </div>`;
   }).join('');
@@ -819,7 +823,8 @@ function renderBuyerDetail(){
       </div>
       <div class="detail-grid">
         <div class="detail-item"><div class="d-label">Quốc gia</div><div class="d-value">${esc(b.country||'—')}</div></div>
-        <div class="detail-item"><div class="d-label">Người liên hệ</div><div class="d-value">${esc(b.contact_person||'—')}</div></div>
+        <div class="detail-item"><div class="d-label">PIC (phụ trách bên mình)</div><div class="d-value">${esc(b.pic||'—')}</div></div>
+        <div class="detail-item"><div class="d-label">Người liên hệ (phía khách)</div><div class="d-value">${esc(b.contact_person||'—')}</div></div>
         <div class="detail-item"><div class="d-label">Email</div><div class="d-value">${esc(b.email||'—')}</div></div>
         <div class="detail-item"><div class="d-label">Điện thoại</div><div class="d-value">${esc(b.phone||'—')}</div></div>
         <div class="detail-item" style="grid-column:span 2;"><div class="d-label">Địa chỉ</div><div class="d-value">${esc(b.address||'—')}</div></div>
@@ -844,18 +849,18 @@ function renderBuyerDetail(){
 function openBuyerModal(id){
   document.getElementById('bError').style.display='none';
   if(id){const b=allBuyers.find(x=>x.id===id);document.getElementById('buyerModalTitle').textContent='Sửa buyer';document.getElementById('bEditId').value=id;
-    document.getElementById('bName').value=b.name||'';document.getElementById('bCountry').value=b.country||'';document.getElementById('bContact').value=b.contact_person||'';
+    document.getElementById('bName').value=b.name||'';document.getElementById('bCountry').value=b.country||'';document.getElementById('bContact').value=b.contact_person||'';document.getElementById('bPic').value=b.pic||'';
     document.getElementById('bEmail').value=b.email||'';document.getElementById('bPhone').value=b.phone||'';document.getElementById('bAddress').value=b.address||'';
     document.getElementById('bStatus').value=b.status||'active';document.getElementById('bNotes').value=b.notes||'';document.getElementById('bSaveBtn').textContent='Cập nhật';
   }else{document.getElementById('buyerModalTitle').textContent='Thêm buyer';document.getElementById('bEditId').value='';
-    ['bName','bCountry','bContact','bEmail','bPhone','bAddress','bNotes'].forEach(x=>document.getElementById(x).value='');document.getElementById('bStatus').value='active';document.getElementById('bSaveBtn').textContent='Lưu';}
+    ['bName','bCountry','bContact','bPic','bEmail','bPhone','bAddress','bNotes'].forEach(x=>document.getElementById(x).value='');document.getElementById('bStatus').value='active';document.getElementById('bSaveBtn').textContent='Lưu';}
   document.getElementById('buyerModal').classList.remove('hidden');
 }
 async function saveBuyer(){
   const err=document.getElementById('bError');err.style.display='none';
   const name=document.getElementById('bName').value.trim();
   if(!name){err.textContent='Vui lòng nhập tên buyer';err.style.display='block';return;}
-  const payload={name,country:document.getElementById('bCountry').value.trim()||null,contact_person:document.getElementById('bContact').value.trim()||null,
+  const payload={name,country:document.getElementById('bCountry').value.trim()||null,contact_person:document.getElementById('bContact').value.trim()||null,pic:document.getElementById('bPic').value.trim()||null,
     email:document.getElementById('bEmail').value.trim()||null,phone:document.getElementById('bPhone').value.trim()||null,
     address:document.getElementById('bAddress').value.trim()||null,status:document.getElementById('bStatus').value,
     notes:document.getElementById('bNotes').value.trim()||null,updated_by:currentUser.name,updated_at:new Date().toISOString()};
