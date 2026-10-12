@@ -779,40 +779,52 @@ const CONTRACT_PALETTE=[
   {color:'#c2410c',bg:'#fff1ea',border:'#ffcbb0'},
   {color:'#0e7490',bg:'#e8fafc',border:'#a8e4ee'}
 ];
-let editingContracts=false, contractDraft=[];
+let editingContracts=false, flowDraft=[];
 
-// Lấy danh sách HĐ; nếu đơn còn dữ liệu cũ (6 cột) thì tự chuyển sang mảng
-function getContracts(o){
-  if(Array.isArray(o.contracts)&&o.contracts.length)return o.contracts;
-  const legacy=[];
-  if(o.contract_buy||o.contract_buy_url)legacy.push({label:'HĐ Mua (NCC)',code:o.contract_buy||'',url:o.contract_buy_url||''});
-  if(o.contract_intermediary||o.contract_intermediary_url)legacy.push({label:'HĐ Trung gian',code:o.contract_intermediary||'',url:o.contract_intermediary_url||''});
-  if(o.contract_sell||o.contract_sell_url)legacy.push({label:'HĐ Bán quốc tế',code:o.contract_sell||'',url:o.contract_sell_url||''});
-  if(legacy.length)return legacy;
-  // Mặc định 3 loại trống
+// ===== Luồng hợp đồng — HỖ TRỢ NHIỀU LUỒNG (mỗi mặt hàng 1 HĐ mua riêng) =====
+function defaultFlowItems(o){
   return [
     {label:'HĐ Mua (NCC)',code:'',url:''},
     {label:'HĐ Trung gian',code:'',url:''},
     {label:'HĐ Bán quốc tế',code:o.code||'',url:''}
   ];
 }
-
-// Luồng gọn cho danh sách — chỉ hiện khi đơn đã nhập hợp đồng
-function renderFlowInline(o){
-  const cs=(Array.isArray(o.contracts)?o.contracts:[]).filter(c=>(c.code||'').trim()||(c.url||'').trim());
-  if(!cs.length)return '';
-  const chips=cs.map((c,i)=>{
-    const p=CONTRACT_PALETTE[i%CONTRACT_PALETTE.length];
-    const hasUrl=c.url&&/^https?:\/\//i.test(c.url);
-    const base=`font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;background:${p.bg};color:${p.color};border:1px solid ${p.border};white-space:nowrap;`;
-    const click=hasUrl?`onclick="event.stopPropagation();window.open('${esc(c.url)}','_blank')" style="cursor:pointer;${base}" title="${esc(c.label)} — mở bản scan"`:`style="${base}" title="${esc(c.label)}"`;
-    return `<span ${click}>${hasUrl?'📎':''}${esc(c.code||c.label)}</span>`;
-  }).join('<span style="color:#ccc;font-size:10px;">›</span>');
-  return `<div style="margin-top:4px;font-weight:400;display:flex;flex-wrap:wrap;align-items:center;gap:3px;">${chips}</div>`;
+function legacyContracts(o){
+  if(Array.isArray(o.contracts)&&o.contracts.length)return o.contracts;
+  const legacy=[];
+  if(o.contract_buy||o.contract_buy_url)legacy.push({label:'HĐ Mua (NCC)',code:o.contract_buy||'',url:o.contract_buy_url||''});
+  if(o.contract_intermediary||o.contract_intermediary_url)legacy.push({label:'HĐ Trung gian',code:o.contract_intermediary||'',url:o.contract_intermediary_url||''});
+  if(o.contract_sell||o.contract_sell_url)legacy.push({label:'HĐ Bán quốc tế',code:o.contract_sell||'',url:o.contract_sell_url||''});
+  return legacy;
+}
+// Trả về mảng luồng: [{name, items:[{label,code,url}]}] — tự chuyển dữ liệu cũ sang 1 luồng
+function getFlows(o){
+  if(Array.isArray(o.flows)&&o.flows.length)return o.flows;
+  const legacy=legacyContracts(o);
+  return [{name:'',items:legacy.length?legacy:defaultFlowItems(o)}];
 }
 
-function renderFlowView(cs){
-  if(!cs.length)return '<div style="font-size:13px;color:#bbb;">Chưa có hợp đồng nào.</div>';
+// Luồng gọn cho danh sách — mỗi luồng 1 dòng chip
+function renderFlowInline(o){
+  const flows=(Array.isArray(o.flows)&&o.flows.length)?o.flows:(Array.isArray(o.contracts)&&o.contracts.length?[{name:'',items:o.contracts}]:[]);
+  const lines=flows.map(f=>{
+    const cs=(f.items||[]).filter(c=>(c.code||'').trim()||(c.url||'').trim());
+    if(!cs.length)return '';
+    const chips=cs.map((c,i)=>{
+      const p=CONTRACT_PALETTE[i%CONTRACT_PALETTE.length];
+      const hasUrl=c.url&&/^https?:\/\//i.test(c.url);
+      const base=`font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;background:${p.bg};color:${p.color};border:1px solid ${p.border};white-space:nowrap;`;
+      const click=hasUrl?`onclick="event.stopPropagation();window.open('${esc(c.url)}','_blank')" style="cursor:pointer;${base}" title="${esc(c.label)} — mở bản scan"`:`style="${base}" title="${esc(c.label)}"`;
+      return `<span ${click}>${hasUrl?'📎':''}${esc(c.code||c.label)}</span>`;
+    }).join('<span style="color:#ccc;font-size:10px;">›</span>');
+    const tag=f.name?`<span style="font-size:9.5px;color:#c8873a;font-weight:700;margin-right:4px;">${esc(f.name)}:</span>`:'';
+    return `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:3px;">${tag}${chips}</div>`;
+  }).filter(Boolean);
+  if(!lines.length)return '';
+  return `<div style="margin-top:4px;font-weight:400;display:flex;flex-direction:column;gap:3px;">${lines.join('')}</div>`;
+}
+
+function renderOneFlowRow(cs){
   let html='<div style="display:flex;align-items:stretch;gap:0;flex-wrap:wrap;">';
   cs.forEach((c,i)=>{
     const p=CONTRACT_PALETTE[i%CONTRACT_PALETTE.length];
@@ -830,37 +842,66 @@ function renderFlowView(cs){
   return html;
 }
 
+function renderFlowView(flows){
+  const list=(flows||[]).filter(f=>(f.items||[]).some(c=>(c.code||'').trim()||(c.url||'').trim()));
+  if(!list.length)return '<div style="font-size:13px;color:#bbb;">Chưa có hợp đồng nào.</div>';
+  const multi=list.length>1;
+  return list.map((f,fi)=>{
+    const head=(f.name||multi)?`<div style="font-size:11px;font-weight:700;color:#c8873a;margin:${fi?'14px':'0'} 0 6px;">🔗 ${esc(f.name||('Luồng '+(fi+1)))}</div>`:'';
+    const items=(f.items||[]).filter(c=>(c.code||'').trim()||(c.url||'').trim());
+    return head+renderOneFlowRow(items);
+  }).join('');
+}
+
 function renderFlowEdit(){
-  const rows=contractDraft.map((c,i)=>`
-    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
-      <span style="font-size:12px;color:#aaa;width:18px;text-align:center;">${i+1}</span>
-      <input type="text" value="${esc(c.label)}" oninput="contractDraft[${i}].label=this.value" placeholder="Loại hợp đồng" style="flex:1;min-width:140px;padding:7px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;">
-      <input type="text" value="${esc(c.code)}" oninput="contractDraft[${i}].code=this.value" placeholder="Mã hợp đồng" style="flex:1;min-width:130px;padding:7px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;">
-      <input type="url" value="${esc(c.url)}" oninput="contractDraft[${i}].url=this.value" placeholder="Link scan (Drive)" style="flex:2;min-width:160px;padding:7px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;">
-      <button class="btn-mini" style="color:#c0392b;" onclick="removeContract(${i})">✕</button>
-    </div>`).join('');
-  return `<div style="margin-top:4px;">${rows}
-    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
-      <button class="btn-mini" style="border:1.5px dashed #a5c4ff;background:#f5f9ff;color:#1565c0;font-weight:600;" onclick="addContract()">+ Thêm hợp đồng</button>
+  const flowsHtml=flowDraft.map((f,fi)=>{
+    const rows=(f.items||[]).map((c,i)=>`
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
+        <span style="font-size:12px;color:#aaa;width:18px;text-align:center;">${i+1}</span>
+        <input type="text" value="${esc(c.label)}" oninput="flowDraft[${fi}].items[${i}].label=this.value" placeholder="Loại hợp đồng" style="flex:1;min-width:140px;padding:7px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;">
+        <input type="text" value="${esc(c.code)}" oninput="flowDraft[${fi}].items[${i}].code=this.value" placeholder="Mã hợp đồng" style="flex:1;min-width:130px;padding:7px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;">
+        <input type="url" value="${esc(c.url)}" oninput="flowDraft[${fi}].items[${i}].url=this.value" placeholder="Link scan (Drive)" style="flex:2;min-width:160px;padding:7px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;">
+        <button class="btn-mini" style="color:#c0392b;" onclick="removeContract(${fi},${i})">✕</button>
+      </div>`).join('');
+    return `<div style="border:1.5px solid #f0e0cc;border-radius:10px;padding:12px 12px 10px;margin-bottom:10px;background:#fffdf9;">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
+        <span style="font-size:11px;font-weight:700;color:#c8873a;">LUỒNG ${fi+1}</span>
+        <input type="text" value="${esc(f.name||'')}" oninput="flowDraft[${fi}].name=this.value" placeholder="Tên luồng / mặt hàng (VD: -A Arabica)" style="flex:1;min-width:180px;padding:6px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;">
+        ${flowDraft.length>1?`<button class="btn-mini" style="color:#c0392b;" onclick="removeFlow(${fi})">🗑️ Xóa luồng</button>`:''}
+      </div>
+      ${rows}
+      <button class="btn-mini" style="border:1.5px dashed #a5c4ff;background:#f5f9ff;color:#1565c0;font-weight:600;" onclick="addContract(${fi})">+ Thêm hợp đồng</button>
+    </div>`;
+  }).join('');
+  return `<div style="margin-top:4px;">${flowsHtml}
+    <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;align-items:center;">
+      <button class="btn-mini" style="border:1.5px dashed #c8873a;background:#fff8f1;color:#c8873a;font-weight:600;" onclick="addFlow()">+ Thêm luồng (HĐ mua khác)</button>
+      <div style="flex:1;"></div>
       <button class="btn-mini" style="background:#667eea;color:white;border-color:#667eea;" onclick="saveContracts()">💾 Lưu luồng</button>
       <button class="btn-mini" style="color:#c0392b;" onclick="cancelContracts()">Hủy</button>
     </div>
   </div>`;
 }
 
-function startEditContracts(){contractDraft=JSON.parse(JSON.stringify(getContracts(currentOrder)));editingContracts=true;renderDetail();}
-function addContract(){contractDraft.push({label:'Hợp đồng mới',code:'',url:''});renderDetail();}
-function removeContract(i){contractDraft.splice(i,1);renderDetail();}
+function startEditContracts(){flowDraft=JSON.parse(JSON.stringify(getFlows(currentOrder)));editingContracts=true;renderDetail();}
+function addFlow(){flowDraft.push({name:'',items:defaultFlowItems(currentOrder)});renderDetail();}
+function removeFlow(fi){flowDraft.splice(fi,1);if(!flowDraft.length)flowDraft=[{name:'',items:defaultFlowItems(currentOrder)}];renderDetail();}
+function addContract(fi){flowDraft[fi].items.push({label:'Hợp đồng mới',code:'',url:''});renderDetail();}
+function removeContract(fi,i){flowDraft[fi].items.splice(i,1);renderDetail();}
 function cancelContracts(){editingContracts=false;renderDetail();}
 async function saveContracts(){
-  const clean=contractDraft.filter(c=>(c.label||'').trim()||(c.code||'').trim()||(c.url||'').trim())
-    .map(c=>({label:(c.label||'').trim()||'Hợp đồng',code:(c.code||'').trim(),url:(c.url||'').trim()}));
+  const clean=flowDraft.map(f=>({
+    name:(f.name||'').trim(),
+    items:(f.items||[]).filter(c=>(c.label||'').trim()||(c.code||'').trim()||(c.url||'').trim())
+      .map(c=>({label:(c.label||'').trim()||'Hợp đồng',code:(c.code||'').trim(),url:(c.url||'').trim()}))
+  })).filter(f=>f.items.length);
+  const flat=clean.length?clean[0].items:[]; // phẳng hóa luồng đầu → tương thích cột contracts cũ
   showLoading('Đang lưu luồng hợp đồng...');
   try{
-    const{error}=await sb.from('orders').update({contracts:clean}).eq('id',currentOrderId);
+    const{error}=await sb.from('orders').update({flows:clean,contracts:flat}).eq('id',currentOrderId);
     if(error)throw error;
-    currentOrder.contracts=clean;
-    const idx=allOrders.findIndex(o=>o.id===currentOrderId);if(idx>=0)allOrders[idx].contracts=clean;
+    currentOrder.flows=clean;currentOrder.contracts=flat;
+    const idx=allOrders.findIndex(o=>o.id===currentOrderId);if(idx>=0){allOrders[idx].flows=clean;allOrders[idx].contracts=flat;}
     editingContracts=false;renderDetail();
   }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
 }
@@ -910,7 +951,7 @@ function renderDetail(){
         <div style="font-size:11px;font-weight:700;color:#888;letter-spacing:.5px;text-transform:uppercase;">🔗 Luồng hợp đồng ${editingContracts?'· đang sửa':'<span style="font-weight:400;text-transform:none;color:#aaa;">· bấm hợp đồng để mở bản scan</span>'}</div>
         ${editingContracts?'':`<button class="btn-mini" onclick="startEditContracts()">✏️ Sửa luồng</button>`}
       </div>
-      ${editingContracts?renderFlowEdit():renderFlowView(getContracts(o))}
+      ${editingContracts?renderFlowEdit():renderFlowView(getFlows(o))}
     </div>
     ${folderSection}${renderChecklistSection()}${renderPaymentSection()}`;
 
