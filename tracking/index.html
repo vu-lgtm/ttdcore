@@ -53,6 +53,7 @@ tr.in_transit td{background:var(--eta-bg)}
 .carrier.auto{background:#efe2d1;color:var(--brand)}
 td input.inline{width:118px;padding:3px 6px;font-size:12.5px}
 td input.txt{width:150px;padding:3px 6px;font-size:12.5px}
+td input.sc{width:110px;font-family:ui-monospace,Consolas,monospace;font-weight:600;color:var(--brand)}
 dialog{border:none;border-radius:12px;padding:0;width:min(720px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.25)}
 dialog .hd{padding:14px 18px;border-bottom:1px solid var(--line);font-weight:600}
 dialog .bd{padding:14px 18px;display:grid;gap:10px}
@@ -86,8 +87,9 @@ dialog textarea{width:100%;min-height:230px;font-family:ui-monospace,Consolas,mo
   <div class="stats" id="stats"></div>
   <div class="bar">
     <select id="fBatch"><option value="">Tất cả đợt</option></select>
+    <select id="fContract"><option value="">Tất cả HĐ bán</option></select>
     <select id="fCarrier"><option value="">Tất cả hãng</option></select>
-    <input id="fSearch" placeholder="Tìm B/L, POD, shipping line…" style="min-width:230px">
+    <input id="fSearch" placeholder="Tìm Booking, Số HĐ bán, POD…" style="min-width:230px">
     <div class="sp"></div>
     <button id="btnPaste">+ Dán danh sách B/L</button>
     <button id="btnRefresh" class="primary">Cập nhật tự động</button>
@@ -95,7 +97,7 @@ dialog textarea{width:100%;min-height:230px;font-family:ui-monospace,Consolas,mo
   </div>
   <div class="wrap"><table>
     <thead><tr>
-      <th>#</th><th>Booking No</th><th>Hãng</th><th>Cảng đích</th><th>Ngày đến / ETA</th><th>Trạng thái</th><th>Cập nhật</th><th></th>
+      <th>#</th><th>Booking No</th><th>Số HĐ bán</th><th>Hãng</th><th>Cảng đích</th><th>Ngày đến / ETA</th><th>Trạng thái</th><th>Cập nhật</th><th></th>
     </tr></thead>
     <tbody id="tbody"></tbody>
   </table></div>
@@ -206,12 +208,13 @@ async function loadChanges(){
 function fillFilters(){
   const keep=(sel,vals,label)=>{const v=sel.value;sel.innerHTML=`<option value="">${label}</option>`+vals.map(x=>`<option value="${esc(x)}">${esc(CARRIER_NAME[x]||x)}</option>`).join("");sel.value=vals.includes(v)?v:"";};
   keep($("fBatch"),[...new Set(rows.map(r=>r.batch).filter(Boolean))],"Tất cả đợt");
+  keep($("fContract"),[...new Set(rows.map(r=>r.sale_contract).filter(Boolean))].sort(),"Tất cả HĐ bán");
   keep($("fCarrier"),[...new Set(rows.map(r=>r.carrier))],"Tất cả hãng");
 }
 function filtered(){
-  const b=$("fBatch").value,c=$("fCarrier").value,q=$("fSearch").value.trim().toLowerCase();
-  return rows.filter(r=>(!b||r.batch===b)&&(!c||r.carrier===c)&&(!statusFilter||r.status===statusFilter||(statusFilter==="pending"&&r.status==="manual"))
-    &&(!q||[r.bl_no,r.booking_no,r.master_bl,r.pod,r.shipping_line,r.container_no].join(" ").toLowerCase().includes(q)));
+  const b=$("fBatch").value,sc=$("fContract").value,c=$("fCarrier").value,q=$("fSearch").value.trim().toLowerCase();
+  return rows.filter(r=>(!b||r.batch===b)&&(!sc||r.sale_contract===sc)&&(!c||r.carrier===c)&&(!statusFilter||r.status===statusFilter||(statusFilter==="pending"&&r.status==="manual"))
+    &&(!q||[r.bl_no,r.booking_no,r.sale_contract,r.master_bl,r.pod,r.shipping_line,r.container_no].join(" ").toLowerCase().includes(q)));
 }
 function render(){
   const base=rows.filter(r=>(!$("fBatch").value||r.batch===$("fBatch").value));
@@ -222,7 +225,7 @@ function render(){
   document.querySelectorAll(".stat").forEach(e=>e.onclick=()=>{statusFilter=statusFilter===e.dataset.k?"":e.dataset.k;render();});
 
   const list=filtered();
-  if(!list.length){$("tbody").innerHTML=`<tr><td colspan="8" class="empty">Chưa có lô nào. Bấm “+ Dán danh sách Booking”.</td></tr>`;return;}
+  if(!list.length){$("tbody").innerHTML=`<tr><td colspan="9" class="empty">Chưa có lô nào. Bấm “+ Dán danh sách Booking”.</td></tr>`;return;}
   $("tbody").innerHTML=list.map((r,i)=>{
     const auto=r.auto&&AUTO.includes(r.carrier);
     const bkUrl=r.booking_no?trackUrlBooking(r.carrier,r.booking_no):(r.bl_no?trackUrl(r.carrier,r.bl_no):"");
@@ -233,6 +236,7 @@ function render(){
     return `<tr class="${r.status}">
       <td>${i+1}</td>
       <td class="mono"><b>${esc(r.booking_no||r.bl_no||"")}</b></td>
+      <td><input class="txt sc" data-f="sale_contract" data-id="${r.id}" value="${esc(r.sale_contract||"")}" placeholder="Số HĐ bán"></td>
       <td><span class="carrier ${auto?"auto":""}" title="${auto?"Tự cập nhật":"Nhập tay"}">${esc(CARRIER_NAME[r.carrier]||r.carrier)}</span></td>
       <td>${auto?esc(r.pod||""):`<input class="txt" data-f="pod" data-id="${r.id}" value="${esc(r.pod||"")}" placeholder="Cảng đích">`}</td>
       <td>${dateCell}</td>
@@ -311,14 +315,14 @@ $("pSave").onclick=async()=>{
 
 // ===== Xuất Excel =====
 $("btnExport").onclick=()=>{
-  const data=filtered().map((r,i)=>({"STT":i+1,"Shipping Line":r.shipping_line||"","Booking No":r.booking_no||"","B/L No":r.bl_no||"","Hãng":CARRIER_NAME[r.carrier]||r.carrier,
+  const data=filtered().map((r,i)=>({"STT":i+1,"Số HĐ bán":r.sale_contract||"","Shipping Line":r.shipping_line||"","Booking No":r.booking_no||"","B/L No":r.bl_no||"","Hãng":CARRIER_NAME[r.carrier]||r.carrier,
     "Master B/L":r.master_bl||"","Cảng đích":r.pod||"","ETA":fmt(r.eta),"Ngày đến (ATA)":fmt(r.ata),
     "Trạng thái":STATUS[r.status]||r.status,"Sự kiện cuối":r.last_event||"","Ghi chú":r.note||"","Cập nhật lúc":r.last_checked?new Date(r.last_checked).toLocaleString("vi-VN"):""}));
-  const ws=XLSX.utils.json_to_sheet(data); ws["!cols"]=[6,30,20,20,12,18,24,12,14,12,40,30,18].map(w=>({wch:w}));
+  const ws=XLSX.utils.json_to_sheet(data); ws["!cols"]=[6,16,30,20,20,12,18,24,12,14,12,40,30,18].map(w=>({wch:w}));
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"ETA");
   XLSX.writeFile(wb,`ETA_${new Date().toISOString().slice(0,10)}.xlsx`);
 };
-["fBatch","fCarrier"].forEach(id=>$(id).onchange=render); $("fSearch").oninput=render;
+["fBatch","fContract","fCarrier"].forEach(id=>$(id).onchange=render); $("fSearch").oninput=render;
 
 initAuth();
 </script>
