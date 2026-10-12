@@ -95,8 +95,7 @@ dialog textarea{width:100%;min-height:230px;font-family:ui-monospace,Consolas,mo
   </div>
   <div class="wrap"><table>
     <thead><tr>
-      <th>#</th><th>Shipping Line</th><th>Booking No</th><th>B/L No</th><th>Hãng</th><th>Master B/L / Cont</th>
-      <th>Cảng đích</th><th>Ngày đến</th><th>Trạng thái</th><th>Sự kiện / Ghi chú</th><th>Cập nhật</th><th></th>
+      <th>#</th><th>Booking No</th><th>Hãng</th><th>Cảng đích</th><th>Ngày đến / ETA</th><th>Trạng thái</th><th>Cập nhật</th><th></th>
     </tr></thead>
     <tbody id="tbody"></tbody>
   </table></div>
@@ -223,31 +222,23 @@ function render(){
   document.querySelectorAll(".stat").forEach(e=>e.onclick=()=>{statusFilter=statusFilter===e.dataset.k?"":e.dataset.k;render();});
 
   const list=filtered();
-  if(!list.length){$("tbody").innerHTML=`<tr><td colspan="12" class="empty">Chưa có lô nào. Bấm “+ Dán danh sách B/L”.</td></tr>`;return;}
+  if(!list.length){$("tbody").innerHTML=`<tr><td colspan="8" class="empty">Chưa có lô nào. Bấm “+ Dán danh sách Booking”.</td></tr>`;return;}
   $("tbody").innerHTML=list.map((r,i)=>{
     const auto=r.auto&&AUTO.includes(r.carrier);
-    const ref=r.master_bl||r.bl_no;
-    const url=ref?trackUrl(r.master_bl?detectCarrier(r.master_bl):r.carrier,ref):"";
-    const bkUrl=r.booking_no?trackUrlBooking(r.carrier,r.booking_no):"";
+    const bkUrl=r.booking_no?trackUrlBooking(r.carrier,r.booking_no):(r.bl_no?trackUrl(r.carrier,r.bl_no):"");
     const dateCell=auto
       ?(r.ata?`<span class="date">${fmt(r.ata)}</span>`:r.eta?`<span class="date eta">ETA ${fmt(r.eta)}</span>`:"")
       :`<div style="display:grid;gap:3px"><label class="hint">ETA <input type="date" class="inline" data-f="eta" data-id="${r.id}" value="${r.eta||""}"></label>
          <label class="hint">ATA <input type="date" class="inline" data-f="ata" data-id="${r.id}" value="${r.ata||""}"></label></div>`;
     return `<tr class="${r.status}">
       <td>${i+1}</td>
-      <td>${esc(r.shipping_line)}</td>
-      <td class="mono"><b>${esc(r.booking_no||"")}</b></td>
-      <td><input class="txt mono" data-f="bl_no" data-id="${r.id}" value="${esc(r.bl_no||"")}" placeholder="B/L (nếu có)"></td>
+      <td class="mono"><b>${esc(r.booking_no||r.bl_no||"")}</b></td>
       <td><span class="carrier ${auto?"auto":""}" title="${auto?"Tự cập nhật":"Nhập tay"}">${esc(CARRIER_NAME[r.carrier]||r.carrier)}</span></td>
-      <td><input class="txt mono" data-f="master_bl" data-id="${r.id}" value="${esc(r.master_bl||"")}" placeholder="${r.carrier==="FORWARDER"?"Nhập Master B/L":"—"}"></td>
       <td>${auto?esc(r.pod||""):`<input class="txt" data-f="pod" data-id="${r.id}" value="${esc(r.pod||"")}" placeholder="Cảng đích">`}</td>
       <td>${dateCell}</td>
-      <td><span class="pill p-${r.status}">${STATUS[r.status]||r.status}</span></td>
-      <td class="wrapc">${esc(r.last_event||"")}${r.vessel?`<br>${esc(r.vessel)}`:""}
-        <input class="txt" style="width:100%;margin-top:3px" data-f="note" data-id="${r.id}" value="${esc(r.note||"")}" placeholder="Ghi chú"></td>
+      <td><span class="pill p-${r.status}">${STATUS[r.status]||r.status}</span>${r.last_event?`<div class="hint" style="margin-top:3px">${esc(r.last_event)}</div>`:""}</td>
       <td class="hint">${ago(r.last_checked)}</td>
-      <td>${url?`<a href="${url}" target="_blank" rel="noopener"><button class="sm">Tra B/L</button></a>`:""}
-        ${bkUrl?`<a href="${bkUrl}" target="_blank" rel="noopener"><button class="sm">Tra Booking</button></a>`:""}
+      <td>${bkUrl?`<a href="${bkUrl}" target="_blank" rel="noopener"><button class="sm">Tra web</button></a>`:""}
         ${auto?`<button class="sm" data-act="one" data-id="${r.id}">↻</button>`:""}
         <button class="sm" data-act="del" data-id="${r.id}" title="Xoá">✕</button></td>
     </tr>`;}).join("");
