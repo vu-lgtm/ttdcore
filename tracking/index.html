@@ -95,7 +95,7 @@ dialog textarea{width:100%;min-height:230px;font-family:ui-monospace,Consolas,mo
   </div>
   <div class="wrap"><table>
     <thead><tr>
-      <th>#</th><th>Shipping Line</th><th>B/L No</th><th>Hãng</th><th>Master B/L / Cont</th>
+      <th>#</th><th>Shipping Line</th><th>Booking No</th><th>B/L No</th><th>Hãng</th><th>Master B/L / Cont</th>
       <th>Cảng đích</th><th>Ngày đến</th><th>Trạng thái</th><th>Sự kiện / Ghi chú</th><th>Cập nhật</th><th></th>
     </tr></thead>
     <tbody id="tbody"></tbody>
@@ -104,11 +104,11 @@ dialog textarea{width:100%;min-height:230px;font-family:ui-monospace,Consolas,mo
 </main>
 
 <dialog id="dlg">
-  <div class="hd">Dán danh sách B/L</div>
+  <div class="hd">Dán danh sách Booking</div>
   <div class="bd">
-    <div class="hint">Copy 2 cột <b>Shipping Line</b> và <b>B/L No</b> từ Excel rồi dán vào đây (mỗi dòng 1 lô). Chỉ có cột B/L cũng được. Thứ tự dán được giữ nguyên.</div>
+    <div class="hint">Copy từ Excel, mỗi dòng 1 lô, theo thứ tự cột: <b>Shipping Line</b> &#9; <b>Booking No</b> &#9; <b>B/L No</b>. Chỉ cần cột Booking cũng được; B/L là tùy chọn (giúp Evergreen/MSC tự cập nhật). Thứ tự dán được giữ nguyên.</div>
     <input id="pBatch" placeholder="Tên đợt, vd: GRAB T9.2026">
-    <textarea id="pText" placeholder="EVERGREEN&#9;235600753162&#10;CROSS OCEAN LINE via MSC&#9;MEDUXT584604"></textarea>
+    <textarea id="pText" placeholder="EVERGREEN&#9;235600753162&#10;CROSS OCEAN LINE via MSC&#9;EBKGQ0023BEB&#9;MEDUXT584604&#10;CMA&#9;SGN3288023"></textarea>
     <div class="hint" id="pPreview"></div>
   </div>
   <div class="ft"><button id="pCancel">Huỷ</button><button class="primary" id="pSave">Lưu & tra ngay</button></div>
@@ -132,6 +132,17 @@ const trackUrl = (c,b)=>({
   HLC:`https://www.hapag-lloyd.com/en/online-business/track/track-by-booking-solution.html?blno=${b}`,
   MAERSK:`https://www.maersk.com/tracking/${b}`,
   ZIM:`https://www.zim.com/tools/track-a-shipment?consnumber=${b}`,
+  YML:"https://www.yangming.com/e-service/track_trace/track_trace_cargo_tracking.aspx",
+}[c]);
+// Tra cứu theo SỐ BOOKING (reference type = Booking)
+const trackUrlBooking = (c,bk)=>({
+  EVERGREEN:"https://ct.shipmentlink.com/servlet/TDB1_CargoTracking.do",
+  MSC:`https://www.msc.com/en/track-a-shipment?trackingNumber=${bk}`,
+  ONE:`https://www.one-line.com/one-ecom/manage-shipment/cargo-tracking?trakNoParam=${bk}&trakNoTpCdParam=BK`,
+  CMA:`https://www.cma-cgm.com/ebusiness/tracking/search?SearchBy=Booking&Reference=${bk}`,
+  HLC:`https://www.hapag-lloyd.com/en/online-business/track/track-by-booking-solution.html?blno=${bk}`,
+  MAERSK:`https://www.maersk.com/tracking/${bk}`,
+  ZIM:`https://www.zim.com/tools/track-a-shipment?consnumber=${bk}`,
   YML:"https://www.yangming.com/e-service/track_trace/track_trace_cargo_tracking.aspx",
 }[c]);
 
@@ -201,7 +212,7 @@ function fillFilters(){
 function filtered(){
   const b=$("fBatch").value,c=$("fCarrier").value,q=$("fSearch").value.trim().toLowerCase();
   return rows.filter(r=>(!b||r.batch===b)&&(!c||r.carrier===c)&&(!statusFilter||r.status===statusFilter||(statusFilter==="pending"&&r.status==="manual"))
-    &&(!q||[r.bl_no,r.master_bl,r.pod,r.shipping_line,r.container_no].join(" ").toLowerCase().includes(q)));
+    &&(!q||[r.bl_no,r.booking_no,r.master_bl,r.pod,r.shipping_line,r.container_no].join(" ").toLowerCase().includes(q)));
 }
 function render(){
   const base=rows.filter(r=>(!$("fBatch").value||r.batch===$("fBatch").value));
@@ -212,11 +223,12 @@ function render(){
   document.querySelectorAll(".stat").forEach(e=>e.onclick=()=>{statusFilter=statusFilter===e.dataset.k?"":e.dataset.k;render();});
 
   const list=filtered();
-  if(!list.length){$("tbody").innerHTML=`<tr><td colspan="11" class="empty">Chưa có lô nào. Bấm “+ Dán danh sách B/L”.</td></tr>`;return;}
+  if(!list.length){$("tbody").innerHTML=`<tr><td colspan="12" class="empty">Chưa có lô nào. Bấm “+ Dán danh sách B/L”.</td></tr>`;return;}
   $("tbody").innerHTML=list.map((r,i)=>{
     const auto=r.auto&&AUTO.includes(r.carrier);
     const ref=r.master_bl||r.bl_no;
-    const url=trackUrl(r.master_bl?detectCarrier(r.master_bl):r.carrier,ref);
+    const url=ref?trackUrl(r.master_bl?detectCarrier(r.master_bl):r.carrier,ref):"";
+    const bkUrl=r.booking_no?trackUrlBooking(r.carrier,r.booking_no):"";
     const dateCell=auto
       ?(r.ata?`<span class="date">${fmt(r.ata)}</span>`:r.eta?`<span class="date eta">ETA ${fmt(r.eta)}</span>`:"")
       :`<div style="display:grid;gap:3px"><label class="hint">ETA <input type="date" class="inline" data-f="eta" data-id="${r.id}" value="${r.eta||""}"></label>
@@ -224,7 +236,8 @@ function render(){
     return `<tr class="${r.status}">
       <td>${i+1}</td>
       <td>${esc(r.shipping_line)}</td>
-      <td class="mono">${esc(r.bl_no)}</td>
+      <td class="mono"><b>${esc(r.booking_no||"")}</b></td>
+      <td><input class="txt mono" data-f="bl_no" data-id="${r.id}" value="${esc(r.bl_no||"")}" placeholder="B/L (nếu có)"></td>
       <td><span class="carrier ${auto?"auto":""}" title="${auto?"Tự cập nhật":"Nhập tay"}">${esc(CARRIER_NAME[r.carrier]||r.carrier)}</span></td>
       <td><input class="txt mono" data-f="master_bl" data-id="${r.id}" value="${esc(r.master_bl||"")}" placeholder="${r.carrier==="FORWARDER"?"Nhập Master B/L":"—"}"></td>
       <td>${auto?esc(r.pod||""):`<input class="txt" data-f="pod" data-id="${r.id}" value="${esc(r.pod||"")}" placeholder="Cảng đích">`}</td>
@@ -233,7 +246,8 @@ function render(){
       <td class="wrapc">${esc(r.last_event||"")}${r.vessel?`<br>${esc(r.vessel)}`:""}
         <input class="txt" style="width:100%;margin-top:3px" data-f="note" data-id="${r.id}" value="${esc(r.note||"")}" placeholder="Ghi chú"></td>
       <td class="hint">${ago(r.last_checked)}</td>
-      <td>${url?`<a href="${url}" target="_blank" rel="noopener"><button class="sm">Tra web</button></a>`:""}
+      <td>${url?`<a href="${url}" target="_blank" rel="noopener"><button class="sm">Tra B/L</button></a>`:""}
+        ${bkUrl?`<a href="${bkUrl}" target="_blank" rel="noopener"><button class="sm">Tra Booking</button></a>`:""}
         ${auto?`<button class="sm" data-act="one" data-id="${r.id}">↻</button>`:""}
         <button class="sm" data-act="del" data-id="${r.id}" title="Xoá">✕</button></td>
     </tr>`;}).join("");
@@ -247,6 +261,7 @@ async function saveField(id,f,v){
   if(f==="master_bl"){ // gắn Master B/L hãng tàu → nếu là Evergreen/MSC thì chuyển sang tự động
     const c=v?detectCarrier(v):(r.carrier); if(v&&AUTO.includes(c)){upd.auto=true;upd.status="pending";}
   }
+  if(f==="bl_no"&&v&&AUTO.includes(r.carrier)&&!r.auto){upd.auto=true;upd.status="pending";} // thêm B/L cho Evergreen/MSC → bật tự động
   if(!r.auto&&(f==="eta"||f==="ata")){
     const eta=f==="eta"?v:r.eta, ata=f==="ata"?v:r.ata;
     upd.status=ata?"arrived":eta?"in_transit":"manual";
@@ -279,21 +294,25 @@ $("btnRefresh").onclick=()=>refresh();
 // ===== Dán danh sách =====
 function parsePaste(txt){
   return txt.split(/\r?\n/).map(l=>l.split("\t").map(s=>s.trim())).filter(c=>c.some(Boolean)).map(c=>{
-    const bl=c.length>1?c[c.length-1]:c[0], line=c.length>1?c.slice(0,-1).join(" "):"";
-    return {shipping_line:line||null,bl_no:bl};
-  }).filter(r=>r.bl_no&&!/^B\/?L/i.test(r.bl_no));
+    let line="",booking="",bl="";
+    if(c.length>=3){line=c.slice(0,-2).join(" ");booking=c[c.length-2];bl=c[c.length-1];}
+    else if(c.length===2){line=c[0];booking=c[1];}
+    else{booking=c[0];}
+    return {shipping_line:line||null,booking_no:booking||null,bl_no:bl||null};
+  }).filter(r=>(r.booking_no||r.bl_no)&&!/^BOOKING/i.test(r.booking_no||"")&&!/^B\/?L/i.test(r.booking_no||""));
 }
 $("btnPaste").onclick=()=>{$("pText").value="";$("pPreview").textContent="";$("dlg").showModal();};
 $("pCancel").onclick=()=>$("dlg").close();
 $("pText").oninput=()=>{const p=parsePaste($("pText").value);
-  const auto=p.filter(r=>AUTO.includes(detectCarrier(r.bl_no,r.shipping_line||""))).length;
-  $("pPreview").textContent=p.length?`${p.length} lô · ${auto} lô tự cập nhật (Evergreen/MSC) · ${p.length-auto} lô nhập tay`:"";};
+  const auto=p.filter(r=>AUTO.includes(detectCarrier(r.booking_no||r.bl_no,r.shipping_line||""))&&!!r.bl_no).length;
+  $("pPreview").textContent=p.length?`${p.length} lô · ${auto} lô tự cập nhật (Evergreen/MSC có B/L) · ${p.length-auto} lô nhập tay`:"";};
 $("pSave").onclick=async()=>{
-  const p=parsePaste($("pText").value); if(!p.length)return toast("Chưa có B/L nào.");
+  const p=parsePaste($("pText").value); if(!p.length)return toast("Chưa có Booking nào.");
   const start=rows.reduce((m,r)=>Math.max(m,r.sort_order||0),0)+1, batch=$("pBatch").value.trim()||null;
-  const recs=p.map((r,i)=>{const c=detectCarrier(r.bl_no,r.shipping_line||"");
-    return {...r,batch,carrier:c,auto:AUTO.includes(c),status:AUTO.includes(c)?"pending":"manual",sort_order:start+i};});
-  const {error}=await sb.from("shipment_tracking").upsert(recs,{onConflict:"bl_no",ignoreDuplicates:true});
+  const recs=p.map((r,i)=>{const c=detectCarrier(r.booking_no||r.bl_no||"",r.shipping_line||"");
+    const canAuto=AUTO.includes(c)&&!!r.bl_no;
+    return {...r,batch,carrier:c,auto:canAuto,status:canAuto?"pending":"manual",sort_order:start+i};});
+  const {error}=await sb.from("shipment_tracking").upsert(recs,{onConflict:"booking_no",ignoreDuplicates:true});
   if(error)return toast("Lỗi lưu: "+error.message);
   $("dlg").close(); await load();
   if(recs.some(r=>r.auto))refresh();
@@ -301,10 +320,10 @@ $("pSave").onclick=async()=>{
 
 // ===== Xuất Excel =====
 $("btnExport").onclick=()=>{
-  const data=filtered().map((r,i)=>({"STT":i+1,"Shipping Line":r.shipping_line||"","B/L No":r.bl_no,"Hãng":CARRIER_NAME[r.carrier]||r.carrier,
+  const data=filtered().map((r,i)=>({"STT":i+1,"Shipping Line":r.shipping_line||"","Booking No":r.booking_no||"","B/L No":r.bl_no||"","Hãng":CARRIER_NAME[r.carrier]||r.carrier,
     "Master B/L":r.master_bl||"","Cảng đích":r.pod||"","ETA":fmt(r.eta),"Ngày đến (ATA)":fmt(r.ata),
     "Trạng thái":STATUS[r.status]||r.status,"Sự kiện cuối":r.last_event||"","Ghi chú":r.note||"","Cập nhật lúc":r.last_checked?new Date(r.last_checked).toLocaleString("vi-VN"):""}));
-  const ws=XLSX.utils.json_to_sheet(data); ws["!cols"]=[6,30,20,12,18,24,12,14,12,40,30,18].map(w=>({wch:w}));
+  const ws=XLSX.utils.json_to_sheet(data); ws["!cols"]=[6,30,20,20,12,18,24,12,14,12,40,30,18].map(w=>({wch:w}));
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"ETA");
   XLSX.writeFile(wb,`ETA_${new Date().toISOString().slice(0,10)}.xlsx`);
 };
