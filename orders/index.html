@@ -372,12 +372,13 @@ const workflows=[
 ];
 
 const TOTAL=30;
-const DEPTS={sale:"Sale",ketoan:"Kế toán",thumua:"Thu mua",logistics:"Logistics",admin:"Ban Giám Đốc",sale_admin:"Sale Admin"};
+const DEPTS={viewer:"Chỉ xem",sale:"Sale",ketoan:"Kế toán",thumua:"Thu mua",logistics:"Logistics",admin:"Ban Giám Đốc",sale_admin:"Sale Admin"};
 const SALE_ADMIN_STEPS=[3,4,6,8,13,20,30];
 
 let currentUser=null,currentOrderId=null,currentOrder=null,allOrders=[];
 let deptFilter='all',expandedNotes={},currentListView='list',allUsers=[];
 let collapsedParents={},selectedShipmentCount=1;
+let editingMatHang=false,matHangDraft=[];
 let driveTreeOpen=false,checklistOpen=true,checklistExpanded={};
 const attachTabState={};
 const MAX_FILE_SIZE=10*1024*1024;
@@ -416,7 +417,7 @@ async function loginWithGoogle(){
       provider:'google',
       options:{
         redirectTo:window.location.href,
-        queryParams:{hd:'ttdglobal.vn'}
+        queryParams:{prompt:'select_account'}
       }
     });
     if(error)throw error;
@@ -545,6 +546,7 @@ function renderListTable(container,groups){
     const payText=p.receivedFull?`<span style="font-size:11px;padding:2px 7px;border-radius:4px;background:#e8f5e9;color:#2e7d32;">💰 Đã TT đủ</span>`:p.receivedDeposit?`<span style="font-size:11px;padding:2px 7px;border-radius:4px;background:#e3f2fd;color:#1565c0;">💵 Đã deposit</span>`:`<span style="font-size:11px;padding:2px 7px;border-radius:4px;background:#f5f5f5;color:#888;">⏳ Chưa TT</span>`;
     const barColor=pct>=80?'#2e7d32':pct>=40?'#667eea':'#1976d2';
     const shipBadge=hasKids?`<span style="font-size:10px;background:#eeeeff;color:#667eea;padding:2px 7px;border-radius:10px;font-weight:600;margin-left:6px;">📦 ${kids.length} lần</span>`:'';
+    const mhBadge=(o.mat_hang&&o.mat_hang.length)?`<span style="font-size:10px;background:#fff0e0;color:#c8873a;padding:2px 7px;border-radius:10px;font-weight:600;margin-left:6px;">🏷️ ${o.mat_hang.length} mặt hàng</span>`:'';
     const collapseBtn=hasKids?`<button class="collapse-btn" onclick="event.stopPropagation();toggleCollapse('${o.id}')">${isCollapsed?'▶':'▼'}</button>`:'';
 
     // Aggregate progress across children
@@ -559,7 +561,7 @@ function renderListTable(container,groups){
     }
 
     rows+=`<tr class="parent-row" onclick="openOrder('${o.id}')">
-      <td style="font-weight:700;">${collapseBtn}${esc(o.code)}${shipBadge}${renderFlowInline(o)}</td>
+      <td style="font-weight:700;">${collapseBtn}${esc(o.code)}${shipBadge}${mhBadge}${renderFlowInline(o)}</td>
       <td style="color:#555;">${esc(o.customer)}</td>
       <td style="font-size:12px;color:#777;">${o.supplier?esc(o.supplier):'—'}</td>
       <td>${progCell}</td>
@@ -902,6 +904,7 @@ function renderDetail(){
         <button class="btn-mini" style="color:#c0392b;" onclick="document.getElementById('shipmentEditRow').classList.add('hidden')">Hủy</button>
       </div>
     </div>
+    ${renderMatHangSection()}
     <div style="background:#fff;border:1.5px solid #eef0f5;border-radius:10px;padding:14px 16px;margin-bottom:12px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
         <div style="font-size:11px;font-weight:700;color:#888;letter-spacing:.5px;text-transform:uppercase;">🔗 Luồng hợp đồng ${editingContracts?'· đang sửa':'<span style="font-weight:400;text-transform:none;color:#aaa;">· bấm hợp đồng để mở bản scan</span>'}</div>
@@ -932,6 +935,73 @@ function renderDetail(){
   },0);
 }
 
+// ===== Mặt hàng trong đơn (nhiều mặt hàng / 1 hợp đồng – PI, đi chung 1 cont) =====
+function renderMatHangSection(){
+  const o=currentOrder; if(o.is_parent)return ''; // đơn tổng hợp (nhiều lần giao) không gắn mặt hàng
+  const canEdit=['admin','sale','sale_admin'].includes(currentUser.role);
+  const list=o.mat_hang||[];
+  let body;
+  if(editingMatHang){
+    body=`<div style="display:flex;flex-direction:column;gap:8px;">
+      ${matHangDraft.map((m,i)=>`<div style="display:grid;grid-template-columns:90px 1fr 110px 34px;gap:8px;align-items:center;">
+        <input class="mh-code" value="${esc(m.code||'')}" placeholder="Hậu tố" maxlength="8" style="padding:7px 8px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;text-transform:uppercase;font-family:ui-monospace,monospace;font-weight:700;">
+        <input class="mh-name" value="${esc(m.name||'')}" placeholder="Tên mặt hàng (VD: Arabica Cầu Đất)" style="padding:7px 10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;">
+        <input class="mh-qty" value="${esc(m.qty||'')}" placeholder="Số lượng" style="padding:7px 8px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;">
+        <button class="btn-mini" style="color:#c0392b;" onclick="removeMatHangRow(${i})">✕</button>
+      </div>`).join('')}
+      <div style="display:flex;gap:8px;align-items:center;margin-top:2px;">
+        <button class="btn-mini" onclick="addMatHangRow()">+ Thêm mặt hàng</button>
+        <div style="flex:1;"></div>
+        <button class="btn-mini" style="background:#667eea;color:white;border:none;" onclick="saveMatHang()">Lưu</button>
+        <button class="btn-mini" style="color:#c0392b;" onclick="cancelEditMatHang()">Hủy</button>
+      </div>
+      <div style="font-size:11px;color:#aaa;">Mã đầy đủ: <strong>${esc(o.code)}-&lt;Hậu tố&gt;</strong> — VD ${esc(o.code)}-A, ${esc(o.code)}-R. Dùng chung 1 bộ chứng từ &amp; 1 lần thanh toán (1 PI / 1 cont).</div>
+    </div>`;
+  }else if(list.length){
+    body=`<div style="display:flex;flex-wrap:wrap;gap:8px;">
+      ${list.map(m=>`<div style="display:flex;align-items:center;gap:8px;background:#fff8f1;border:1px solid #f0e0cc;border-radius:8px;padding:6px 11px;">
+        <span style="font-family:ui-monospace,monospace;font-weight:700;color:#c8873a;font-size:12.5px;">${esc(o.code)}-${esc(m.code||'')}</span>
+        ${m.name?`<span style="font-size:12.5px;color:#444;">${esc(m.name)}</span>`:''}
+        ${m.qty?`<span style="font-size:11.5px;color:#888;">⚖️ ${esc(m.qty)}</span>`:''}
+      </div>`).join('')}
+    </div>`;
+  }else{
+    body=`<div style="font-size:12.5px;color:#aaa;">Chưa khai báo mặt hàng. Dùng khi 1 hợp đồng/PI gồm nhiều loại hàng đi chung 1 container (VD: -A Arabica, -R Robusta) để không nhập nhằng hàng hóa.</div>`;
+  }
+  return `<div style="background:#fff;border:1.5px solid #f0e0cc;border-radius:10px;padding:14px 16px;margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+      <div style="font-size:11px;font-weight:700;color:#c8873a;letter-spacing:.5px;text-transform:uppercase;">🏷️ Mặt hàng trong đơn${list.length?` · ${list.length} loại`:''}</div>
+      ${canEdit&&!editingMatHang?`<button class="btn-mini" onclick="startEditMatHang()">✏️ Sửa mặt hàng</button>`:''}
+    </div>
+    ${body}
+  </div>`;
+}
+function startEditMatHang(){
+  editingMatHang=true;
+  matHangDraft=(currentOrder.mat_hang||[]).map(m=>({code:m.code||'',name:m.name||'',qty:m.qty||''}));
+  if(!matHangDraft.length)matHangDraft=[{code:'',name:'',qty:''}];
+  renderDetail();
+}
+function syncMatHangDraft(){
+  const codes=document.querySelectorAll('.mh-code'),names=document.querySelectorAll('.mh-name'),qtys=document.querySelectorAll('.mh-qty');
+  matHangDraft=Array.from(codes).map((c,i)=>({code:(c.value||'').trim().toUpperCase(),name:(names[i]?.value||'').trim(),qty:(qtys[i]?.value||'').trim()}));
+}
+function addMatHangRow(){syncMatHangDraft();matHangDraft.push({code:'',name:'',qty:''});renderDetail();}
+function removeMatHangRow(i){syncMatHangDraft();matHangDraft.splice(i,1);if(!matHangDraft.length)matHangDraft=[{code:'',name:'',qty:''}];renderDetail();}
+function cancelEditMatHang(){editingMatHang=false;renderDetail();}
+async function saveMatHang(){
+  syncMatHangDraft();
+  const list=matHangDraft.filter(m=>m.code||m.name);
+  const codes=list.map(m=>m.code).filter(Boolean);
+  if(new Set(codes).size!==codes.length){alert('Hậu tố mặt hàng bị trùng, sửa lại cho khác nhau (VD: A, R).');return;}
+  showLoading('Đang lưu mặt hàng...');
+  try{
+    const{error}=await sb.from('orders').update({mat_hang:list}).eq('id',currentOrderId);if(error)throw error;
+    currentOrder.mat_hang=list;
+    const idx=allOrders.findIndex(o=>o.id===currentOrderId);if(idx>=0)allOrders[idx].mat_hang=list;
+    editingMatHang=false;renderDetail();
+  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
+}
 function editShipmentInfo(){const row=document.getElementById('shipmentEditRow');if(row){row.classList.remove('hidden');row.style.display='flex';}}
 async function saveShipmentInfo(){
   const customer=document.getElementById('customerInput')?.value.trim()||'';
@@ -1559,7 +1629,7 @@ async function addUser(){const errEl=document.getElementById('addUserError');err
 async function deleteUser(id,name){if(!confirm(`Xóa tài khoản "${name}"?`))return;showLoading('Đang xóa...');try{const{error}=await sb.from('profiles').delete().eq('id',id);if(error)throw error;await loadAdminUsers();}catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}}
 
 // ─── EXPORT ───
-function exportToExcel(){const o=currentOrder,done=countCompleted(o);let csv="\uFEFFMã đơn,Khách hàng,Lần giao,Ngày xuất,Tổng,Hoàn thành,Tiến độ\n";csv+=`"${o.code}","${o.customer}","${o.shipment_no?'L'+String(o.shipment_no).padStart(2,'0'):'—'}","${new Date().toLocaleString('vi-VN')}","${TOTAL}","${done}","${Math.round((done/TOTAL)*100)}%"\n\nSTT,Công việc,Nội dung,Phụ trách,Trạng thái,Người tick,Thời gian\n`;workflows.forEach(s=>{if(s.hasMultiCheck){s.teams.forEach(t=>{const key=`${s.stt}_${t}`,info=o.tick_info[key];csv+=`"${s.stt}.${t}","${s.job} (${DEPTS[t]})","${s.content}","${DEPTS[t]}","${o.completed[key]?'✓':''}","${info?info.user:''}","${info?new Date(info.time).toLocaleString('vi-VN'):''}" \n`;});}else{const info=o.tick_info[s.stt];csv+=`"${s.stt}","${s.job}","${s.content}","${s.pic}","${o.completed[s.stt]?'✓':''}","${info?info.user:''}","${info?new Date(info.time).toLocaleString('vi-VN'):''}" \n`;}});const b=new Blob([csv],{type:'text/csv;charset=utf-8;'});const l=document.createElement('a');l.href=URL.createObjectURL(b);l.download=`DonHang_${o.code}_${Date.now()}.csv`;l.click();}
+function exportToExcel(){const o=currentOrder,done=countCompleted(o);const mhStr=(o.mat_hang||[]).map(m=>o.code+'-'+m.code+(m.name?' '+m.name:'')+(m.qty?' ('+m.qty+')':'')).join(' | ');let csv="\uFEFFMã đơn,Khách hàng,Lần giao,Mặt hàng,Ngày xuất,Tổng,Hoàn thành,Tiến độ\n";csv+=`"${o.code}","${o.customer}","${o.shipment_no?'L'+String(o.shipment_no).padStart(2,'0'):'—'}","${mhStr}","${new Date().toLocaleString('vi-VN')}","${TOTAL}","${done}","${Math.round((done/TOTAL)*100)}%"\n\nSTT,Công việc,Nội dung,Phụ trách,Trạng thái,Người tick,Thời gian\n`;workflows.forEach(s=>{if(s.hasMultiCheck){s.teams.forEach(t=>{const key=`${s.stt}_${t}`,info=o.tick_info[key];csv+=`"${s.stt}.${t}","${s.job} (${DEPTS[t]})","${s.content}","${DEPTS[t]}","${o.completed[key]?'✓':''}","${info?info.user:''}","${info?new Date(info.time).toLocaleString('vi-VN'):''}" \n`;});}else{const info=o.tick_info[s.stt];csv+=`"${s.stt}","${s.job}","${s.content}","${s.pic}","${o.completed[s.stt]?'✓':''}","${info?info.user:''}","${info?new Date(info.time).toLocaleString('vi-VN'):''}" \n`;}});const b=new Blob([csv],{type:'text/csv;charset=utf-8;'});const l=document.createElement('a');l.href=URL.createObjectURL(b);l.download=`DonHang_${o.code}_${Date.now()}.csv`;l.click();}
 
 // ─── TAB SWITCH ───
 function switchTab(tab){
@@ -1661,5 +1731,46 @@ async function addShipment(){
 }
 </script>
 
+<!-- ===== TTD READ-ONLY GUARD — tài khoản chỉ xem (lsdinh@gmail.com) =====
+     Tự kích hoạt: nếu người đăng nhập nằm trong VIEWERS thì khóa mọi thao tác
+     ghi dữ liệu (checkbox, select trạng thái, nút Lưu/Thêm/Xóa/Duyệt/Upload…),
+     vẫn cho phép xem, mở chi tiết, lọc, tìm kiếm và đăng xuất.
+     Dán nguyên khối này ngay trước thẻ </body> của mỗi trang. -->
+<script>
+(function(){
+  var VIEWERS=['lsdinh@gmail.com'];   // thêm email chỉ-xem khác vào đây nếu cần
+  function viewer(){try{var u=window.currentUser;return !!(u&&u.email&&VIEWERS.indexOf(String(u.email).toLowerCase())>-1);}catch(e){return false;}}
+  var on=false;
+  function lock(){
+    if(!viewer())return;
+    document.querySelectorAll('input[type=checkbox]:not([disabled]),input[type=radio]:not([disabled])').forEach(function(el){el.disabled=true;});
+    document.querySelectorAll('select:not([disabled])').forEach(function(s){
+      var oc=s.getAttribute('onchange')||'';
+      if(/save|update|set|toggle|status|insert|trang\s*th/i.test(oc))s.disabled=true;
+    });
+  }
+  function start(){
+    if(on||!viewer())return;on=true;
+    lock();
+    try{new MutationObserver(lock).observe(document.body,{childList:true,subtree:true});}catch(e){}
+    document.addEventListener('click',function(e){
+      var el=e.target.closest&&e.target.closest('button,[onclick],label,a');
+      if(!el)return;
+      var s=((el.getAttribute&&el.getAttribute('onclick'))||'')+' '+(el.className||'')+' '+(el.id||'')+' '+String(el.textContent||'').slice(0,50);
+      if(/save|delete|remove|upload|submit|approve|duy|th[eê]m|x[oó]a|s[uử]a|l[uư]u|toggle|insert|\bnew\b|\badd\b|t[aạ]o|g[uử]i|c[aậ]p\s*nh[aậ]t/i.test(s)){
+        e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();
+        alert('👁️ Tài khoản chỉ xem — không thể thao tác chỉnh sửa.');
+        return false;
+      }
+    },true);
+    if(!document.getElementById('roBanner')){
+      var b=document.createElement('div');b.id='roBanner';b.textContent='👁️ Chế độ CHỈ XEM';
+      b.style.cssText='position:fixed;bottom:12px;right:12px;z-index:999999;background:#111827;color:#fff;font:600 12px sans-serif;padding:6px 12px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none;';
+      document.body.appendChild(b);
+    }
+  }
+  setInterval(start,400);
+})();
+</script>
 </body>
 </html>
