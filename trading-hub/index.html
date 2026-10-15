@@ -120,6 +120,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <div class="tabs">
     <button class="tab active" id="tab-reports" onclick="switchTab('reports')">📈 Coffee Report</button>
     <button class="tab" id="tab-buyers" onclick="switchTab('buyers')">🧑‍💼 Buyer Profile</button>
+    <button class="tab" id="tab-suppliers" onclick="switchTab('suppliers')">🏭 Supplier Profile</button>
     <button class="tab" id="tab-countries" onclick="switchTab('countries')">🌍 Country Profile</button>
     <button class="tab" id="tab-services" onclick="switchTab('services')">🛠️ Hợp đồng dịch vụ</button>
     <button class="tab" id="tab-quality" onclick="switchTab('quality')">✅ Quality</button>
@@ -187,6 +188,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div id="buyerDetail" class="hidden">
       <button class="back-btn" onclick="backToBuyers()">← Danh sách buyer</button>
       <div id="buyerDetailContent"></div>
+    </div>
+  </div>
+
+  <!-- ===== SUPPLIER PROFILES ===== -->
+  <div id="paneSuppliers" class="hidden">
+    <div id="suppliersList">
+      <div class="toolbar">
+        <div class="search-box"><input type="text" id="supplierSearch" placeholder="Tìm tên NCC, mặt hàng, khu vực..." oninput="renderSuppliers()"></div>
+        <select style="padding:10px 14px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;background:white;" id="supplierStatus" onchange="renderSuppliers()">
+          <option value="all">Tất cả</option>
+          <option value="active">Đang giao dịch</option>
+          <option value="prospect">Tiềm năng</option>
+          <option value="inactive">Ngừng</option>
+        </select>
+        <div class="view-toggle"><button class="vt-card" onclick="setView('card')" title="Dạng thẻ">⊞</button><button class="vt-list active" onclick="setView('list')" title="Dạng danh sách">☰</button></div>
+        <button class="btn btn-primary" onclick="openSupplierModal()">+ Thêm NCC</button>
+        <button class="btn" onclick="loadSuppliers()">🔄</button>
+      </div>
+      <div class="card-grid" id="supplierGrid"></div>
+    </div>
+    <div id="supplierDetail" class="hidden">
+      <button class="back-btn" onclick="backToSuppliers()">← Danh sách NCC</button>
+      <div id="supplierDetailContent"></div>
     </div>
   </div>
 
@@ -370,6 +394,38 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   </div>
 </div>
 
+<div class="modal-backdrop hidden" id="supplierModal">
+  <div class="modal">
+    <h2 id="supplierModalTitle">Thêm nhà cung cấp</h2>
+    <input type="hidden" id="sEditId">
+    <div class="form-row">
+      <div class="form-group"><label>Tên nhà cung cấp *</label><input type="text" id="sName" placeholder="VD: Hân Vinh"></div>
+      <div class="form-group"><label>Khu vực nguyên liệu</label><input type="text" id="sCountry" placeholder="VD: Đắk Lắk / Lâm Đồng"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Mặt hàng cung cấp</label><input type="text" id="sGoods" placeholder="VD: Robusta R2 scr18, Arabica..."></div>
+      <div class="form-group"><label>Trạng thái</label>
+        <select id="sStatus"><option value="active">Đang giao dịch</option><option value="prospect">Tiềm năng</option><option value="inactive">Ngừng</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>PIC (phụ trách bên mình)</label><input type="text" id="sPic" placeholder="Nhân sự TTD phụ trách NCC này"></div>
+      <div class="form-group"><label>Người liên hệ (phía NCC)</label><input type="text" id="sContact" placeholder="Tên người LH bên NCC"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Email</label><input type="text" id="sEmail" placeholder="email@..."></div>
+      <div class="form-group"><label>Điện thoại</label><input type="text" id="sPhone" placeholder="SĐT"></div>
+    </div>
+    <div class="form-group"><label>Địa chỉ</label><input type="text" id="sAddress" placeholder="Địa chỉ công ty / kho"></div>
+    <div class="form-group"><label>Ghi chú</label><textarea id="sNotes" rows="2" placeholder="Ghi chú thêm..."></textarea></div>
+    <div id="sError" style="color:#c0392b;font-size:13px;display:none;"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('supplierModal')">Hủy</button>
+      <button class="btn btn-primary" onclick="saveSupplier()" id="sSaveBtn">Lưu</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: Country -->
 <div class="modal-backdrop hidden" id="countryModal">
   <div class="modal">
@@ -541,6 +597,7 @@ const MAX_FILE=20*1024*1024;
 let currentUser=null, activeTab='reports';
 let allReports=[], currentReport=null;
 let allBuyers=[], currentBuyer=null;
+let allSuppliers=[], currentSupplier=null;
 let allCountries=[], currentCountry=null;
 let allServices=[], currentService=null;
 let allQuality=[], currentQuality=null;
@@ -589,12 +646,13 @@ function showMainApp(){
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('mainApp').classList.remove('hidden');
   document.getElementById('userBadge').textContent=`${currentUser.name} · ${isAdmin()?'👑 Admin':DEPTS[currentUser.role]||currentUser.role}`;
-  loadReports();loadBuyers();loadCountries();loadServices();loadQuality();loadWeather();loadSaleskit();
+  loadReports();loadBuyers();loadSuppliers();loadCountries();loadServices();loadQuality();loadWeather();loadSaleskit();
 }
 function switchTab(t){
   activeTab=t;
   document.getElementById('tab-reports').classList.toggle('active',t==='reports');
   document.getElementById('tab-buyers').classList.toggle('active',t==='buyers');
+  document.getElementById('tab-suppliers').classList.toggle('active',t==='suppliers');
   document.getElementById('tab-countries').classList.toggle('active',t==='countries');
   document.getElementById('tab-services').classList.toggle('active',t==='services');
   document.getElementById('tab-quality').classList.toggle('active',t==='quality');
@@ -602,6 +660,7 @@ function switchTab(t){
   document.getElementById('tab-saleskit').classList.toggle('active',t==='saleskit');
   document.getElementById('paneReports').classList.toggle('hidden',t!=='reports');
   document.getElementById('paneBuyers').classList.toggle('hidden',t!=='buyers');
+  document.getElementById('paneSuppliers').classList.toggle('hidden',t!=='suppliers');
   document.getElementById('paneCountries').classList.toggle('hidden',t!=='countries');
   document.getElementById('paneServices').classList.toggle('hidden',t!=='services');
   document.getElementById('paneQuality').classList.toggle('hidden',t!=='quality');
@@ -619,6 +678,7 @@ function kindCfg(kind){
   if(kind==='quality')return{obj:currentQuality,table:'quality_standards',key:'documents',nameField:'company',render:renderQualityDetail};
   if(kind==='weather')return{obj:currentWeather,table:'weather_reports',key:'attachments',nameField:'title',render:renderWeatherDetail};
   if(kind==='saleskit')return{obj:currentSaleskit,table:'sales_kit',key:'attachments',nameField:'title',render:renderSaleskitDetail};
+  if(kind==='supplier')return{obj:currentSupplier,table:'supplier_profiles',key:'documents',nameField:'name',render:renderSupplierDetail};
   return{obj:currentBuyer,table:'buyer_profiles',key:'documents',nameField:'name',render:renderBuyerDetail};
 }
 async function handleFiles(files){
@@ -880,6 +940,120 @@ async function deleteBuyer(id){
   try{
     const paths=(b.documents||[]).map(d=>d.path).filter(Boolean);if(paths.length)await sb.storage.from('order-files').remove(paths);
     await sb.from('buyer_profiles').delete().eq('id',id);backToBuyers();await loadBuyers();
+  }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
+}
+
+// ===== SUPPLIER PROFILES (Hồ sơ nhà cung cấp) =====
+async function loadSuppliers(){
+  try{const{data,error}=await sb.from('supplier_profiles').select('*').order('name');if(error)throw error;allSuppliers=data||[];renderSuppliers();}
+  catch(e){document.getElementById('supplierGrid').innerHTML=`<div class="empty-state"><p>Lỗi: ${e.message}</p></div>`;}
+}
+function renderSuppliers(){
+  const g=document.getElementById('supplierGrid');
+  const s=(document.getElementById('supplierSearch').value||'').toLowerCase();
+  const st=document.getElementById('supplierStatus').value;
+  let list=allSuppliers.filter(b=>{
+    const ms=!s||[b.name,b.country,b.goods,b.contact_person,b.pic].some(v=>(v||'').toLowerCase().includes(s));
+    return ms&&(st==='all'||b.status===st);
+  });
+  g.style.display=viewMode==='list'?'block':'';
+  if(!list.length){g.innerHTML='<div class="empty-state"><div class="ico">🏭</div><p>Chưa có nhà cung cấp nào</p></div>';return;}
+  if(viewMode==='list'){
+    g.innerHTML=`<table class="th-table"><thead><tr><th>Tên NCC</th><th>Khu vực</th><th>Mặt hàng</th><th>PIC (bên mình)</th><th>Người liên hệ (NCC)</th><th>Trạng thái</th><th>Ngày upload TL</th><th>📎</th></tr></thead><tbody>${list.map(b=>`
+      <tr onclick="openSupplier('${b.id}')"><td style="font-weight:600;">${esc(b.name)}</td><td>${esc(b.country||'—')}</td><td>${esc(b.goods||'—')}</td><td>${esc(b.pic||'—')}</td><td>${esc(b.contact_person||'—')}</td><td><span class="status-pill ${BSTATUS_CLASS[b.status]||'st-active'}">${BSTATUS_LABELS[b.status]||b.status}</span></td><td>${lastDoc(b.documents)}</td><td>${(b.documents||[]).length||''}</td></tr>`).join('')}</tbody></table>`;
+    return;
+  }
+  g.innerHTML=list.map(b=>{
+    const n=(b.documents||[]).length;
+    return`<div class="item-card" onclick="openSupplier('${b.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">
+        <span class="status-pill ${BSTATUS_CLASS[b.status]||'st-active'}">${BSTATUS_LABELS[b.status]||b.status}</span>
+        ${b.country?`<span style="font-size:12px;color:#888;">🌐 ${esc(b.country)}</span>`:''}
+      </div>
+      <div style="font-size:16px;font-weight:700;color:#333;line-height:1.3;">${esc(b.name)}</div>
+      ${b.goods?`<div style="font-size:12px;color:#444;margin-top:4px;">☕ ${esc(b.goods)}</div>`:''}
+      ${b.pic?`<div style="font-size:12px;color:#0f766e;margin-top:2px;">🧑‍💼 PIC: ${esc(b.pic)}</div>`:''}
+      ${b.contact_person?`<div style="font-size:12px;color:#666;margin-top:2px;">👤 LH: ${esc(b.contact_person)}</div>`:''}
+      <div style="font-size:11px;color:#aaa;margin-top:10px;">${n?`📎 ${n} giấy tờ`:'Chưa có giấy tờ'}</div>
+    </div>`;
+  }).join('');
+}
+function openSupplier(id){currentSupplier=allSuppliers.find(b=>b.id===id);if(!currentSupplier)return;document.getElementById('suppliersList').classList.add('hidden');document.getElementById('supplierDetail').classList.remove('hidden');renderSupplierDetail();}
+function backToSuppliers(){document.getElementById('supplierDetail').classList.add('hidden');document.getElementById('suppliersList').classList.remove('hidden');currentSupplier=null;}
+function renderSupplierDetail(){
+  const b=currentSupplier;
+  const docs=(b.documents||[]).map((d,i)=>docRow(d,'supplier',i)).join('')||'<span style="color:#aaa;font-size:13px;">Chưa có giấy tờ</span>';
+  document.getElementById('supplierDetailContent').innerHTML=`
+    <div class="detail-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+        <div>
+          <span class="status-pill ${BSTATUS_CLASS[b.status]||'st-active'}">${BSTATUS_LABELS[b.status]||b.status}</span>
+          <div style="font-size:22px;font-weight:700;margin-top:8px;">${esc(b.name)}</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn" onclick="openSupplierModal('${b.id}')">✏️ Sửa</button>
+          ${isAdmin()?`<button class="btn btn-danger" onclick="deleteSupplier('${b.id}')">🗑️ Xóa</button>`:''}
+        </div>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-item"><div class="d-label">Khu vực nguyên liệu</div><div class="d-value">${esc(b.country||'—')}</div></div>
+        <div class="detail-item"><div class="d-label">Mặt hàng cung cấp</div><div class="d-value">${esc(b.goods||'—')}</div></div>
+        <div class="detail-item"><div class="d-label">PIC (phụ trách bên mình)</div><div class="d-value">${esc(b.pic||'—')}</div></div>
+        <div class="detail-item"><div class="d-label">Người liên hệ (phía NCC)</div><div class="d-value">${esc(b.contact_person||'—')}</div></div>
+        <div class="detail-item"><div class="d-label">Email</div><div class="d-value">${esc(b.email||'—')}</div></div>
+        <div class="detail-item"><div class="d-label">Điện thoại</div><div class="d-value">${esc(b.phone||'—')}</div></div>
+        <div class="detail-item" style="grid-column:span 2;"><div class="d-label">Địa chỉ</div><div class="d-value">${esc(b.address||'—')}</div></div>
+      </div>
+      ${b.notes?`<div style="margin-top:14px;padding:12px 14px;background:#f0fdfa;border-left:3px solid #0f766e;border-radius:6px;font-size:13px;color:#444;white-space:pre-wrap;">${esc(b.notes)}</div>`:''}
+    </div>
+    <div class="detail-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:600;color:#0f766e;text-transform:uppercase;letter-spacing:.5px;">📎 Giấy tờ NCC</div>
+        <button class="btn-mini" onclick="triggerUpload('supplier','${b.id}')">+ Tải giấy tờ lên</button>
+      </div>
+      <div class="drop-zone" id="supplierDrop" onclick="triggerUpload('supplier','${b.id}')">
+        <div style="font-size:28px;">📤</div>
+        <div style="font-size:13px;color:#0f766e;font-weight:600;margin-top:4px;">Bấm hoặc kéo giấy tờ vào đây</div>
+        <div style="font-size:11px;color:#999;margin-top:2px;">Company profile, brochure, giấy phép, bảng giá... · tối đa 20MB</div>
+      </div>
+      <div class="doc-list" style="margin-top:12px;">${docs}</div>
+    </div>`;
+  const drop=document.getElementById('supplierDrop');
+  if(drop){drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag');});drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');uploadTarget={kind:'supplier',id:b.id};handleFiles(e.dataTransfer.files);});}
+}
+function openSupplierModal(id){
+  document.getElementById('sError').style.display='none';
+  if(id){const b=allSuppliers.find(x=>x.id===id);document.getElementById('supplierModalTitle').textContent='Sửa nhà cung cấp';document.getElementById('sEditId').value=id;
+    document.getElementById('sName').value=b.name||'';document.getElementById('sCountry').value=b.country||'';document.getElementById('sGoods').value=b.goods||'';document.getElementById('sContact').value=b.contact_person||'';document.getElementById('sPic').value=b.pic||'';
+    document.getElementById('sEmail').value=b.email||'';document.getElementById('sPhone').value=b.phone||'';document.getElementById('sAddress').value=b.address||'';
+    document.getElementById('sStatus').value=b.status||'active';document.getElementById('sNotes').value=b.notes||'';document.getElementById('sSaveBtn').textContent='Cập nhật';
+  }else{document.getElementById('supplierModalTitle').textContent='Thêm nhà cung cấp';document.getElementById('sEditId').value='';
+    ['sName','sCountry','sGoods','sContact','sPic','sEmail','sPhone','sAddress','sNotes'].forEach(x=>document.getElementById(x).value='');document.getElementById('sStatus').value='active';document.getElementById('sSaveBtn').textContent='Lưu';}
+  document.getElementById('supplierModal').classList.remove('hidden');
+}
+async function saveSupplier(){
+  const err=document.getElementById('sError');err.style.display='none';
+  const name=document.getElementById('sName').value.trim();
+  if(!name){err.textContent='Vui lòng nhập tên nhà cung cấp';err.style.display='block';return;}
+  const payload={name,country:document.getElementById('sCountry').value.trim()||null,goods:document.getElementById('sGoods').value.trim()||null,contact_person:document.getElementById('sContact').value.trim()||null,pic:document.getElementById('sPic').value.trim()||null,
+    email:document.getElementById('sEmail').value.trim()||null,phone:document.getElementById('sPhone').value.trim()||null,
+    address:document.getElementById('sAddress').value.trim()||null,status:document.getElementById('sStatus').value,
+    notes:document.getElementById('sNotes').value.trim()||null,updated_by:currentUser.name,updated_at:new Date().toISOString()};
+  const id=document.getElementById('sEditId').value;
+  const btn=document.getElementById('sSaveBtn');btn.disabled=true;showLoading('Đang lưu...');
+  try{
+    if(id){await sb.from('supplier_profiles').update(payload).eq('id',id);}
+    else{payload.id='sup_'+Date.now()+'_'+Math.floor(Math.random()*9999);payload.created_by=currentUser.name;payload.created_at=new Date().toISOString();payload.documents=[];await sb.from('supplier_profiles').insert(payload);}
+    closeModal('supplierModal');await loadSuppliers();
+    if(id){currentSupplier=allSuppliers.find(x=>x.id===id);if(!document.getElementById('supplierDetail').classList.contains('hidden'))renderSupplierDetail();}
+  }catch(e){err.textContent='Lỗi: '+e.message;err.style.display='block';}finally{btn.disabled=false;hideLoading();}
+}
+async function deleteSupplier(id){
+  if(!isAdmin()){alert('Chỉ Admin được xóa');return;}
+  const b=allSuppliers.find(x=>x.id===id);if(!confirm(`Xóa nhà cung cấp "${b?.name}" và toàn bộ giấy tờ?`))return;
+  showLoading('Đang xóa...');
+  try{
+    await sb.from('supplier_profiles').delete().eq('id',id);backToSuppliers();await loadSuppliers();
   }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
 }
 
