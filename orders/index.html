@@ -585,7 +585,7 @@ function renderListTable(container,groups){
         const lBadge=`<span style="font-size:10px;background:#667eea;color:white;padding:1px 6px;border-radius:8px;font-weight:600;margin-right:4px;">L${String(k.shipment_no||'?').padStart(2,'0')}</span>`;
         const meta=[k.shipment_month?`📅 ${k.shipment_month}`:'',k.shipment_qty?`⚖️ ${k.shipment_qty}`:''].filter(Boolean).join(' · ');
         rows+=`<tr class="child-row" onclick="openOrder('${k.id}')">
-          <td style="padding-left:32px;font-size:12px;">${lBadge}${esc(k.code)}${meta?`<div style="font-size:10px;color:#888;margin-top:2px;">${meta}</div>`:''}${renderFlowInline(k)}
+          <td style="padding-left:50px;font-size:12px;">${lBadge}${esc(k.code)}${meta?`<div style="font-size:10px;color:#888;margin-top:2px;">${meta}</div>`:''}${renderFlowInline(k)}
           <td style="font-size:12px;color:#888;">${esc(k.customer)}</td>
           <td style="font-size:11px;color:#aaa;">${k.supplier?esc(k.supplier):'—'}</td>
           <td><div style="display:flex;align-items:center;gap:6px;"><div style="flex:1;height:3px;background:#f0f0f0;border-radius:2px;overflow:hidden;min-width:50px;"><div style="height:100%;width:${kPct}%;background:${kBar};border-radius:2px;"></div></div><span style="font-size:11px;color:#888;">${kPct}%</span></div><div style="font-size:11px;color:#aaa;margin-top:1px;">${kDone}/${TOTAL}</div></td>
