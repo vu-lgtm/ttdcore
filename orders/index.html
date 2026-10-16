@@ -407,6 +407,13 @@ function countCompleted(o){
 }
 function getStatus(o){
   if(o.cancelled)return'cancelled';
+  if(o.is_parent){ // đơn tổng: tổng hợp trạng thái từ các đơn con
+    const kids=allOrders.filter(k=>k.parent_order_id===o.id&&!k.cancelled);
+    if(!kids.length)return'new';
+    if(kids.every(k=>countCompleted(k)>=TOTAL))return'done'; // tất cả con đủ hồ sơ → tự hoàn thành
+    if(kids.some(k=>countCompleted(k)>0))return'progress';
+    return'new';
+  }
   const c=countCompleted(o);
   if(c===0)return'new';if(c>=TOTAL)return'done';return'progress';
 }
