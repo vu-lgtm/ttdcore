@@ -127,6 +127,18 @@ header { background: var(--dark2); border-bottom: 2px solid var(--teal2); paddin
   color: var(--mod-color, var(--teal));
   opacity: 0.8;
 }
+/* Card Nhân sự — list tên người nghỉ */
+.hr-card { align-items:stretch; justify-content:flex-start; gap:0; }
+.hr-head { display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Montserrat',sans-serif; font-size:15px; font-weight:700; color:var(--white,#eaf2f1); margin-bottom:14px; text-align:center; }
+.hr-head .dot { width:8px; height:8px; border-radius:50%; background:var(--mod-color,#1565C0); }
+.hr-list { display:flex; flex-direction:column; gap:9px; width:100%; }
+.hr-row { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07); border-radius:10px; padding:9px 11px; }
+.hr-tag { font-size:11px; font-weight:600; padding:3px 8px; border-radius:7px; white-space:nowrap; }
+.hr-tag.t-today { background:rgba(21,101,192,.18); color:#64b5f6; }
+.hr-tag.t-tmr { background:rgba(0,191,165,.15); color:#4dd0c4; }
+.hr-tag.t-pend { background:rgba(240,165,0,.15); color:#f0a500; }
+.hr-ppl { font-size:13.5px; font-weight:600; color:#eaf2f1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.hr-ppl.none { color:#90a4ae; font-weight:500; }
 
 /* FOOTER */
 footer { background: var(--dark2); border-top: 2px solid var(--teal2); padding: 24px 0; }
@@ -322,10 +334,13 @@ footer { background: var(--dark2); border-top: 2px solid var(--teal2); padding: 
       
     </a>
 
-    <a href="./hr/" class="mod-card" style="--mod-color:#1565C0;">
-      <div class="mod-icon-wrap">👥</div>
-      <div class="mod-name">Quản lý<br>nhân sự</div>
-      
+    <a href="./hr/" class="mod-card hr-card" style="--mod-color:#1565C0;">
+      <div class="hr-head"><span class="dot"></span> Quản lý nhân sự</div>
+      <div class="hr-list">
+        <div class="hr-row"><span class="hr-tag t-today">Nghỉ hôm nay</span><span class="hr-ppl" id="hrToday">…</span></div>
+        <div class="hr-row"><span class="hr-tag t-tmr">Nghỉ ngày mai</span><span class="hr-ppl" id="hrTmr">…</span></div>
+        <div class="hr-row"><span class="hr-tag t-pend">Phép đợi duyệt</span><span class="hr-ppl" id="hrPend">…</span></div>
+      </div>
     </a>
 
     <a href="./notices/" class="mod-card" style="--mod-color:#ab47bc;">
@@ -502,6 +517,30 @@ async function loadStats() {
     });
     if (res.ok) document.getElementById('statOrders').textContent = (await res.json()).length;
   } catch(e) {}
+  loadHrStats();
+}
+// Card Nhân sự: tên người nghỉ hôm nay / ngày mai / phép đợi duyệt (bảng leaves)
+async function loadHrStats() {
+  const set = (id, names) => {
+    const el = document.getElementById(id); if (!el) return;
+    const uniq = [...new Set((names || []).filter(Boolean))];
+    if (uniq.length) { el.textContent = uniq.join(', '); el.classList.remove('none'); }
+    else { el.textContent = '—'; el.classList.add('none'); }
+  };
+  try {
+    const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
+    const ymd = x => x.toLocaleDateString('en-CA');
+    const today = ymd(d);
+    const tmr = ymd(new Date(d.getTime() + 86400000));
+    const { data, error } = await sb.from('leaves').select('emp_name,from_date,to_date,status');
+    if (error) throw error;
+    const rows = data || [];
+    set('hrToday', rows.filter(l => l.status === 'approved' && l.from_date <= today && l.to_date >= today).map(l => l.emp_name));
+    set('hrTmr', rows.filter(l => l.status === 'approved' && l.from_date <= tmr && l.to_date >= tmr).map(l => l.emp_name));
+    set('hrPend', rows.filter(l => l.status === 'pending').map(l => l.emp_name));
+  } catch(e) {
+    ['hrToday','hrTmr','hrPend'].forEach(id => set(id, []));
+  }
 }
 
 // ============ NOTIFICATIONS ============
