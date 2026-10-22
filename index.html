@@ -128,7 +128,7 @@ header { background: var(--dark2); border-bottom: 2px solid var(--teal2); paddin
   opacity: 0.8;
 }
 /* Card Nhân sự — list tên người nghỉ */
-.hr-card { align-items:stretch; justify-content:flex-start; gap:0; }
+.hr-card { align-items:stretch; justify-content:center; gap:0; }
 .hr-head { display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Montserrat',sans-serif; font-size:15px; font-weight:700; color:var(--white,#eaf2f1); margin-bottom:14px; text-align:center; }
 .hr-head .dot { width:8px; height:8px; border-radius:50%; background:var(--mod-color,#1565C0); }
 .hr-list { display:flex; flex-direction:column; gap:9px; width:100%; }
@@ -521,9 +521,10 @@ async function loadStats() {
 }
 // Card Nhân sự: tên người nghỉ hôm nay / ngày mai / phép đợi duyệt (bảng leaves)
 async function loadHrStats() {
+  const firstName = s => (s || '').trim().split(/\s+/).pop(); // lấy tên gọi (chữ cuối)
   const set = (id, names) => {
     const el = document.getElementById(id); if (!el) return;
-    const uniq = [...new Set((names || []).filter(Boolean))];
+    const uniq = [...new Set((names || []).map(firstName).filter(Boolean))];
     if (uniq.length) { el.textContent = uniq.join(', '); el.classList.remove('none'); }
     else { el.textContent = '—'; el.classList.add('none'); }
   };
