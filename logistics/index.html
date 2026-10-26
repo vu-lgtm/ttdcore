@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
@@ -536,11 +536,34 @@ function renderDetail(){
       <div style="font-size:11px;color:#999;margin-bottom:8px;">File không thuộc mục chứng từ nào (ảnh container, email, ghi chú...)</div>
       <div class="drop-zone" id="dropZone" onclick="triggerUpload('${s.id}')"><div style="font-size:28px;">📤</div><div style="font-size:13px;color:#e65100;font-weight:600;margin-top:4px;">Bấm hoặc kéo file vào đây</div><div style="font-size:11px;color:#999;">PDF, ảnh, Word, Excel · tối đa 20MB</div></div>
       <div class="att-list">${attHtml}</div>
-    </div>`;
+    </div>
+    ${renderHistCard(s)}`;
   const drop=document.getElementById('dropZone');
   if(drop){drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag');});drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');uploadCtx={id:s.id,mode:'general'};handleFiles(e.dataTransfer.files);});}
   const bulk=document.getElementById('docBulkZone');
   if(bulk){bulk.addEventListener('dragover',e=>{e.preventDefault();bulk.classList.add('drag');});bulk.addEventListener('dragleave',()=>bulk.classList.remove('drag'));bulk.addEventListener('drop',e=>{e.preventDefault();bulk.classList.remove('drag');uploadCtx={id:s.id,mode:'bulk'};handleFiles(e.dataTransfer.files);});}
+}
+
+// ===== LỊCH SỬ CHỈNH SỬA =====
+const HFIELDS={incoterms:'Incoterm',coffee_type:'Loại cà phê',quantity:'Số lượng',status:'Trạng thái',customer:'Khách hàng',supplier:'NCC',booking_no:'Booking',vessel:'Tàu',container_no:'Container',etd:'ETD',eta:'ETA',port_load:'Cảng đi',port_disch:'Cảng đến',notes:'Ghi chú',docs_done_date:'Ngày xong CT gốc',lot_code:'Mã lô'};
+function diffFields(oldS,payload){
+  const ch=[];
+  Object.keys(HFIELDS).forEach(k=>{
+    const a=(oldS[k]==null?'':String(oldS[k])), b=(payload[k]==null?'':String(payload[k]));
+    if(a!==b)ch.push(HFIELDS[k]);
+  });
+  return ch;
+}
+function histEntry(action,detail){return {action:action,detail:detail||'',user:currentUser?currentUser.name:'',time:Date.now()};}
+function renderHistCard(s){
+  const h=(s.history||[]).slice().reverse();
+  if(!h.length)return `<div class="detail-card"><div class="section-title" style="margin:0 0 6px;">🕘 Lịch sử chỉnh sửa</div><div style="font-size:13px;color:#aaa;">Chưa có thay đổi nào được ghi.</div></div>`;
+  const rows=h.map(e=>`<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:12.5px;align-items:baseline;">
+    <span style="color:#999;white-space:nowrap;min-width:125px;">${new Date(e.time).toLocaleString('vi-VN')}</span>
+    <span style="flex:1;color:#333;"><b>${esc(e.action)}</b>${e.detail?` · ${esc(e.detail)}`:''}</span>
+    <span style="color:#ff7043;white-space:nowrap;font-weight:600;">${esc(e.user||'')}</span>
+  </div>`).join('');
+  return `<div class="detail-card"><div class="section-title" style="margin:0 0 8px;">🕘 Lịch sử chỉnh sửa (${h.length})</div><div>${rows}</div></div>`;
 }
 
 // ===== CHI PHÍ LÔ HÀNG =====
@@ -586,10 +609,11 @@ async function saveCosts(){
   const cost_currency=document.getElementById('costCurrency')?.value||'VND';
   showLoading('Đang lưu chi phí...');
   try{
-    const{error}=await sb.from('logistics_shipments').update({costs,cost_currency,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',currentId);
+    const hist=[...(currentShip.history||[]),histEntry('Cập nhật chi phí','')];
+    const{error}=await sb.from('logistics_shipments').update({costs,cost_currency,history:hist,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',currentId);
     if(error)throw error;
-    currentShip.costs=costs;currentShip.cost_currency=cost_currency;
-    const idx=allShips.findIndex(x=>x.id===currentId);if(idx>=0){allShips[idx].costs=costs;allShips[idx].cost_currency=cost_currency;}
+    currentShip.costs=costs;currentShip.cost_currency=cost_currency;currentShip.history=hist;
+    const idx=allShips.findIndex(x=>x.id===currentId);if(idx>=0){allShips[idx].costs=costs;allShips[idx].cost_currency=cost_currency;allShips[idx].history=hist;}
     editingCosts=false;renderDetail();
   }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
 }
@@ -599,17 +623,20 @@ async function toggleAllDocs(){
   if(!canEdit()||!currentShip)return;
   const allDone=DOC_LIST.every(x=>(currentShip.doc_status||{})[x.key]);
   const d={...(currentShip.doc_status||{})};DOC_LIST.forEach(x=>{d[x.key]=!allDone;});
+  const hist=[...(currentShip.history||[]),histEntry(allDone?'Bỏ tick tất cả chứng từ':'Hoàn thành tất cả chứng từ','')];
   showLoading(allDone?'Đang bỏ tick...':'Đang hoàn thành...');
-  try{const{error}=await sb.from('logistics_shipments').update({doc_status:d,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',currentId);if(error)throw error;
-    currentShip.doc_status=d;const idx=allShips.findIndex(x=>x.id===currentId);if(idx>=0)allShips[idx].doc_status=d;renderDetail();
+  try{const{error}=await sb.from('logistics_shipments').update({doc_status:d,history:hist,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',currentId);if(error)throw error;
+    currentShip.doc_status=d;currentShip.history=hist;const idx=allShips.findIndex(x=>x.id===currentId);if(idx>=0){allShips[idx].doc_status=d;allShips[idx].history=hist;}renderDetail();
   }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
 }
 async function toggleDoc(key){
   if(!canEdit())return;
   const d={...(currentShip.doc_status||{})};d[key]=!d[key];
+  const lbl=(DOC_LIST.find(x=>x.key===key)||{}).label||key;
+  const hist=[...(currentShip.history||[]),histEntry(d[key]?'Tick chứng từ':'Bỏ tick chứng từ',lbl)];
   showLoading('Đang lưu...');
-  try{const{error}=await sb.from('logistics_shipments').update({doc_status:d,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',currentId);if(error)throw error;
-    currentShip.doc_status=d;const idx=allShips.findIndex(x=>x.id===currentId);if(idx>=0)allShips[idx].doc_status=d;renderDetail();
+  try{const{error}=await sb.from('logistics_shipments').update({doc_status:d,history:hist,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',currentId);if(error)throw error;
+    currentShip.doc_status=d;currentShip.history=hist;const idx=allShips.findIndex(x=>x.id===currentId);if(idx>=0){allShips[idx].doc_status=d;allShips[idx].history=hist;}renderDetail();
   }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
 }
 
@@ -645,7 +672,7 @@ async function downloadAllDocs(){
 async function handleFiles(files){
   if(!uploadCtx||!currentShip)return;
   const newDocStatus={...(currentShip.doc_status||{})};
-  const warn=[];
+  const warn=[]; const uploaded=[];
   for(const file of [...files]){
     if(file.size>MAX_FILE){alert(`File "${file.name}" quá 20MB, bỏ qua.`);continue;}
     // Xác định mục chứng từ cho file này
@@ -663,16 +690,23 @@ async function handleFiles(files){
       const docItem={title:r.name||file.name,url:r.url,previewUrl:r.previewUrl,fileId:r.fileId,mime:file.type,size:r.size||file.size,user:currentUser.name,time:Date.now(),doc:docKey};
       const list=[...(currentShip.attachments||[]),docItem];
       await sb.from('logistics_shipments').update({attachments:list}).eq('id',currentShip.id);
-      currentShip.attachments=list;
+      currentShip.attachments=list;uploaded.push(r.name||file.name);
       if(docKey&&DOC_LIST.some(d=>d.key===docKey))newDocStatus[docKey]=true; // chỉ auto-tick mục chứng từ thật (bỏ qua _zip)
     }catch(e){alert(`Lỗi tải "${file.name}": ${e.message}`);}
   }
-  // cập nhật tick nếu có thay đổi
-  if(JSON.stringify(newDocStatus)!==JSON.stringify(currentShip.doc_status||{})){
-    currentShip.doc_status=newDocStatus;
+  // cập nhật tick + ghi log file mới
+  const changedDoc=JSON.stringify(newDocStatus)!==JSON.stringify(currentShip.doc_status||{});
+  if(changedDoc)currentShip.doc_status=newDocStatus;
+  if(uploaded.length){
+    const hist=[...(currentShip.history||[]),histEntry('Tải lên file',uploaded.join(', '))];
+    const upd={history:hist,updated_by:currentUser.name,updated_at:new Date().toISOString()};
+    if(changedDoc)upd.doc_status=newDocStatus;
+    await sb.from('logistics_shipments').update(upd).eq('id',currentShip.id);
+    currentShip.history=hist;
+  }else if(changedDoc){
     await sb.from('logistics_shipments').update({doc_status:newDocStatus,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',currentShip.id);
   }
-  const idx=allShips.findIndex(x=>x.id===currentShip.id);if(idx>=0){allShips[idx].attachments=currentShip.attachments;allShips[idx].doc_status=currentShip.doc_status;}
+  const idx=allShips.findIndex(x=>x.id===currentShip.id);if(idx>=0){allShips[idx].attachments=currentShip.attachments;allShips[idx].doc_status=currentShip.doc_status;allShips[idx].history=currentShip.history;}
   hideLoading();renderDetail();
   if(warn.length)alert(`${warn.length} file không có số đầu hợp lệ (1–${DOC_LIST.length}) → đã đưa vào "File đính kèm chung":\n\n`+warn.join('\n'));
 }
@@ -682,8 +716,9 @@ async function removeAtt(i){
   showLoading('Đang xóa...');
   try{if(a.fileId)await driveDelete(a.fileId);
     const list=[...currentShip.attachments];list.splice(i,1);
-    await sb.from('logistics_shipments').update({attachments:list,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',currentShip.id);
-    currentShip.attachments=list;const idx=allShips.findIndex(x=>x.id===currentShip.id);if(idx>=0)allShips[idx].attachments=list;renderDetail();
+    const hist=[...(currentShip.history||[]),histEntry('Xóa file',a.title||'')];
+    await sb.from('logistics_shipments').update({attachments:list,history:hist,updated_by:currentUser.name,updated_at:new Date().toISOString()}).eq('id',currentShip.id);
+    currentShip.attachments=list;currentShip.history=hist;const idx=allShips.findIndex(x=>x.id===currentShip.id);if(idx>=0){allShips[idx].attachments=list;allShips[idx].history=hist;}renderDetail();
   }catch(e){alert('Lỗi: '+e.message);}finally{hideLoading();}
 }
 function previewDoc(previewUrl,openUrl){if(!previewUrl){if(openUrl)window.open(openUrl,'_blank');return;}document.getElementById('previewContent').innerHTML=`<iframe src="${esc(previewUrl)}"></iframe>`;document.getElementById('previewBackdrop').classList.remove('hidden');}
@@ -718,8 +753,13 @@ async function saveShip(){
     updated_by:currentUser.name,updated_at:new Date().toISOString()};
   const id=document.getElementById('editId').value;const btn=document.getElementById('saveBtn');btn.disabled=true;showLoading(id?'Đang cập nhật...':'Đang lưu...');
   try{
-    if(id){await sb.from('logistics_shipments').update(payload).eq('id',id);}
-    else{payload.id='ls_'+Date.now()+'_'+Math.floor(Math.random()*9999);payload.created_by=currentUser.name;payload.created_at=new Date().toISOString();payload.doc_status={};payload.attachments=[];payload.costs={};payload.cost_currency='VND';await sb.from('logistics_shipments').insert(payload);}
+    if(id){
+      const oldS=allShips.find(x=>x.id===id)||{};
+      const changed=diffFields(oldS,payload);
+      payload.history=[...(oldS.history||[]),histEntry('Sửa thông tin lô',changed.join(', '))];
+      await sb.from('logistics_shipments').update(payload).eq('id',id);
+    }
+    else{payload.id='ls_'+Date.now()+'_'+Math.floor(Math.random()*9999);payload.created_by=currentUser.name;payload.created_at=new Date().toISOString();payload.doc_status={};payload.attachments=[];payload.costs={};payload.cost_currency='VND';payload.history=[histEntry('Tạo lô hàng','')];await sb.from('logistics_shipments').insert(payload);}
     closeModal();await loadData();
     if(id){currentShip=allShips.find(x=>x.id===id);if(!document.getElementById('viewDetail').classList.contains('hidden'))renderDetail();}
   }catch(e){err.textContent='Lỗi: '+e.message;err.style.display='block';}finally{btn.disabled=false;hideLoading();}
