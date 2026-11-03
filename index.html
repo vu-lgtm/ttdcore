@@ -2,8 +2,17 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>TTDCore — Hệ thống nội bộ TTD Global</title>
+<!-- ===== PWA / App iOS ===== -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0a1420">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="TTDCore">
+<link rel="apple-touch-icon" href="/icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap');
@@ -351,6 +360,12 @@ footer { background: var(--dark2); border-top: 2px solid var(--teal2); padding: 
     <a href="./regulations/" class="mod-card" style="--mod-color:#4fc3f7;">
       <div class="mod-icon-wrap">📚</div>
       <div class="mod-name">Nội quy<br>& Tài liệu</div>
+    </a>
+
+    <a href="./tool-hop-dong/" class="mod-card" style="--mod-color:#c8873a;">
+      <div class="mod-icon-wrap">📝</div>
+      <div class="mod-name">Tool<br>Hợp đồng</div>
+      <div class="mod-badge">● Active</div>
     </a>
 
     <a href="./trading-hub-v2/" class="mod-card" style="--mod-color:#0f766e;">
