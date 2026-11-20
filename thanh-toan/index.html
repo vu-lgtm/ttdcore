@@ -422,7 +422,7 @@ const XLSX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.m
 
 /* ============================ TIỆN ÍCH ============================ */
 const sb = (!DEMO && window.supabase) ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-let currentUser=null, allProfiles=[], chain=[], chainReady=false, reqs=[], tab=null, cur=null, depts={}, payees=[];
+let currentUser=null, allProfiles=[], chain=[], chainReady=false, reqs=[], tab=null, cur=null, depts={}, payees=[], emps=[];
 let fm=null; // trạng thái form
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -439,7 +439,27 @@ function showLoading(m){$('loading').textContent=m||'Đang xử lý…';$('loadi
 function hideLoading(){$('loading').style.display='none';}
 function isAdmin(){return !!currentUser&&(currentUser.role==='admin'||currentUser.email===SUPER);}
 function isAccounting(){return chain.some(s=>PAY_STEPS.includes(s.key)&&s.options.some(o=>o.email===me()));}
-function profileName(email){const p=allProfiles.find(p=>p.email===email);return p&&p.name?p.name:String(email||'').split('@')[0];}
+function profileName(email){const e=empOf(email);if(e&&e.ten)return e.ten;const p=allProfiles.find(p=>p.email===email);return p&&p.name?p.name:String(email||'').split('@')[0];}
+/* ---------- Nhân viên từ module HR (bảng employees: ma, ten = họ tên đầy đủ, vitri = chức vụ, email) ---------- */
+const lc=s=>String(s||'').trim().toLowerCase();
+// Số hóa đơn lưu & hiển thị ĐỦ số 0; chỉ bỏ số 0 khi SO SÁNH để phát hiện trùng (00004521 = 0004521 = 4521)
+const noZero=s=>String(s||'').trim().replace(/^0+(?=\d)/,'');
+function invVariants(no){const b=noZero(no);return[...new Set([String(no).trim(),b,b.padStart(7,'0'),b.padStart(8,'0')])];}
+function empOf(key){key=lc(key);if(!key)return null;if(key.startsWith('ma:'))return emps.find(e=>'ma:'+lc(e.ma)===key)||null;return emps.find(e=>lc(e.email)===key)||null;}
+function deptFromPos(v){const s=deaccent(v);if(!s)return'';
+  if(/logistic|chung tu|xnk|xuat nhap khau|giao nhan|van tai/.test(s))return'Logistics';
+  if(/ke toan|accountant|tai chinh|thu quy/.test(s))return'Kế toán';
+  if(/thu mua|purchas|mua hang/.test(s))return'Thu mua';
+  if(/nhan su|hanh chinh|\bhr\b|admin/.test(s))return'Hành chính - Nhân sự';
+  if(/giam doc|director|ceo|coo|chu tich/.test(s))return'Ban Giám đốc';
+  if(/trade|sale|kinh doanh|trader/.test(s))return'Trade';return'';}
+function peopleList(){
+  const out=[];
+  emps.forEach(e=>{if(!e.ten)return;const em=lc(e.email);if(em&&out.some(o=>o.email===em))return;out.push({key:em||('ma:'+lc(e.ma)),email:em,name:e.ten,vitri:e.vitri||''});});
+  allProfiles.forEach(p=>{const em=lc(p.email);if(em&&!out.some(o=>o.email===em))out.push({key:em,email:em,name:p.name||em,vitri:''});});
+  return out.sort((a,b)=>a.name.localeCompare(b.name,'vi'));
+}
+function applyMyName(){const e=empOf(me());if(e&&e.ten)currentUser.name=e.ten;$('who').textContent=currentUser.name+(isAdmin()?' · 👑':'');}
 const PALETTE=['#0f766e','#2563eb','#9333ea','#c2410c','#be185d','#0369a1','#4d7c0f','#b45309'];
 function avColor(s){let h=0;for(const c of String(s))h=(h*31+c.charCodeAt(0))>>>0;return PALETTE[h%PALETTE.length];}
 function avatar(name,email){const n=lastWord(name)||'?';return `<span class="av" style="background:${avColor(email||name)}">${esc(n.charAt(0).toUpperCase())}</span>`;}
@@ -486,12 +506,13 @@ const db = DEMO ? null : {
   async update(id,patch,expect){const{data,error}=await sb.from(T).update(patch).eq('id',id).eq('updated_at',expect).select('id');if(error)throw error;return !!(data&&data.length);},
   async lastCode(prefix){const{data}=await sb.from(T).select('code').like('code',prefix+'%').order('code',{ascending:false}).limit(1);return data&&data[0]?data[0].code:null;},
   async depts(){const{data,error}=await sb.from('staff_departments').select('email,department');if(error){console.warn(error);return[];}return data||[];},
+  async employees(){const{data,error}=await sb.from('employees').select('ma,ten,vitri,email,cty').order('ten');if(error){console.warn(error);return[];}return data||[];},
   async setDept(email,department){const{error}=await sb.from('staff_departments').upsert({email,department,updated_at:nowISO()});if(error)throw error;},
   async payees(){const{data,error}=await sb.from('payment_payees').select('*').order('use_count',{ascending:false}).limit(5000);if(error){console.warn(error);return[];}return data||[];},
   async upsertPayees(rows){for(let i=0;i<rows.length;i+=500){const{error}=await sb.from('payment_payees').upsert(rows.slice(i,i+500));if(error)throw error;}},
   async deletePayee(acc){const{error}=await sb.from('payment_payees').delete().eq('account_no',acc);if(error)throw error;},
   async findInvoice(no){
-    const vs=[...new Set([no,no.padStart(7,'0'),no.padStart(8,'0')])];
+    const vs=invVariants(no);
     const res=await Promise.all(vs.map(v=>sb.from(T).select('id,code,status').contains('items',[{invoice_no:v}]).limit(5)));
     const out=[];res.forEach(r=>(r.data||[]).forEach(x=>{if(!out.some(o=>o.id===x.id))out.push(x);}));return out;
   }
@@ -544,8 +565,9 @@ async function enterApp(){
   $('login').style.display='none';$('app').hidden=false;document.body.classList.add('app-on');setHH();
   $('who').textContent=currentUser.name+(isAdmin()?' · 👑':'');
   resolveChain();
-  const[dl,pl]=await Promise.all([DB.depts(),DB.payees()]);
-  depts={};dl.forEach(x=>{if(x.department)depts[String(x.email).toLowerCase()]=x.department;});payees=pl;
+  const[dl,pl,el]=await Promise.all([DB.depts(),DB.payees(),DB.employees()]);
+  depts={};dl.forEach(x=>{if(x.department)depts[String(x.email).toLowerCase()]=x.department;});payees=pl;emps=el||[];
+  applyMyName();
   await reload();
   const h=location.hash.slice(1);if(h)openDetail(h);
 }
@@ -565,7 +587,10 @@ const chainEmails=()=>chain.flatMap(s=>s.options.map(o=>o.email)).filter(Boolean
 function defaultSel(dept){const sel={};chain.forEach(s=>sel[s.key]=s.options[0].key);if(TP_BY_DEPT[dept])sel.tp=TP_BY_DEPT[dept];return sel;}
 function selOption(s,sel){return s.options.find(o=>o.key===sel[s.key])||s.options[0];}
 function missingSel(sel){return chain.map(s=>selOption(s,sel)).filter(o=>!o.email).map(o=>o.name);}
-function deptOf(email){email=String(email||'').toLowerCase();if(depts[email])return depts[email];const p=allProfiles.find(p=>p.email===email);return (p&&ROLE_DEPT[String(p.role||'').toLowerCase()])||'';}
+// Bộ phận: (1) đã lưu riêng cho người đó → (2) chức vụ trong HR → (3) vai trò TTDCore
+function deptOf(email){email=lc(email);if(depts[email])return depts[email];
+  const e=empOf(email);const d=e&&deptFromPos(e.vitri);if(d)return d;
+  const p=allProfiles.find(p=>p.email===email);return (p&&ROLE_DEPT[String(p.role||'').toLowerCase()])||'';}
 function canPay(){return isAdmin()||chain.some(s=>s.options.some(o=>PAYER_KEYS.includes(o.key)&&o.email===me()));}
 function canManagePayees(){return isAdmin()||isAccounting();}
 
@@ -913,7 +938,10 @@ function notifyFlow(r,reason){
 const emptyItem=()=>({content:'',amount:0,invoice_no:'',invoice_date:'',due_date:'',note:''});
 function openForm(mode){
   const r=mode==='edit'?cur:null;
-  const reqEmail=(r&&(r.requester_email||(allProfiles.find(p=>p.name===r.requester)||{}).email))||me();
+  const people=peopleList();
+  let reqEmail=me();   // mặc định: chính người đang đăng nhập
+  if(r)reqEmail=r.requester_email||((people.find(p=>p.name===r.requester)||{}).key)||me();
+  if(!people.some(p=>p.key===reqEmail))people.unshift({key:reqEmail,email:reqEmail.startsWith('ma:')?'':reqEmail,name:(r&&r.requester)||currentUser.name,vitri:''});
   const dept0=r?(r.department||''):deptOf(reqEmail);
   const sel=defaultSel(dept0);
   if(r)(r.approvers||[]).forEach(a=>{if(a.stepKey&&chain.some(s=>s.key===a.stepKey&&s.options.some(o=>o.key===a.key)))sel[a.stepKey]=a.key;});
@@ -923,13 +951,12 @@ function openForm(mode){
   $('fmSave').textContent=mode==='edit'?(r.status==='rejected'?'Gửi lại':'Lưu thay đổi'):'Gửi đề nghị';
   const v=(k,d)=>esc(r?(r[k]==null?'':r[k]):(d||''));
   const opt=(list,val)=>list.map(x=>`<option ${x===val?'selected':''}>${esc(x)}</option>`).join('');
-  const people=allProfiles.slice().sort((a,b)=>String(a.name||a.email).localeCompare(String(b.name||b.email),'vi'));
-  if(!people.some(p=>p.email===reqEmail))people.unshift({email:reqEmail,name:(r&&r.requester)||currentUser.name});
   const cands=allProfiles.filter(p=>p.email!==me()&&!chainEmails().includes(p.email));
   $('fmBody').innerHTML=`
     <div class="g2">
       <div><label class="fl">Người đề nghị <span class="req-star">*</span></label>
-        <select id="fReqEmail" onchange="fmRequester(this.value)">${people.map(p=>`<option value="${esc(p.email)}" ${p.email===reqEmail?'selected':''}>${esc(p.name||p.email)}</option>`).join('')}</select></div>
+        <select id="fReqEmail" onchange="fmRequester(this.value)">${people.map(p=>`<option value="${esc(p.key)}" data-name="${esc(p.name)}" ${p.key===reqEmail?'selected':''}>${esc(p.name)}${p.key===me()?' (bạn)':''}</option>`).join('')}</select>
+        <div id="fReqHint" class="hint2"></div></div>
       <div><label class="fl">Bộ phận</label><select id="fDept" onchange="fmDept(this.value,true)"><option value="">— Chọn —</option>${opt(DEPARTMENTS,dept0)}</select><div id="fDeptHint" class="hint2"></div></div>
     </div>
     <div><label class="fl">Tiêu đề <span class="req-star">*</span></label><input id="fTitle" value="${v('title')}" placeholder="VD: TTD_LOG_Thanh toán local charge lô S.26007E.LSU"></div>
@@ -982,6 +1009,8 @@ function closeForm(){$('formSheet').classList.remove('on');fm=null;}
 /* ---------- Người đề nghị → bộ phận → trưởng phòng, phân loại ---------- */
 function fmRequester(email){
   fm.reqEmail=email;
+  const e=empOf(email);
+  $('fReqHint').textContent=e?`Họ tên theo HR${e.vitri?' · Chức vụ: '+e.vitri:''}${email===me()?' · tài khoản đang đăng nhập':''}`:(email===me()?'Tài khoản đang đăng nhập (chưa có trong HR)':'');
   const d=deptOf(email);
   $('fDept').value=d||'';
   fmDept(d,false);
@@ -1086,7 +1115,7 @@ function parseInvoiceText(raw){
   const inv={no:'',series:'',date:'',total:0,seller:'',tax:'',account:'',bank:'',items:[]};
   let m;
   m=flat.match(/K[ýíy]\s*hi[ệeê]u(?:\s*m[ẫa]u\s*s[ốo])?\s*(?:\([^)]*\))?\s*[:：]\s*([0-9A-Z][A-Z0-9/]{3,11})/i);if(m)inv.series=m[1].toUpperCase();
-  m=flat.match(/(?:^|[\s(])S[ốo]\s*(?:h[óo]a\s*[đd][ơo]n\s*)?(?:\((?:Invoice\s*)?No\.?\)\s*)?[:：]\s*0*(\d{1,10})\b/im);if(m)inv.no=m[1];
+  m=flat.match(/(?:^|[\s(])S[ốo]\s*(?:h[óo]a\s*[đd][ơo]n\s*)?(?:\((?:Invoice\s*)?No\.?\)\s*)?[:：]\s*(\d{1,10})\b/im);if(m)inv.no=m[1];   // giữ nguyên đủ số 0 như in trên hóa đơn
   m=flat.match(/Ng[àa]y\s*(?:\(\s*(?:date|day)\s*\)\s*)?(\d{1,2})\s*th[áa]ng\s*(?:\(\s*month\s*\)\s*)?(\d{1,2})\s*n[ăa]m\s*(?:\(\s*year\s*\)\s*)?(\d{4})/i);
   if(m)inv.date=`${m[3]}-${pad2(m[2])}-${pad2(m[1])}`;
   else{m=flat.match(/Ng[àa]y[^\n\d]{0,30}(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})/i);if(m)inv.date=`${m[3]}-${pad2(m[2])}-${pad2(m[1])}`;}
@@ -1118,7 +1147,8 @@ function parseInvoiceXML(xml){
   const no=T(doc,'SHDon');if(!no)throw new Error('Không phải XML hóa đơn điện tử (thiếu SHDon)');
   const nb=doc.getElementsByTagName('NBan')[0];
   const d=T(doc,'NLap').slice(0,10);
-  return{no:no.replace(/^0+(?=\d)/,''),series:(T(doc,'KHMSHDon')+T(doc,'KHHDon')).toUpperCase(),date:/^\d{4}-\d{2}-\d{2}$/.test(d)?d:'',
+  // XML lưu số hóa đơn không có số 0 đầu → bổ sung đủ 8 chữ số như bản in hóa đơn
+  return{no:no.length<8?no.padStart(8,'0'):no,series:(T(doc,'KHMSHDon')+T(doc,'KHHDon')).toUpperCase(),date:/^\d{4}-\d{2}-\d{2}$/.test(d)?d:'',
     total:parseFloat(T(doc,'TgTTTBSo'))||0,seller:T(nb,'Ten'),tax:T(nb,'MST'),account:T(nb,'STKNHang').replace(/\D/g,''),bank:T(nb,'TNHang'),
     currency:T(doc,'DVTTe')||'VND',items:[...doc.getElementsByTagName('HHDVu')].map(h=>T(h,'THHDVu')).filter(Boolean)};
 }
@@ -1158,7 +1188,7 @@ const shortName=s=>String(s||'').replace(/^(C[ÔO]NG\s*TY\s*(TNHH|C[ỔO]\s*PH[�
 function applyInvoice(inv){
   const w=[];
   if(!inv.total)w.push('Chưa đọc được tổng tiền — nhập tay');if(!inv.no)w.push('Chưa đọc được số hóa đơn');if(!inv.date)w.push('Chưa đọc được ngày hóa đơn');
-  if(inv.no&&fm.items.some(it=>it.invoice_no&&it.invoice_no.replace(/^0+/,'')===inv.no))w.push(`Hóa đơn số ${inv.no} đã có ở dòng khác trong đề nghị này`);
+  if(inv.no&&fm.items.some(it=>it.invoice_no&&noZero(it.invoice_no)===noZero(inv.no)))w.push(`Hóa đơn số ${inv.no} đã có ở dòng khác trong đề nghị này`);
   let row=fm.items.find(it=>!it.content&&!it.amount);if(!row){row=emptyItem();fm.items.push(row);}
   const itemsTxt=inv.items&&inv.items.length?inv.items.slice(0,2).join('; ')+(inv.items.length>2?` (+${inv.items.length-2} mục)`:''):'';
   row.content=itemsTxt||`Hóa đơn${inv.series?' '+inv.series:''} số ${inv.no||'?'}${inv.seller?' – '+inv.seller:''}`;
@@ -1203,7 +1233,7 @@ function fmCollect(){
   const items=fm.items.map(it=>({content:(it.content||'').trim(),amount:Number(it.amount)||0,invoice_no:(it.invoice_no||'').trim(),invoice_date:it.invoice_date||'',due_date:it.due_date||'',note:(it.note||'').trim()})).filter(it=>it.content||it.amount);
   const rs=$('fReqEmail');
   const d={title:g('fTitle'),category:g('fCat'),lot_ref:g('fLot')||null,content:g('fContent'),currency:fm.currency,items,total:fmTotal(),
-    requester:rs.options[rs.selectedIndex]?rs.options[rs.selectedIndex].text:'',requester_email:fm.reqEmail||null,department:g('fDept')||null,
+    requester:rs.options[rs.selectedIndex]?rs.options[rs.selectedIndex].dataset.name:'',requester_email:fm.reqEmail&&!fm.reqEmail.startsWith('ma:')?fm.reqEmail:null,department:g('fDept')||null,
     due_date:g('fDue')||null,method:g('fMethod'),beneficiary:g('fBenef'),bank_name:g('fBank')||null,account_no:g('fAcc')||null};
   if(d.method!=='Chuyển khoản'){d.bank_name=null;d.account_no=null;}
   const fl=[...fm.followers].map(e=>({email:e,name:profileName(e)}));
@@ -1556,7 +1586,11 @@ function startDemo(){
     async insert(rec){if(demoRows.some(r=>r.code===rec.code))throw Object.assign(new Error('duplicate'),{code:'23505'});demoRows.push(JSON.parse(JSON.stringify(rec)));},
     async update(id,patch,expect){const r=demoRows.find(r=>r.id===id);if(!r||r.updated_at!==expect)return false;Object.assign(r,JSON.parse(JSON.stringify(patch)));return true;},
     async lastCode(prefix){const c=demoRows.map(r=>r.code).filter(c=>c.startsWith(prefix)).sort().pop();return c||null;},
-    async depts(){return[{email:'tuan@ttdglobal.vn',department:'Logistics'}];},
+    async depts(){return[];},
+    async employees(){return[   // mẫu bảng employees của module HR
+      {ma:'NV001',ten:'Nguyễn Hữu Chí Vũ',vitri:'Giám đốc điều hành',email:'vu@ttdglobal.vn'},
+      {ma:'NV014',ten:'Vũ Mạnh Tuấn',vitri:'Chứng từ XNK',email:'tuan@ttdglobal.vn'},
+      {ma:'NV020',ten:'Nhân viên mới (chưa có email)',vitri:'Thu mua',email:''}];},
     async setDept(){},
     async payees(){return[
       {account_no:'0071001234567',bank_name:'Vietcombank - CN Tân Định',beneficiary:'CÔNG TY TNHH GIAO NHẬN SAO VIỆT',tax_code:'0301112223',source:'import',use_count:6},
@@ -1564,7 +1598,7 @@ function startDemo(){
       {account_no:'0071000999888',bank_name:'Vietcombank - CN HCM',beneficiary:'CÔNG TY TNHH SGS VIỆT NAM',source:'auto',use_count:1}];},
     async upsertPayees(){},
     async deletePayee(){},
-    async findInvoice(no){const vs=[no,no.padStart(7,'0'),no.padStart(8,'0')];return demoRows.filter(r=>(r.items||[]).some(it=>vs.includes(it.invoice_no))).map(r=>({id:r.id,code:r.code,status:r.status}));}
+    async findInvoice(no){const vs=invVariants(no);return demoRows.filter(r=>(r.items||[]).some(it=>vs.includes(it.invoice_no))).map(r=>({id:r.id,code:r.code,status:r.status}));}
   };
   demoSeed();
   const params=new URLSearchParams(location.search);
@@ -1573,7 +1607,7 @@ function startDemo(){
   setDemoUser(u);enterApp();
 }
 function setDemoUser(email){const p=DEMO_PROFILES.find(p=>p.email===email)||DEMO_PROFILES[0];currentUser={id:p.email,email:p.email,name:p.name,role:p.role};}
-async function demoSwitch(email){setDemoUser(email);tab=null;cur=null;showEmptyDetail();$('detail').classList.remove('on');$('who').textContent=currentUser.name+(isAdmin()?' · 👑':'');resolveChain();await reload();toast('Đang xem với tư cách '+currentUser.name);}
+async function demoSwitch(email){setDemoUser(email);tab=null;cur=null;showEmptyDetail();$('detail').classList.remove('on');applyMyName();resolveChain();await reload();toast('Đang xem với tư cách '+currentUser.name);}
 
 init();
 </script>
