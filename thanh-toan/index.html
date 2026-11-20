@@ -1,0 +1,1000 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Đề nghị thanh toán · TTDCore</title>
+<link rel="manifest" href="/thanh-toan/manifest.json">
+<meta name="theme-color" content="#0f766e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Thanh toán">
+<link rel="apple-touch-icon" href="/icons/icon-180.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#f2f4f6;--panel:#fff;--ink:#1f2328;--muted:#6b7280;--line:#e5e7eb;--brand:#0f766e;--brand2:#115e4a;--brand-bg:#f0fdfa;--ok:#16a34a;--ok-bg:#e8f6ec;--warn:#d97706;--warn-bg:#fef3e2;--err:#dc2626;--err-bg:#fdecec;--grey-bg:#f1f3f5;--safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;-webkit-text-size-adjust:100%}
+button{font:inherit;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:11px 15px;border-radius:12px;cursor:pointer}
+button:active{transform:scale(.98)}
+button:disabled{opacity:.5}
+button.primary{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:700}
+button.danger{color:#fff;background:var(--err);border-color:var(--err);font-weight:700}
+button.dangerline{color:var(--err);border-color:#f3c4c4;background:#fff}
+button.sm{padding:8px 12px;font-size:13.5px;border-radius:10px}
+input,textarea,select{font:inherit;font-size:16px;border:1px solid var(--line);border-radius:11px;padding:11px 12px;background:#fff;color:var(--ink);width:100%}
+textarea{resize:vertical}
+input:focus,textarea:focus,select:focus{outline:2px solid #99e0d6;border-color:var(--brand)}
+
+.demobar{background:#fffbeb;border-bottom:1px solid #fde68a;color:#92400e;font-size:12.5px;padding:7px 14px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+.demobar select{width:auto;font-size:13px;padding:5px 8px;border-radius:8px}
+
+header{position:sticky;top:0;z-index:20;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;padding:calc(10px + var(--safe-t)) 16px 11px;display:flex;align-items:center;gap:10px}
+header .home{color:#fff;text-decoration:none;font-size:20px;line-height:1;opacity:.9}
+header h1{font-size:17px;margin:0;font-weight:800;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header .who{font-size:12px;opacity:.9;max-width:38vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+header .lo{background:rgba(255,255,255,.16);border:none;color:#fff;border-radius:10px;padding:7px 11px;font-size:13px}
+
+.toolbar{position:sticky;top:var(--hh,0px);z-index:15;background:var(--bg);padding:12px 14px 6px}
+.searchrow{display:flex;gap:8px}
+.searchrow .newbtn{display:none;white-space:nowrap}
+.tabrow{display:flex;gap:7px;overflow-x:auto;padding:10px 1px 2px;scrollbar-width:none}
+.tabrow::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;padding:8px 13px;border:1.5px solid var(--line);border-radius:999px;background:#fff;color:#555;font-weight:700;font-size:13.5px;white-space:nowrap}
+.tab.active{background:var(--brand);border-color:var(--brand);color:#fff}
+.tab .c{opacity:.85;font-weight:600;margin-left:2px}
+.tab .c.hot{background:var(--err);color:#fff;border-radius:999px;padding:0 6px;opacity:1}
+
+.list{display:flex;flex-direction:column;gap:9px;padding:4px 14px calc(96px + var(--safe-b))}
+.req{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:12px;padding:12px 13px;cursor:pointer}
+.req:active{background:#f7faf9}
+.req.sel{border-color:var(--brand);box-shadow:0 0 0 2px #99e0d6 inset}
+.req.st-pending{border-left-color:var(--warn)}.req.st-approved{border-left-color:var(--ok)}.req.st-rejected{border-left-color:var(--err)}.req.st-cancelled{border-left-color:#9ca3af}
+.req .r1{display:flex;gap:8px;align-items:flex-start}
+.req .ttl{font-weight:800;font-size:15px;line-height:1.3;flex:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.req .amt{font-weight:800;white-space:nowrap;color:#0b3d36}
+.req .meta{font-size:12.5px;color:var(--muted);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.req .r3{display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.req .r3 .sp{flex:1}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}
+.p-pending{background:var(--warn-bg);color:var(--warn)}.p-approved{background:var(--ok-bg);color:var(--ok)}.p-rejected{background:var(--err-bg);color:var(--err)}.p-cancelled{background:var(--grey-bg);color:#6b7280}
+.tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11.5px;font-weight:700;background:var(--grey-bg);color:#4b5563}
+.tag.turn{background:#fff7ed;color:#c2410c}.tag.me{background:#fee2e2;color:#b91c1c}.tag.print{background:#e0f2fe;color:#0369a1}
+.empty{padding:60px 20px;text-align:center;color:var(--muted)}
+
+.fab{position:fixed;right:18px;bottom:calc(20px + var(--safe-b));z-index:30;background:var(--brand);color:#fff;border:none;border-radius:999px;height:54px;padding:0 20px;font-size:15.5px;font-weight:800;box-shadow:0 10px 24px rgba(15,118,110,.4)}
+
+/* ---------- DETAIL ---------- */
+.detail{position:fixed;inset:0;z-index:40;background:#fff;display:none;flex-direction:column}
+.detail.on{display:flex}
+.dt-hd{padding:calc(10px + var(--safe-t)) 14px 10px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.dt-hd .back{border:none;background:var(--grey-bg);border-radius:10px;padding:7px 12px;font-weight:700}
+.dt-hd .code{font-size:12.5px;color:var(--muted);font-weight:700}
+.dt-body{flex:1;overflow:auto;padding:16px 16px 24px}
+.dt-ft{padding:10px 14px calc(12px + var(--safe-b));border-top:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap;background:#fff}
+.dt-ft button{flex:1;padding:13px;min-width:120px}
+.dt-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);flex-direction:column;gap:8px}
+.dt-title{font-size:19px;font-weight:800;line-height:1.35;margin:0 0 6px}
+.dt-sub{font-size:13px;color:var(--muted);display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center}
+.dt-sub .over{color:var(--err);font-weight:700}
+.dt-grid{display:flex;flex-direction:column;gap:16px;margin-top:16px}
+.dt-side{display:flex;flex-direction:column;gap:14px}
+.card{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff}
+.sec-t{font-size:12px;font-weight:800;color:var(--brand);letter-spacing:.6px;text-transform:uppercase;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.sec-t .r{margin-left:auto;font-size:12px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:600}
+.kv{display:grid;grid-template-columns:130px 1fr;gap:8px 12px;font-size:14px}
+.kv .k{color:var(--muted)}
+.kv .v{word-break:break-word}
+.frow{display:flex;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.frow:last-child{border-bottom:none}
+.frow .n{color:#9ca3af;font-size:12px;width:20px;flex:0 0 auto;padding-top:2px}
+.frow .l{font-size:12.5px;color:var(--muted)}
+.frow .val{font-size:14.5px;margin-top:2px;word-break:break-word;white-space:pre-wrap}
+.frow .words{font-style:italic;color:#374151;font-size:13.5px;margin-top:2px}
+.bigamt{font-size:18px;font-weight:800;color:#0b3d36}
+.tblwrap{overflow-x:auto;margin-top:6px;border:1px solid var(--line);border-radius:10px}
+table.items{border-collapse:collapse;width:100%;font-size:13px;min-width:560px}
+table.items th{background:#f8fafc;color:#475569;font-size:11.5px;text-transform:uppercase;text-align:left;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.items td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.items td.num,table.items th.num{text-align:right;white-space:nowrap}
+table.items tr.tot td{font-weight:800;background:#f8fafc;border-bottom:none}
+
+.apv{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)}
+.apv:last-child{border-bottom:none}
+.av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;flex:0 0 auto}
+.apv .who{flex:1;min-width:0}
+.apv .nm{font-weight:700;font-size:14px}
+.apv .ti{font-size:12px;color:var(--muted)}
+.apv .nt{font-size:12.5px;margin-top:3px;color:#374151;background:var(--grey-bg);border-radius:8px;padding:5px 8px}
+.apv .nt.bad{background:var(--err-bg);color:#991b1b}
+.ic{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;flex:0 0 auto;margin-top:5px}
+.ic.approved{background:var(--ok);color:#fff}.ic.pending{background:var(--warn);color:#fff}.ic.waiting{background:#e5e7eb;color:#9ca3af}.ic.rejected{background:var(--err);color:#fff}
+.apv.cur{background:#fffbeb;margin:0 -8px;padding:9px 8px;border-radius:10px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--grey-bg);border-radius:999px;padding:4px 10px 4px 4px;font-size:13px}
+.chip .av{width:22px;height:22px;font-size:11px}
+
+.files{display:grid;grid-template-columns:1fr;gap:8px}
+.file{display:flex;gap:10px;align-items:center;background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:9px 10px;text-decoration:none;color:inherit}
+.file .fi{width:36px;height:40px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:900;color:#fff;flex:0 0 auto}
+.file .fn{font-weight:700;font-size:13.5px;word-break:break-all}
+.file .fm{font-size:12px;color:var(--muted)}
+.file .fx{margin-left:auto;border:none;background:none;color:#9ca3af;font-size:16px;padding:6px}
+
+.tl{position:relative;padding-left:4px}
+.tli{display:flex;gap:10px;padding:6px 0;position:relative}
+.tli .dot{width:22px;height:22px;border-radius:50%;background:var(--brand-bg);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:12px;flex:0 0 auto;border:1px solid #99e0d6}
+.tli .tx{font-size:13px}
+.tli .tm{font-size:11.5px;color:var(--muted)}
+.cm{display:flex;gap:9px;padding:8px 0}
+.cm .bub{background:var(--grey-bg);border-radius:12px;padding:8px 11px;font-size:14px;flex:1;white-space:pre-wrap;word-break:break-word}
+.cm .bub b{font-size:13px}
+.cm .bub .tm{font-size:11.5px;color:var(--muted);margin-left:6px;font-weight:400}
+.cmform{display:flex;gap:8px;margin-top:8px}
+.cmform textarea{min-height:44px}
+
+/* ---------- FORM SHEET / DIALOG ---------- */
+.sheet{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.4);display:none}
+.sheet.on{display:block}
+.sheet .panel{position:absolute;inset:0;background:#fff;display:flex;flex-direction:column}
+.sheet .hd{padding:calc(12px + var(--safe-t)) 16px 12px;border-bottom:1px solid var(--line);font-weight:800;font-size:17px;display:flex;align-items:center;gap:10px}
+.sheet .hd .x{margin-left:auto;background:var(--grey-bg);border:none;border-radius:10px;padding:7px 12px}
+.sheet .bd{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.sheet .ft{padding:12px 16px calc(14px + var(--safe-b));border-top:1px solid var(--line);display:flex;gap:10px}
+.sheet .ft button{flex:1;padding:14px}
+label.fl{font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:6px}
+.req-star{color:var(--err)}
+.g2{display:grid;grid-template-columns:1fr;gap:14px}
+.box{border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:12px}
+.box-t{font-size:12px;font-weight:800;color:var(--brand);text-transform:uppercase;letter-spacing:.6px}
+.itemrow{border:1px solid var(--line);border-radius:11px;padding:10px;position:relative;background:#fcfcfd}
+.itemrow .no{font-size:12px;font-weight:800;color:var(--muted);margin-bottom:6px}
+.ir-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ir-grid .full{grid-column:1/-1}
+.ir-grid label{font-size:11.5px;color:var(--muted);font-weight:700;display:flex;flex-direction:column;gap:4px}
+.ir-grid input{font-size:16px;padding:9px 10px}
+.itemrow .ir-x{position:absolute;top:6px;right:6px;border:none;background:none;color:#9ca3af;font-size:16px;padding:4px 8px}
+.totalbox{background:var(--brand-bg);border:1px solid #99e0d6;border-radius:12px;padding:12px 14px}
+.totalbox .tb-l{font-size:12.5px;color:var(--brand);font-weight:800}
+.totalbox .tb-n{font-size:22px;font-weight:900;color:#0b3d36;margin-top:2px}
+.totalbox .tb-w{font-style:italic;font-size:13.5px;color:#374151;margin-top:2px}
+.apflow{display:grid;grid-template-columns:1fr;gap:8px}
+.apstep{display:flex;gap:10px;align-items:center}
+.apno{width:26px;height:26px;border-radius:50%;background:var(--brand);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.apt{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:3px}
+.apstep select{padding:9px 10px}
+.apfix{font-weight:700;padding:9px 12px;background:var(--grey-bg);border-radius:11px}
+@media(min-width:620px){.apflow{grid-template-columns:repeat(4,1fr)}}
+.fpend{display:flex;flex-direction:column;gap:6px}
+.fpend .file{padding:7px 9px}
+.flw{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow:auto;margin-top:8px}
+.flw label{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-size:14px}
+.flw input{width:20px;height:20px}
+.warnbox{background:var(--warn-bg);color:#92400e;border:1px solid #fcd9a6;border-radius:10px;padding:10px 12px;font-size:13.5px}
+.errline{color:var(--err);font-size:14px;display:none}
+.dlg{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center}
+.dlg.on{display:flex}
+.dlg .box2{background:#fff;width:100%;max-width:480px;border-radius:16px 16px 0 0;padding:18px 16px calc(16px + var(--safe-b));display:flex;flex-direction:column;gap:12px}
+.dlg h3{margin:0;font-size:17px}
+.dlg .btns{display:flex;gap:10px}
+.dlg .btns button{flex:1;padding:13px}
+
+#login{max-width:420px;margin:16vh auto;background:#fff;border:1px solid var(--line);border-radius:16px;padding:30px;text-align:center}
+#toast{position:fixed;left:50%;bottom:calc(84px + var(--safe-b));transform:translateX(-50%);background:#111;color:#fff;padding:11px 16px;border-radius:12px;display:none;z-index:99;font-size:14px;max-width:92vw;text-align:center}
+#loading{position:fixed;inset:0;background:rgba(255,255,255,.72);display:none;align-items:center;justify-content:center;z-index:120;font-weight:700;color:var(--brand);text-align:center;padding:20px}
+#printArea{display:none}
+
+/* ---------- DESKTOP ---------- */
+@media(min-width:620px){
+  .sheet .panel{max-width:820px;margin:auto;inset:3vh 0;border-radius:16px;overflow:hidden}
+  .g2{grid-template-columns:1fr 1fr}
+  .ir-grid{grid-template-columns:2.2fr 1.2fr 1.2fr 1fr 1fr 1.4fr}
+  .ir-grid .full{grid-column:auto}
+  .dlg{align-items:center}
+  .dlg .box2{border-radius:16px}
+  .files{grid-template-columns:1fr 1fr}
+}
+@media(min-width:1000px){
+  body.app-on{height:100vh;overflow:hidden;display:flex;flex-direction:column}
+  #app{display:flex;flex-direction:column;flex:1;min-height:0}
+  .split{flex:1;display:grid;grid-template-columns:400px 1fr;min-height:0}
+  .leftcol{overflow:auto;border-right:1px solid var(--line);background:var(--bg)}
+  .toolbar{top:0}
+  .list{padding-bottom:24px}
+  .searchrow .newbtn{display:block}
+  .fab{display:none}
+  .detail{position:static;display:flex;min-height:0;z-index:auto}
+  .dt-hd .back{display:none}
+  .dt-body{padding:20px 26px 30px}
+  .dt-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;align-items:start}
+  .dt-ft{justify-content:flex-end}
+  .dt-ft button{flex:0 0 auto;min-width:130px}
+}
+@media(max-width:999px){.dt-side{display:contents}.dt-side>*{order:1}.dt-side .apvcard{order:-1}}
+
+/* ---------- PRINT ---------- */
+@media print{
+  @page{size:A4;margin:11mm 12mm}
+  body{background:#fff!important;height:auto!important;overflow:visible!important;display:block!important}
+  body>*:not(#printArea){display:none!important}
+  #printArea{display:block!important}
+}
+.pv{font-family:"Times New Roman",Times,serif;color:#000;font-size:12.5px;line-height:1.38}
+.pv-head{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid #000;padding-bottom:6px}
+.pv-head .co b{font-size:14px}
+.pv-head .cd{text-align:right}
+.pv h1{text-align:center;font-size:20px;margin:14px 0 0;letter-spacing:.5px}
+.pv .sub{text-align:center;font-style:italic;margin-bottom:12px}
+.pv table{border-collapse:collapse;width:100%}
+.pv .info td{padding:3px 4px;vertical-align:top}
+.pv .info td.k{width:31%;color:#222}
+.pv .grid th,.pv .grid td{border:1px solid #000;padding:4px 5px;vertical-align:top}
+.pv .grid th{background:#eee;font-size:11.5px}
+.pv .num{text-align:right;white-space:nowrap}
+.pv h3{font-size:13px;margin:12px 0 5px;text-transform:uppercase}
+.pv .signs{display:grid;gap:6px;margin-top:12px;text-align:center}
+.pv .signs .s{border:1px solid #000;padding:6px 4px;min-height:110px;display:flex;flex-direction:column;justify-content:space-between}
+.pv .signs .r{font-weight:bold;font-size:11.5px;text-transform:uppercase}
+.pv .stamp{border:2px solid #0f766e;color:#0f766e;border-radius:6px;padding:3px 4px;font-weight:bold;font-size:10.5px;margin:6px auto;display:inline-block}
+.pv .stamp.no{border-color:#999;color:#999}
+.pv .foot{margin-top:12px;border-top:1px solid #000;padding-top:4px;font-size:10.5px;color:#333;display:flex;justify-content:space-between;gap:10px}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <h2 style="margin-top:0;color:var(--brand)">💳 Đề nghị thanh toán</h2>
+  <p style="color:var(--muted);font-size:14px">Đăng nhập Google @ttdglobal.vn</p>
+  <button class="primary" id="btnLogin" style="width:100%;padding:15px">Đăng nhập với Google</button>
+  <div id="loginErr" style="color:var(--err);font-size:13px;margin-top:10px;display:none"></div>
+</div>
+
+<div id="app" hidden>
+  <div class="demobar" id="demobar" hidden>⚠️ BẢN DEMO — dữ liệu mẫu, không lưu. Xem với tư cách:
+    <select id="demoUser" onchange="demoSwitch(this.value)"></select>
+  </div>
+  <header>
+    <a class="home" href="/" title="Trang chủ TTDCore">⌂</a>
+    <h1>💳 Đề nghị thanh toán</h1>
+    <span class="who" id="who"></span>
+    <button class="lo" id="btnLogout">Thoát</button>
+  </header>
+  <div class="split">
+    <div class="leftcol">
+      <div class="toolbar">
+        <div class="searchrow">
+          <input id="search" placeholder="🔍 Tìm tiêu đề, mã, lô, người tạo…" oninput="renderList()">
+          <button class="primary newbtn" onclick="openForm('new')">＋ Đề nghị mới</button>
+        </div>
+        <div class="tabrow" id="tabs"></div>
+      </div>
+      <div class="list" id="list"></div>
+    </div>
+    <section class="detail" id="detail">
+      <div class="dt-empty" id="dtEmpty"><div style="font-size:40px">💳</div><div>Chọn 1 đề nghị để xem chi tiết</div></div>
+      <div class="dt-hd" id="dtHd" hidden></div>
+      <div class="dt-body" id="dtBody" hidden></div>
+      <div class="dt-ft" id="dtFt" hidden></div>
+    </section>
+  </div>
+  <button class="fab" onclick="openForm('new')">＋ Đề nghị</button>
+</div>
+
+<!-- FORM -->
+<div class="sheet" id="formSheet"><div class="panel">
+  <div class="hd"><span id="fmTitle">＋ Đề nghị thanh toán mới</span><button class="x" onclick="closeForm()">✕</button></div>
+  <div class="bd" id="fmBody"></div>
+  <div class="ft"><button onclick="closeForm()">Huỷ</button><button class="primary" id="fmSave" onclick="saveForm()">Gửi đề nghị</button></div>
+</div></div>
+
+<!-- DIALOG -->
+<div class="dlg" id="dlg"><div class="box2">
+  <h3 id="dlgTitle"></h3>
+  <div id="dlgSub" style="font-size:13.5px;color:var(--muted)"></div>
+  <textarea id="dlgText" rows="3"></textarea>
+  <div class="errline" id="dlgErr"></div>
+  <div class="btns"><button onclick="closeDlg()">Huỷ</button><button id="dlgOk" class="primary">OK</button></div>
+</div></div>
+
+<input type="file" id="attInput" multiple accept=".pdf,image/*,.doc,.docx,.xls,.xlsx" style="display:none" onchange="attachToCurrent(this)">
+<div id="toast"></div>
+<div id="loading">Đang xử lý…</div>
+<div id="printArea"></div>
+
+<script>
+/* ============================ CẤU HÌNH ============================ */
+const DEMO = false;
+const SUPABASE_URL = 'https://fyjinbtabsentsvnkqzg.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5amluYnRhYnNlbnRzdm5rcXpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MTAxNTUsImV4cCI6MjA5NDI4NjE1NX0.m1H8bOT7gUXJxPoQT6bDqtRUjo4nCSxb4A1rth7Eols';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxoz9LbR0MbBYeP5IuXDmzyCM9tCh6FZDZ-xZIgx35rwP5dxGuY21Ocz_kD0DVTKGmR/exec';   // URL Web App của apps_script_thanh_toan.gs
+const UPLOAD_SECRET = 'ttd_pay_2026';                   // khớp với Apps Script
+const SITE_URL = 'https://ttdcore.com/thanh-toan/';
+const SUPER = 'vu@ttdglobal.vn';
+const YEN_EMAIL = '';   // để trống = tự tìm nhân viên tên "Yến" trong bảng profiles; tìm sai thì điền email vào đây
+const VY_EMAIL  = '';   // tương tự cho "Vy"
+// Chuỗi duyệt lần lượt. Bước có nhiều lựa chọn → người tạo chọn khi lập đề nghị (lựa chọn đầu tiên là mặc định).
+const STEPS = [
+  {key:'tp',  title:'Trưởng phòng', options:[
+      {key:'grace', name:'Grace', email:'grace@ttdglobal.vn'},
+      {key:'jacob', name:'Jacob', email:'jacob@ttdglobal.vn'}]},
+  {key:'kt',  title:'Kế toán', options:[
+      {key:'yen', name:'Yến', email:YEN_EMAIL, match:'yen'},
+      {key:'vy',  name:'Vy',  email:VY_EMAIL,  match:'vy'}]},
+  {key:'ktt', title:'Kế toán', options:[{key:'duom', name:'Đượm', email:'duom@ttdglobal.vn'}]},
+  {key:'gd',  title:'Giám đốc điều hành', options:[{key:'vu', name:'Vũ', email:'vu@ttdglobal.vn'}]},
+];
+const TP_BY_DEPT = {'Logistics':'jacob'};   // bộ phận → trưởng phòng mặc định (còn lại: Grace)
+const PAY_STEPS = ['kt','ktt'];              // các bước kế toán: nhận email khi duyệt xong để chi tiền + in phiếu
+const AUTO_APPROVE_SELF = true;          // người tạo nằm trong chuỗi duyệt → bước của họ tự duyệt
+const COMPANY = {name:'TTD GLOBAL VIETNAM JSC', tax:'0318847447', addr:'56 Nguyễn Đình Chiểu, Quận 1, TP. Hồ Chí Minh'};
+const CATEGORIES = ['Thanh toán NCC (mua cà phê)','Chi phí logistics / xuất khẩu','Thanh toán định kỳ','Thanh toán 1 lần / phát sinh','Tạm ứng','Hoàn ứng'];
+const DEPARTMENTS = ['Trade','Kế toán','Logistics','Thu mua','Hành chính - Nhân sự','Ban Giám đốc'];
+const T = 'payment_requests';
+const LIST_COLS = 'id,code,title,category,content,currency,total,status,current_step,approvers,followers,creator_name,creator_email,created_at,updated_at,due_date,print_count,attachments,lot_ref,beneficiary';
+
+/* ============================ TIỆN ÍCH ============================ */
+const sb = (!DEMO && window.supabase) ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+let currentUser=null, allProfiles=[], chain=[], chainReady=false, reqs=[], tab=null, cur=null;
+let fm=null; // trạng thái form
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nowISO=()=>new Date().toISOString();
+const me=()=>currentUser?currentUser.email:'';
+const deaccent=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase().trim();
+const lastWord=s=>String(s||'').trim().split(/\s+/).pop()||'';
+function fmtDate(d){if(!d)return'';const m=String(d).match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return `${m[3]}/${m[2]}/${m[1]}`;const x=new Date(d);return isNaN(x)?'':x.toLocaleDateString('vi-VN');}
+function fmtDT(t){if(!t)return'';const d=new Date(t);const p=n=>String(n).padStart(2,'0');return `${p(d.getHours())}:${p(d.getMinutes())} ${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()}`;}
+function relTime(t){if(!t)return'';const s=(Date.now()-new Date(t))/1000;if(s<60)return'vừa xong';if(s<3600)return Math.floor(s/60)+' phút trước';if(s<86400)return Math.floor(s/3600)+' giờ trước';const d=Math.floor(s/86400);return d<30?d+' ngày trước':fmtDate(t);}
+function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function toast(m,ms){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',ms||2800);}
+function showLoading(m){$('loading').textContent=m||'Đang xử lý…';$('loading').style.display='flex';}
+function hideLoading(){$('loading').style.display='none';}
+function isAdmin(){return !!currentUser&&(currentUser.role==='admin'||currentUser.email===SUPER);}
+function isAccounting(){return chain.some(s=>PAY_STEPS.includes(s.key)&&s.options.some(o=>o.email===me()));}
+function profileName(email){const p=allProfiles.find(p=>p.email===email);return p&&p.name?p.name:String(email||'').split('@')[0];}
+const PALETTE=['#0f766e','#2563eb','#9333ea','#c2410c','#be185d','#0369a1','#4d7c0f','#b45309'];
+function avColor(s){let h=0;for(const c of String(s))h=(h*31+c.charCodeAt(0))>>>0;return PALETTE[h%PALETTE.length];}
+function avatar(name,email){const n=lastWord(name)||'?';return `<span class="av" style="background:${avColor(email||name)}">${esc(n.charAt(0).toUpperCase())}</span>`;}
+function safeUrl(u){return /^https:\/\/(drive|docs)\.google\.com\//.test(String(u||''))?u:'#';}
+function fmtSize(b){if(!b)return'';if(b<1024)return b+' B';if(b<1048576)return (b/1024).toFixed(0)+' KB';return (b/1048576).toFixed(1)+' MB';}
+function fileBadge(name){const e=(String(name).split('.').pop()||'').toLowerCase();if(e==='pdf')return['PDF','#dc2626'];if(['jpg','jpeg','png','heic','webp','gif'].includes(e))return['IMG','#2563eb'];if(['xls','xlsx','csv'].includes(e))return['XLS','#16a34a'];if(['doc','docx'].includes(e))return['DOC','#1d4ed8'];return[e.slice(0,4).toUpperCase()||'FILE','#6b7280'];}
+
+/* ---------- Tiền & đọc số bằng chữ ---------- */
+function fmtMoney(n,cur){n=Number(n)||0;if(cur==='USD')return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});return Math.round(n).toLocaleString('vi-VN');}
+function parseMoney(s,cur){s=String(s==null?'':s);if(cur==='USD'){const v=parseFloat(s.replace(/,/g,''));return isNaN(v)?0:Math.round(v*100)/100;}const v=parseInt(s.replace(/[^\d]/g,''),10);return isNaN(v)?0:v;}
+const CS=['không','một','hai','ba','bốn','năm','sáu','bảy','tám','chín'];
+function read3(n,full){
+  const tr=Math.floor(n/100),ch=Math.floor(n%100/10),dv=n%10,o=[];
+  if(tr>0||full)o.push(CS[tr]+' trăm');
+  if(ch>1){o.push(CS[ch]+' mươi');if(dv===1)o.push('mốt');else if(dv===5)o.push('lăm');else if(dv>0)o.push(CS[dv]);}
+  else if(ch===1){o.push('mười');if(dv===5)o.push('lăm');else if(dv>0)o.push(CS[dv]);}
+  else if(dv>0){if(tr>0||full)o.push('linh');o.push(CS[dv]);}
+  return o.join(' ');
+}
+function vnWords(num){
+  num=Math.floor(Math.abs(Number(num)||0));if(num===0)return'không';
+  const units=['','nghìn','triệu','tỷ','nghìn tỷ','triệu tỷ'],g=[];
+  while(num>0){g.push(num%1000);num=Math.floor(num/1000);}
+  const parts=[];
+  for(let i=g.length-1;i>=0;i--){if(g[i]===0)continue;parts.push(read3(g[i],i<g.length-1)+(units[i]?' '+units[i]:''));}
+  return parts.join(' ');
+}
+function moneyWords(n,cur){
+  n=Number(n)||0;const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+  if(cur==='USD'){const d=Math.floor(n),c=Math.round((n-d)*100);return cap(vnWords(d))+' đô la Mỹ'+(c?' và '+vnWords(c)+' cent':'');}
+  return cap(vnWords(n))+' đồng';
+}
+
+/* ============================ TẦNG DỮ LIỆU ============================ */
+const db = DEMO ? null : {
+  async profiles(){const{data}=await sb.from('profiles').select('email,name,role').order('name');return (data||[]).filter(p=>p.email);},
+  async list(){
+    let q=sb.from(T).select(LIST_COLS).order('created_at',{ascending:false}).limit(500);
+    if(!isAdmin()){const e=me();q=q.or(`creator_email.eq.${e},approver_emails.ilike.%${e}%,follower_emails.ilike.%${e}%`);}
+    const{data,error}=await q;if(error)throw error;return data||[];
+  },
+  async get(id){const{data,error}=await sb.from(T).select('*').eq('id',id).single();if(error)throw error;return data;},
+  async insert(rec){const{error}=await sb.from(T).insert(rec);if(error)throw error;},
+  async update(id,patch,expect){const{data,error}=await sb.from(T).update(patch).eq('id',id).eq('updated_at',expect).select('id');if(error)throw error;return !!(data&&data.length);},
+  async lastCode(prefix){const{data}=await sb.from(T).select('code').like('code',prefix+'%').order('code',{ascending:false}).limit(1);return data&&data[0]?data[0].code:null;}
+};
+let DB=db;
+
+// Đọc bản mới nhất → áp thay đổi → ghi có khóa lạc quan (tránh 2 người ghi đè nhau)
+async function mutate(id,fn){
+  for(let i=0;i<4;i++){
+    const fresh=await DB.get(id);
+    const patch=fn(JSON.parse(JSON.stringify(fresh)));
+    if(!patch)return fresh;
+    patch.updated_at=nowISO();
+    if(await DB.update(id,patch,fresh.updated_at))return Object.assign(fresh,patch);
+  }
+  throw new Error('Dữ liệu vừa được người khác cập nhật — tải lại và thử lần nữa.');
+}
+
+async function gas(payload){
+  if(DEMO)return demoGas(payload);
+  if(!/^https:\/\/script\.google\.com\//.test(APPS_SCRIPT_URL))throw new Error('Chưa cấu hình APPS_SCRIPT_URL');
+  const res=await fetch(APPS_SCRIPT_URL,{method:'POST',body:JSON.stringify(Object.assign({secret:UPLOAD_SECRET},payload))});
+  const j=await res.json();if(!j.ok)throw new Error(j.error||'Lỗi Apps Script');return j;
+}
+
+/* ============================ ĐĂNG NHẬP ============================ */
+$('btnLogin').onclick=()=>sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname,queryParams:{prompt:'select_account'}}});
+$('btnLogout').onclick=()=>{if(DEMO)return toast('Bản demo');sb.auth.signOut().then(()=>location.reload());};
+async function loadCurrentUser(u){
+  let p=null;
+  const{data:byId}=await sb.from('profiles').select('*').eq('id',u.id).maybeSingle();
+  if(byId)p=byId;else{const{data:byEmail}=await sb.from('profiles').select('*').eq('email',u.email).maybeSingle();if(byEmail)p=byEmail;}
+  currentUser={id:u.id,email:u.email.toLowerCase(),name:(p&&p.name)||u.email.split('@')[0],role:(p&&p.role)||'viewer'};
+}
+async function init(){
+  if(DEMO)return startDemo();
+  const{data:{session}}=await sb.auth.getSession();
+  if(session&&session.user)await start(session.user);
+  sb.auth.onAuthStateChange(async(_e,s)=>{if(s&&s.user&&!currentUser)await start(s.user);});
+}
+async function start(u){
+  if(!u.email.toLowerCase().endsWith('@ttdglobal.vn')){$('loginErr').textContent='Chỉ dùng tài khoản @ttdglobal.vn';$('loginErr').style.display='block';await sb.auth.signOut();return;}
+  await loadCurrentUser(u);
+  allProfiles=await DB.profiles();
+  enterApp();
+}
+function setHH(){const h=document.querySelector('header');if(h)document.documentElement.style.setProperty('--hh',h.offsetHeight+'px');}
+window.addEventListener('resize',setHH);
+async function enterApp(){
+  $('login').style.display='none';$('app').hidden=false;document.body.classList.add('app-on');setHH();
+  $('who').textContent=currentUser.name+(isAdmin()?' · 👑':'');
+  resolveChain();
+  await reload();
+  const h=location.hash.slice(1);if(h)openDetail(h);
+}
+function resolveChain(){
+  const resolve=o=>{
+    let email=(o.email||'').toLowerCase();
+    if(!email&&o.match){
+      const p=allProfiles.find(p=>deaccent(lastWord(p.name))===o.match)||allProfiles.find(p=>String(p.email).toLowerCase().startsWith(o.match+'@'));
+      if(p)email=p.email.toLowerCase();
+    }
+    return email;
+  };
+  chain=STEPS.map(s=>Object.assign({},s,{options:s.options.map(o=>Object.assign({},o,{email:resolve(o)}))}));
+  chainReady=chain.every(s=>s.options.some(o=>o.email));
+}
+const chainEmails=()=>chain.flatMap(s=>s.options.map(o=>o.email)).filter(Boolean);
+function defaultSel(dept){const sel={};chain.forEach(s=>sel[s.key]=s.options[0].key);if(TP_BY_DEPT[dept])sel.tp=TP_BY_DEPT[dept];return sel;}
+function selOption(s,sel){return s.options.find(o=>o.key===sel[s.key])||s.options[0];}
+function missingSel(sel){return chain.map(s=>selOption(s,sel)).filter(o=>!o.email).map(o=>o.name);}
+
+/* ============================ DANH SÁCH ============================ */
+const STATUS={pending:'Đang duyệt',approved:'Đã duyệt',rejected:'Từ chối',cancelled:'Đã hủy'};
+const turnOf=r=>r.status==='pending'?(r.approvers||[])[r.current_step]:null;
+const myTurn=r=>{const t=turnOf(r);return !!t&&t.email===me();};
+function canView(r){return isAdmin()||r.creator_email===me()||(r.approvers||[]).some(a=>a.email===me())||(r.followers||[]).some(f=>f.email===me());}
+function canEdit(r){return r.creator_email===me()&&(r.status==='rejected'||(r.status==='pending'&&!(r.approvers||[]).some(a=>a.status==='approved'&&!a.auto)));}
+function canCancel(r){return (r.creator_email===me()||isAdmin())&&(r.status==='pending'||r.status==='rejected');}
+function canAttach(r){return ['pending','rejected'].includes(r.status)&&(r.creator_email===me()||isAdmin()||(r.approvers||[]).some(a=>a.email===me()));}
+
+function tabDefs(){
+  const t=[
+    {k:'todo',label:'Chờ tôi duyệt',f:myTurn,hot:true},
+    {k:'mine',label:'Tôi tạo',f:r=>r.creator_email===me()},
+    {k:'pending',label:'Đang duyệt',f:r=>r.status==='pending'},
+    {k:'approved',label:'Đã duyệt',f:r=>r.status==='approved'},
+  ];
+  if(isAccounting()||isAdmin())t.push({k:'toprint',label:'🖨️ Chưa in',f:r=>r.status==='approved'&&!r.print_count});
+  t.push({k:'closed',label:'Từ chối / Hủy',f:r=>r.status==='rejected'||r.status==='cancelled'});
+  t.push({k:'all',label:'Tất cả',f:()=>true});
+  return t;
+}
+async function reload(){
+  try{reqs=await DB.list();}
+  catch(e){$('list').innerHTML=`<div class="empty">Lỗi tải dữ liệu: ${esc(e.message)}<br><small>Chưa có bảng? Chạy create_table.sql trong Supabase.</small></div>`;return;}
+  if(!tab){const d=tabDefs();tab=reqs.some(myTurn)?'todo':(reqs.some(d[1].f)?'mine':'all');}
+  renderTabs();renderList();
+}
+function renderTabs(){
+  $('tabs').innerHTML=tabDefs().map(t=>{const n=reqs.filter(t.f).length;return `<button class="tab ${tab===t.k?'active':''}" onclick="tab='${t.k}';renderTabs();renderList()">${t.label}<span class="c ${t.hot&&n?'hot':''}">${n}</span></button>`;}).join('');
+}
+function renderList(){
+  const def=tabDefs().find(t=>t.k===tab)||tabDefs()[0];
+  const q=deaccent($('search').value);
+  const rows=reqs.filter(def.f).filter(r=>!q||deaccent([r.title,r.code,r.content,r.creator_name,r.lot_ref,r.beneficiary,r.category].join(' ')).includes(q));
+  if(!rows.length){$('list').innerHTML=`<div class="empty">${tab==='todo'?'🎉 Không có đề nghị nào chờ bạn duyệt.':'Không có đề nghị nào.'}</div>`;return;}
+  $('list').innerHTML=rows.map(r=>{
+    const t=turnOf(r);
+    const turn=t?(t.email===me()?`<span class="tag me">⏳ Đến lượt bạn</span>`:`<span class="tag turn">⏳ ${esc(t.name)}</span>`):'';
+    const pr=r.status==='approved'?(r.print_count?`<span class="tag">🖨️ Đã in ${r.print_count}</span>`:`<span class="tag print">🖨️ Chưa in</span>`):'';
+    const att=(r.attachments||[]).length?`<span>📎${(r.attachments||[]).length}</span>`:'';
+    return `<div class="req st-${r.status} ${cur&&cur.id===r.id?'sel':''}" onclick="openDetail('${r.id}')">
+      <div class="r1"><div class="ttl">${esc(r.title)}</div><div class="amt">${fmtMoney(r.total,r.currency)} <small>${esc(r.currency)}</small></div></div>
+      <div class="meta">${esc(r.code||'')} · ${esc(r.category||'')}${r.lot_ref?' · '+esc(r.lot_ref):''}</div>
+      <div class="r3"><span class="pill p-${r.status}">${STATUS[r.status]||r.status}</span>${turn}${pr}${att}<span class="sp"></span><span>${esc(lastWord(r.creator_name))} · ${fmtDate(r.created_at)}</span></div>
+    </div>`;
+  }).join('');
+}
+
+/* ============================ CHI TIẾT ============================ */
+async function openDetail(id){
+  showLoading('Đang mở…');
+  try{
+    const r=await DB.get(id);
+    if(!canView(r)){toast('Bạn không có quyền xem đề nghị này.');return;}
+    cur=r;renderDetail();
+    $('detail').classList.add('on');
+    history.replaceState(null,'','#'+id);
+    renderList();
+  }catch(e){toast('Không mở được: '+e.message);}
+  finally{hideLoading();}
+}
+function closeDetail(){$('detail').classList.remove('on');cur=null;history.replaceState(null,'',location.pathname+location.search);renderList();showEmptyDetail();}
+function showEmptyDetail(){$('dtEmpty').hidden=false;['dtHd','dtBody','dtFt'].forEach(i=>$(i).hidden=true);}
+function stepIcon(s){return {approved:'✓',pending:'⏳',waiting:'',rejected:'✕'}[s]||'';}
+function stepLabel(a){return {approved:a.auto?'Tự duyệt (người tạo)':'Đã duyệt',pending:'Đang chờ duyệt',waiting:'Chưa tới lượt',rejected:'Từ chối'}[a.status]||a.status;}
+const ACT={created:['＋','Tạo đề nghị'],approved:['✓','Duyệt'],auto:['✓','Tự duyệt (người tạo)'],rejected:['✕','Từ chối'],completed:['★','Hoàn tất — đã duyệt đủ'],edited:['✎','Chỉnh sửa'],resubmitted:['↻','Sửa & gửi lại'],cancelled:['⦸','Hủy đề nghị'],attached:['📎','Đính kèm'],removed:['🗑','Gỡ file'],printed:['🖨','In phiếu']};
+
+function renderDetail(){
+  const r=cur;if(!r)return showEmptyDetail();
+  $('dtEmpty').hidden=true;['dtHd','dtBody','dtFt'].forEach(i=>$(i).hidden=false);
+  const t=turnOf(r);
+  const overdue=r.due_date&&r.status==='pending'&&r.due_date<todayStr();
+  $('dtHd').innerHTML=`<button class="back" onclick="closeDetail()">‹ Quay lại</button><span class="code">${esc(r.code||'')}</span><span style="flex:1"></span><span class="pill p-${r.status}">${STATUS[r.status]}</span>`;
+
+  const approvers=(r.approvers||[]).map(a=>`<div class="apv ${a.status==='pending'?'cur':''}">
+      ${avatar(a.name,a.email)}
+      <div class="who"><div class="nm">${esc(a.name)}${a.email===me()?' <span class="tag">bạn</span>':''}</div>
+        <div class="ti">${esc(a.title||'')} · ${stepLabel(a)}${a.at?' · '+fmtDT(a.at):''}</div>
+        ${a.note&&!a.auto?`<div class="nt ${a.status==='rejected'?'bad':''}">${esc(a.note)}</div>`:''}</div>
+      <span class="ic ${a.status}">${stepIcon(a.status)}</span></div>`).join('');
+  const followers=(r.followers||[]).length?`<div class="card"><div class="sec-t">Người theo dõi</div><div class="chips">${r.followers.map(f=>`<span class="chip">${avatar(f.name,f.email)}${esc(f.name)}</span>`).join('')}</div></div>`:'';
+  const timeline=(r.history||[]).map(h=>{const a=ACT[h.action]||['•',h.action];return `<div class="tli"><span class="dot">${a[0]}</span><div><div class="tx"><b>${esc(h.by||'')}</b> · ${a[1]}${h.note?': '+esc(h.note):''}</div><div class="tm">${fmtDT(h.at)}</div></div></div>`;}).join('');
+
+  const items=r.items||[];
+  const itemsTbl=items.length?`<div class="tblwrap"><table class="items"><thead><tr><th>#</th><th>Nội dung</th><th class="num">Số tiền</th><th>Số CT / HĐ</th><th>Ngày HĐ</th><th>Ngày đến hạn</th><th>Ghi chú</th></tr></thead><tbody>
+    ${items.map((it,i)=>`<tr><td>${String(i+1).padStart(2,'0')}</td><td>${esc(it.content)}</td><td class="num">${fmtMoney(it.amount,r.currency)}</td><td>${esc(it.invoice_no||'')}</td><td>${fmtDate(it.invoice_date)}</td><td>${fmtDate(it.due_date)}</td><td>${esc(it.note||'')}</td></tr>`).join('')}
+    <tr class="tot"><td></td><td>Tổng cộng</td><td class="num">${fmtMoney(r.total,r.currency)}</td><td colspan="4"></td></tr></tbody></table></div>`:'<span style="color:var(--muted)">—</span>';
+
+  let n=0;const F=(label,val,extra)=>`<div class="frow"><span class="n">${String(++n).padStart(2,'0')}</span><div style="flex:1;min-width:0"><div class="l">${label}</div>${val}${extra||''}</div></div>`;
+  const V=v=>`<div class="val">${v?esc(v):'<span style="color:#9ca3af">—</span>'}</div>`;
+  const isCK=r.method==='Chuyển khoản';
+  const info=F('Phân loại thanh toán',V(r.category))+F('Nội dung thanh toán',V(r.content))
+    +F('Tổng số tiền',`<div class="val bigamt">${fmtMoney(r.total,r.currency)} ${esc(r.currency)}</div>`,`<div class="words">${esc(moneyWords(r.total,r.currency))}</div>`)
+    +F('Thông tin chi tiết',itemsTbl)+F('Người đề nghị',V(r.requester))+F('Bộ phận',V(r.department))
+    +F('Hạn thanh toán',`<div class="val" style="${overdue?'color:var(--err);font-weight:700':''}">${fmtDate(r.due_date)||'—'}${overdue?' · quá hạn':''}</div>`)
+    +F('Phương thức thanh toán',V(r.method))
+    +(isCK?F('Ngân hàng',V(r.bank_name))+F('Số tài khoản',V(r.account_no)):'')
+    +F('Người thụ hưởng',V(r.beneficiary))+F('Liên kết lô / hợp đồng',V(r.lot_ref));
+
+  const files=(r.attachments||[]).map(f=>{const[b,c]=fileBadge(f.name);const del=canAttach(r)&&(f.email===me()||isAdmin());
+    return `<a class="file" href="${esc(safeUrl(f.url))}" target="_blank" rel="noopener"><span class="fi" style="background:${c}">${b}</span><span style="min-width:0"><div class="fn">${esc(f.name)}</div><div class="fm">${fmtSize(f.size)} · ${fmtDT(f.at)} · ${esc(lastWord(f.by))}</div></span>${del?`<button class="fx" title="Gỡ file" onclick="event.preventDefault();event.stopPropagation();removeAtt('${esc(f.fileId)}')">✕</button>`:''}</a>`;}).join('');
+  const comments=(r.comments||[]).map(c=>`<div class="cm">${avatar(c.by,c.email)}<div class="bub"><b>${esc(c.by)}</b><span class="tm">${fmtDT(c.at)}</span><div>${esc(c.text)}</div></div></div>`).join('');
+
+  $('dtBody').innerHTML=`
+    <h2 class="dt-title">${esc(r.title)}</h2>
+    <div class="dt-sub"><span>👤 ${esc(r.creator_name)}</span><span>🕒 Tạo ${fmtDT(r.created_at)}</span><span>Cập nhật ${relTime(r.updated_at)}</span>
+      ${r.due_date?`<span class="${overdue?'over':''}">📅 Hạn TT ${fmtDate(r.due_date)}</span>`:''}
+      ${t?`<span class="tag ${t.email===me()?'me':'turn'}">⏳ Đến lượt: ${esc(t.name)}</span>`:''}
+      ${r.status==='approved'?`<span class="tag ${r.print_count?'':'print'}">🖨️ ${r.print_count?'Đã in '+r.print_count+' lần':'Chưa in'}</span>`:''}</div>
+    <div class="dt-grid">
+      <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+        <div class="card"><div class="sec-t">Thông tin thanh toán<span class="r">Mã: ${esc(r.code||'')}</span></div>${info}</div>
+        <div class="card"><div class="sec-t">Tài liệu đính kèm (${(r.attachments||[]).length})${canAttach(r)?`<button class="sm" style="margin-left:auto" onclick="$('attInput').click()">＋ Thêm file</button>`:''}</div>
+          ${files?`<div class="files">${files}</div>`:'<div style="color:var(--muted);font-size:14px">Chưa có tài liệu.</div>'}</div>
+        <div class="card"><div class="sec-t">Thảo luận (${(r.comments||[]).length})</div>${comments||'<div style="color:var(--muted);font-size:14px">Chưa có trao đổi.</div>'}
+          ${r.status!=='cancelled'?`<div class="cmform"><textarea id="cmText" rows="1" placeholder="Viết trao đổi, yêu cầu bổ sung…"></textarea><button class="primary sm" onclick="addComment()">Gửi</button></div>`:''}</div>
+      </div>
+      <div class="dt-side">
+        <div class="card apvcard"><div class="sec-t">Người xét duyệt<span class="r">Duyệt lần lượt</span></div>${approvers}</div>
+        ${followers}
+        <div class="card"><div class="sec-t">Hành động chính</div><div class="tl">${timeline}</div></div>
+      </div>
+    </div>`;
+
+  const b=[];
+  if(myTurn(r)){b.push(`<button class="dangerline" onclick="rejectCur()">✕ Từ chối</button>`);b.push(`<button class="primary" onclick="approveCur()">✓ Duyệt</button>`);}
+  if(r.status==='approved')b.push(`<button class="primary" onclick="printCur()">🖨️ In phiếu</button>`);
+  if(canEdit(r))b.push(`<button onclick="openForm('edit')">✎ ${r.status==='rejected'?'Sửa & gửi lại':'Sửa'}</button>`);
+  if(canCancel(r))b.push(`<button class="dangerline" onclick="cancelCur()">Hủy đề nghị</button>`);
+  $('dtFt').innerHTML=b.join('');$('dtFt').hidden=!b.length;
+}
+
+/* ---------- Hộp thoại nhập ý kiến ---------- */
+function openDlg({title,sub,placeholder,required,okText,danger,onOk}){
+  $('dlgTitle').textContent=title;$('dlgSub').textContent=sub||'';$('dlgText').value='';$('dlgText').placeholder=placeholder||'';
+  $('dlgErr').style.display='none';const ok=$('dlgOk');ok.textContent=okText||'OK';ok.className=danger?'danger':'primary';
+  ok.onclick=async()=>{const v=$('dlgText').value.trim();if(required&&!v){$('dlgErr').textContent='Vui lòng nhập nội dung.';$('dlgErr').style.display='block';return;}closeDlg();await onOk(v);};
+  $('dlg').classList.add('on');setTimeout(()=>$('dlgText').focus(),60);
+}
+function closeDlg(){$('dlg').classList.remove('on');}
+
+/* ============================ HÀNH ĐỘNG ============================ */
+function hist(r,action,note){(r.history=r.history||[]).push({at:nowISO(),by:currentUser.name,email:me(),action,note:note||''});}
+// Chuyển sang người duyệt kế tiếp (bỏ qua bước của chính người tạo nếu bật AUTO_APPROVE_SELF)
+function advanceFrom(r,start){
+  let i=start;const L=r.approvers.length;
+  while(i<L){
+    const a=r.approvers[i];
+    if(AUTO_APPROVE_SELF&&a.email===r.creator_email){a.status='approved';a.auto=true;a.at=nowISO();r.history.push({at:a.at,by:a.name,email:a.email,action:'auto',note:''});i++;continue;}
+    a.status='pending';break;
+  }
+  if(i>=L){r.status='approved';r.current_step=L;r.history.push({at:nowISO(),by:'TTDCore',email:'',action:'completed',note:''});}
+  else{r.status='pending';r.current_step=i;}
+}
+const flowPatch=r=>({approvers:r.approvers,current_step:r.current_step,status:r.status,history:r.history});
+
+function approveCur(){
+  const r=cur;
+  openDlg({title:'Duyệt đề nghị thanh toán',sub:`${r.code} · ${fmtMoney(r.total,r.currency)} ${r.currency}`,placeholder:'Ý kiến (không bắt buộc)',okText:'✓ Duyệt',onOk:async note=>{
+    showLoading('Đang duyệt…');
+    try{
+      const res=await mutate(r.id,x=>{
+        if(x.status!=='pending')throw new Error('Đề nghị không còn ở trạng thái chờ duyệt.');
+        const st=x.approvers[x.current_step];if(!st||st.email!==me())throw new Error('Chưa tới lượt bạn duyệt.');
+        st.status='approved';st.at=nowISO();st.note=note;hist(x,'approved',note);
+        advanceFrom(x,x.current_step+1);return flowPatch(x);
+      });
+      cur=res;await afterChange(res.status==='approved'?'Đã duyệt — đề nghị đã duyệt đủ ✓':'Đã duyệt, chuyển cho '+turnOf(res).name);
+      notifyFlow(res);
+    }catch(e){toast(e.message,4000);}finally{hideLoading();}
+  }});
+}
+function rejectCur(){
+  const r=cur;
+  openDlg({title:'Từ chối đề nghị',sub:'Người tạo sẽ nhận email kèm lý do.',placeholder:'Lý do từ chối (bắt buộc)',required:true,okText:'✕ Từ chối',danger:true,onOk:async note=>{
+    showLoading('Đang lưu…');
+    try{
+      const res=await mutate(r.id,x=>{
+        if(x.status!=='pending')throw new Error('Đề nghị không còn ở trạng thái chờ duyệt.');
+        const st=x.approvers[x.current_step];if(!st||st.email!==me())throw new Error('Chưa tới lượt bạn duyệt.');
+        st.status='rejected';st.at=nowISO();st.note=note;x.status='rejected';hist(x,'rejected',note);return flowPatch(x);
+      });
+      cur=res;await afterChange('Đã từ chối.');notifyFlow(res,note);
+    }catch(e){toast(e.message,4000);}finally{hideLoading();}
+  }});
+}
+function cancelCur(){
+  const r=cur;
+  openDlg({title:'Hủy đề nghị này?',sub:'Đề nghị chuyển sang "Đã hủy", vẫn lưu lại để tra cứu.',placeholder:'Lý do hủy (không bắt buộc)',okText:'Hủy đề nghị',danger:true,onOk:async note=>{
+    showLoading('Đang hủy…');
+    try{
+      const res=await mutate(r.id,x=>{if(!['pending','rejected'].includes(x.status))throw new Error('Không thể hủy ở trạng thái này.');x.status='cancelled';hist(x,'cancelled',note);return{status:x.status,history:x.history};});
+      cur=res;await afterChange('Đã hủy đề nghị.');
+    }catch(e){toast(e.message,4000);}finally{hideLoading();}
+  }});
+}
+async function addComment(){
+  const text=($('cmText').value||'').trim();if(!text)return;
+  showLoading('Đang gửi…');
+  try{
+    const res=await mutate(cur.id,x=>{(x.comments=x.comments||[]).push({by:currentUser.name,email:me(),text,at:nowISO()});return{comments:x.comments};});
+    cur=res;await afterChange('Đã gửi trao đổi.');
+    const t=turnOf(res);const to=[res.creator_email,t&&t.email].filter(e=>e&&e!==me());
+    if(to.length)sendMail(to,[],`[TTDCore] Trao đổi mới: ${res.code} · ${res.title}`,mailHtml(res,`💬 ${currentUser.name} vừa viết trong đề nghị`,`<div style="margin-top:12px;background:#f1f3f5;border-radius:8px;padding:10px 12px">${esc(text)}</div>`));
+  }catch(e){toast(e.message,4000);}finally{hideLoading();}
+}
+async function afterChange(msg){await reload();renderDetail();if(msg)toast(msg);}
+
+/* ---------- Đính kèm (Google Drive) ---------- */
+function readB64(blob){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result).split(',')[1]);fr.onerror=rej;fr.readAsDataURL(blob);});}
+function compressImage(file,maxDim=1800,q=0.8){return new Promise(res=>{const img=new Image(),u=URL.createObjectURL(file);img.onload=()=>{let w=img.width,h=img.height;if(Math.max(w,h)>maxDim){const s=maxDim/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);}const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);URL.revokeObjectURL(u);c.toBlob(b=>res(b||file),'image/jpeg',q);};img.onerror=()=>{URL.revokeObjectURL(u);res(file);};img.src=u;});}
+async function uploadFiles(r,files){
+  const out=[];
+  for(let i=0;i<files.length;i++){
+    let f=files[i],name=f.name,mime=f.type||'application/octet-stream';
+    showLoading(`Đang tải file ${i+1}/${files.length}…\n${name}`);
+    if(/^image\//.test(mime)&&f.size>900*1024&&!/gif$/.test(mime)){f=await compressImage(f);mime='image/jpeg';name=name.replace(/\.[^.]+$/,'')+'.jpg';}
+    if(f.size>25*1024*1024){toast(`"${name}" quá 25MB, bỏ qua.`,4000);continue;}
+    const j=await gas({action:'upload',code:r.code,title:r.title,month:String(r.created_at||nowISO()).slice(0,7),fileName:name,mimeType:mime,dataBase64:await readB64(f)});
+    out.push({fileId:j.fileId,name:j.name||name,url:j.url,size:j.size||f.size,by:currentUser.name,email:me(),at:nowISO()});
+  }
+  if(!out.length)return r;
+  return mutate(r.id,x=>{x.attachments=(x.attachments||[]).concat(out);hist(x,'attached',out.map(o=>o.name).join(', '));return{attachments:x.attachments,history:x.history};});
+}
+async function attachToCurrent(input){
+  const files=[...(input.files||[])];input.value='';if(!files.length||!cur)return;
+  try{const res=await uploadFiles(cur,files);cur=res;await afterChange(`Đã đính kèm ${files.length} file.`);}
+  catch(e){toast('Lỗi tải file: '+e.message,5000);}finally{hideLoading();}
+}
+function removeAtt(fileId){
+  const f=(cur.attachments||[]).find(a=>a.fileId===fileId);if(!f)return;
+  openDlg({title:'Gỡ file này?',sub:f.name,placeholder:'Ghi chú (không bắt buộc)',okText:'Gỡ file',danger:true,onOk:async()=>{
+    showLoading('Đang gỡ…');
+    try{
+      try{await gas({action:'delete',fileId});}catch(_){}
+      const res=await mutate(cur.id,x=>{x.attachments=(x.attachments||[]).filter(a=>a.fileId!==fileId);hist(x,'removed',f.name);return{attachments:x.attachments,history:x.history};});
+      cur=res;await afterChange('Đã gỡ file.');
+    }catch(e){toast(e.message,4000);}finally{hideLoading();}
+  }});
+}
+
+/* ---------- Email ---------- */
+function chainText(r){return (r.approvers||[]).map(a=>`${a.status==='approved'?'✅':a.status==='pending'?'⏳':a.status==='rejected'?'❌':'○'} ${esc(a.name)}`).join(' → ');}
+function mailHtml(r,headline,extra){
+  const row=(k,v)=>`<tr><td style="color:#6b7280;padding:4px 16px 4px 0;vertical-align:top;white-space:nowrap">${k}</td><td style="padding:4px 0">${v}</td></tr>`;
+  return `<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#1f2328;max-width:640px">
+  <div style="background:#0f766e;color:#fff;padding:13px 18px;border-radius:10px 10px 0 0;font-weight:bold">${esc(headline)}</div>
+  <div style="border:1px solid #e5e7eb;border-top:none;padding:16px 18px;border-radius:0 0 10px 10px">
+  <div style="font-size:16px;font-weight:bold;margin-bottom:8px">${esc(r.title)}</div>
+  <table style="font-size:14px;border-collapse:collapse">${row('Mã',esc(r.code))}${row('Số tiền',`<b>${fmtMoney(r.total,r.currency)} ${esc(r.currency)}</b><br><i style="color:#4b5563">${esc(moneyWords(r.total,r.currency))}</i>`)}${row('Phân loại',esc(r.category))}${row('Nội dung',esc(r.content))}${row('Thụ hưởng',esc(r.beneficiary||'—'))}${row('Người tạo',esc(r.creator_name))}${row('Hạn TT',fmtDate(r.due_date)||'—')}</table>
+  ${extra||''}
+  <div style="margin-top:12px;color:#4b5563;font-size:13px">Tiến trình: ${chainText(r)}</div>
+  <a href="${SITE_URL}#${encodeURIComponent(r.id)}" style="display:inline-block;margin-top:16px;background:#0f766e;color:#fff;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:bold">Mở trên TTDCore</a>
+  </div></div>`;
+}
+function sendMail(to,cc,subject,html){
+  gas({action:'notify',to,cc,subject,html}).catch(e=>console.warn('notify',e));
+}
+function notifyFlow(r,reason){
+  if(r.status==='pending'){const t=turnOf(r);if(t&&t.email!==me())sendMail([t.email],[],`[TTDCore] Đến lượt anh/chị duyệt: ${r.code} · ${fmtMoney(r.total,r.currency)} ${r.currency}`,mailHtml(r,`⏳ Đến lượt ${t.name} duyệt đề nghị thanh toán`));}
+  else if(r.status==='approved'){const acc=(r.approvers||[]).filter(a=>PAY_STEPS.includes(a.stepKey)).map(a=>a.email);sendMail([r.creator_email],acc,`[TTDCore] Đã duyệt xong: ${r.code} — có thể in phiếu`,mailHtml(r,'✅ Đề nghị thanh toán đã được duyệt đủ — có thể in phiếu và chi tiền'));}
+  else if(r.status==='rejected'){sendMail([r.creator_email],[],`[TTDCore] Bị từ chối: ${r.code} · ${r.title}`,mailHtml(r,`❌ ${currentUser.name} đã từ chối đề nghị`,`<div style="margin-top:12px;background:#fdecec;color:#991b1b;border-radius:8px;padding:10px 12px"><b>Lý do:</b> ${esc(reason||'')}</div>`));}
+}
+
+/* ============================ FORM TẠO / SỬA ============================ */
+function openForm(mode){
+  const r=mode==='edit'?cur:null;
+  const sel=defaultSel(r&&r.department);
+  if(r)(r.approvers||[]).forEach(a=>{if(a.stepKey&&chain.some(s=>s.key===a.stepKey&&s.options.some(o=>o.key===a.key)))sel[a.stepKey]=a.key;});
+  fm={mode,id:r&&r.id,currency:(r&&r.currency)||'VND',items:r&&r.items&&r.items.length?JSON.parse(JSON.stringify(r.items)):[{content:'',amount:0,invoice_no:'',invoice_date:'',due_date:'',note:''}],files:[],followers:new Set(((r&&r.followers)||[]).map(f=>f.email)),sel,tpTouched:!!r};
+  $('fmTitle').textContent=mode==='edit'?(r.status==='rejected'?'✎ Sửa & gửi lại':'✎ Sửa đề nghị'):'＋ Đề nghị thanh toán mới';
+  $('fmSave').textContent=mode==='edit'?(r.status==='rejected'?'Gửi lại':'Lưu thay đổi'):'Gửi đề nghị';
+  const v=(k,d)=>esc(r?(r[k]==null?'':r[k]):(d||''));
+  const opt=(list,val)=>list.map(x=>`<option ${x===val?'selected':''}>${esc(x)}</option>`).join('');
+  const cands=allProfiles.filter(p=>p.email!==me()&&!chainEmails().includes(p.email));
+  $('fmBody').innerHTML=`
+    <div><label class="fl">Tiêu đề <span class="req-star">*</span></label><input id="fTitle" value="${v('title')}" placeholder="VD: TTD_TRADE_Thanh toán NCC Hân Vinh lô SE.26030.BDI"></div>
+    <div class="g2">
+      <div><label class="fl">Phân loại thanh toán <span class="req-star">*</span></label><select id="fCat"><option value="">— Chọn —</option>${opt(CATEGORIES,r&&r.category)}</select></div>
+      <div><label class="fl">Liên kết lô / số HĐ</label><input id="fLot" value="${v('lot_ref')}" placeholder="VD: SE.26030.BDI"></div>
+    </div>
+    <div><label class="fl">Nội dung thanh toán <span class="req-star">*</span></label><textarea id="fContent" rows="2" placeholder="VD: Thanh toán đợt 2 tiền mua cà phê nhân R2">${v('content')}</textarea></div>
+    <div class="box"><div class="box-t" style="display:flex;align-items:center;gap:8px">Thông tin chi tiết<span style="flex:1"></span>
+        <select id="fCur" style="width:auto;padding:6px 10px;font-size:14px" onchange="fmCurrency(this.value)"><option ${fm.currency==='VND'?'selected':''}>VND</option><option ${fm.currency==='USD'?'selected':''}>USD</option></select></div>
+      <div id="fItems" style="display:flex;flex-direction:column;gap:8px"></div>
+      <button class="sm" onclick="fmAddItem()">＋ Thêm dòng</button>
+      <div class="totalbox"><div class="tb-l">TỔNG SỐ TIỀN</div><div class="tb-n" id="fTotal"></div><div class="tb-w" id="fWords"></div></div>
+    </div>
+    <div class="g2">
+      <div><label class="fl">Người đề nghị <span class="req-star">*</span></label><input id="fRequester" value="${v('requester',currentUser.name)}"></div>
+      <div><label class="fl">Bộ phận</label><select id="fDept" onchange="fmDept(this.value)"><option value="">— Chọn —</option>${opt(DEPARTMENTS,r&&r.department)}</select></div>
+      <div><label class="fl">Hạn thanh toán</label><input type="date" id="fDue" value="${v('due_date')}"></div>
+      <div><label class="fl">Phương thức <span class="req-star">*</span></label><select id="fMethod" onchange="fmMethod()">${opt(['Chuyển khoản','Tiền mặt'],(r&&r.method)||'Chuyển khoản')}</select></div>
+    </div>
+    <div class="g2">
+      <div class="full" style="grid-column:1/-1"><label class="fl">Người thụ hưởng <span class="req-star">*</span></label><input id="fBenef" value="${v('beneficiary')}" placeholder="Tên công ty / cá nhân nhận tiền"></div>
+      <div class="ck"><label class="fl">Ngân hàng <span class="req-star">*</span></label><input id="fBank" value="${v('bank_name')}" placeholder="VD: ACB - CN Sài Gòn"></div>
+      <div class="ck"><label class="fl">Số tài khoản <span class="req-star">*</span></label><input id="fAcc" value="${v('account_no')}" inputmode="numeric"></div>
+    </div>
+    ${mode==='new'?`<div><label class="fl">Tài liệu đính kèm (hóa đơn, HĐ, biên bản…)</label>
+      <div style="display:flex;gap:8px"><button class="sm" style="flex:1" onclick="$('fFiles').click()">📎 Chọn file</button><button class="sm" style="flex:1" onclick="$('fCam').click()">📷 Chụp chứng từ</button></div>
+      <input type="file" id="fFiles" multiple accept=".pdf,image/*,.doc,.docx,.xls,.xlsx" style="display:none" onchange="fmAddFiles(this)">
+      <input type="file" id="fCam" accept="image/*" capture="environment" style="display:none" onchange="fmAddFiles(this)">
+      <div class="fpend" id="fPend" style="margin-top:8px"></div></div>`:`<div style="font-size:13px;color:var(--muted)">📎 File đính kèm: thêm / gỡ ngay trong màn hình chi tiết.</div>`}
+    <div class="box"><div class="box-t">Người duyệt (lần lượt)</div>
+      <div class="apflow">${chain.map((s,i)=>`<div class="apstep"><span class="apno">${i+1}</span><div style="flex:1;min-width:0"><div class="apt">${esc(s.title)}</div>
+        ${s.options.length>1?`<select id="fSel_${s.key}" onchange="fm.sel['${s.key}']=this.value;${s.key==='tp'?'fm.tpTouched=true;':''}fmChainWarn()">${s.options.map(o=>`<option value="${o.key}" ${fm.sel[s.key]===o.key?'selected':''}>${esc(o.name)}${o.email?'':' (chưa có tài khoản)'}</option>`).join('')}</select>`
+          :`<div class="apfix">${esc(s.options[0].name)}</div>`}</div></div>`).join('')}</div>
+      <div id="fChainWarn"></div></div>
+    <details ${fm.followers.size?'open':''}><summary style="font-weight:700;font-size:13px;color:#374151;cursor:pointer">👁 Người theo dõi (không bắt buộc) — ${fm.followers.size} người</summary>
+      <div class="flw">${cands.map(p=>`<label><input type="checkbox" ${fm.followers.has(p.email)?'checked':''} onchange="this.checked?fm.followers.add('${esc(p.email)}'):fm.followers.delete('${esc(p.email)}')"> ${esc(p.name||p.email)}</label>`).join('')||'<span style="color:var(--muted)">—</span>'}</div></details>
+    <div class="errline" id="fErr"></div>`;
+  fmRenderItems();fmMethod();fmChainWarn();if(mode==='new')fmRenderFiles();
+  $('formSheet').classList.add('on');
+}
+function closeForm(){$('formSheet').classList.remove('on');fm=null;}
+function fmDept(d){if(fm.tpTouched)return;const tp=TP_BY_DEPT[d]||chain[0].options[0].key;fm.sel.tp=tp;if($('fSel_tp'))$('fSel_tp').value=tp;fmChainWarn();}
+function fmChainWarn(){const miss=missingSel(fm.sel);$('fChainWarn').innerHTML=miss.length?`<div class="warnbox">⚠️ Chưa tìm thấy tài khoản TTDCore của <b>${miss.map(esc).join(', ')}</b>. Nhờ người đó đăng nhập TTDCore 1 lần, hoặc điền email vào YEN_EMAIL / VY_EMAIL trong code.</div>`:'';}
+function fmMethod(){const ck=$('fMethod').value==='Chuyển khoản';document.querySelectorAll('#fmBody .ck').forEach(e=>e.style.display=ck?'':'none');}
+function fmCurrency(c){fm.currency=c;fmRenderItems();}
+function fmAddItem(){fm.items.push({content:'',amount:0,invoice_no:'',invoice_date:'',due_date:'',note:''});fmRenderItems();const rows=document.querySelectorAll('.it-content');rows[rows.length-1].focus();}
+function fmDelItem(i){if(fm.items.length<=1){fm.items[0]={content:'',amount:0,invoice_no:'',invoice_date:'',due_date:'',note:''};}else fm.items.splice(i,1);fmRenderItems();}
+function fmRenderItems(){
+  $('fItems').innerHTML=fm.items.map((it,i)=>`<div class="itemrow"><div class="no">Dòng ${i+1}</div><button class="ir-x" onclick="fmDelItem(${i})" title="Xóa dòng">✕</button>
+    <div class="ir-grid">
+      <label class="full">Nội dung *<input class="it-content" value="${esc(it.content)}" oninput="fm.items[${i}].content=this.value"></label>
+      <label>Số tiền *<input class="it-amount" inputmode="decimal" value="${it.amount?fmtMoney(it.amount,fm.currency):''}" oninput="fm.items[${i}].amount=parseMoney(this.value,fm.currency);fmTotal()" onblur="this.value=fm.items[${i}].amount?fmtMoney(fm.items[${i}].amount,fm.currency):''"></label>
+      <label>Số CT / HĐ<input value="${esc(it.invoice_no||'')}" oninput="fm.items[${i}].invoice_no=this.value"></label>
+      <label>Ngày HĐ<input type="date" value="${esc(it.invoice_date||'')}" onchange="fm.items[${i}].invoice_date=this.value"></label>
+      <label>Ngày đến hạn<input type="date" value="${esc(it.due_date||'')}" onchange="fm.items[${i}].due_date=this.value"></label>
+      <label class="full">Ghi chú<input value="${esc(it.note||'')}" oninput="fm.items[${i}].note=this.value"></label>
+    </div></div>`).join('');
+  fmTotal();
+}
+function fmTotal(){const t=fm.items.reduce((s,it)=>s+(Number(it.amount)||0),0);$('fTotal').textContent=fmtMoney(t,fm.currency)+' '+fm.currency;$('fWords').textContent=t?moneyWords(t,fm.currency):'—';return fm.currency==='USD'?Math.round(t*100)/100:t;}
+function fmAddFiles(input){fm.files.push(...[...(input.files||[])]);input.value='';fmRenderFiles();}
+function fmRenderFiles(){$('fPend').innerHTML=fm.files.map((f,i)=>{const[b,c]=fileBadge(f.name);return `<div class="file"><span class="fi" style="background:${c}">${b}</span><span style="min-width:0"><div class="fn">${esc(f.name)}</div><div class="fm">${fmtSize(f.size)}</div></span><button class="fx" onclick="fm.files.splice(${i},1);fmRenderFiles()">✕</button></div>`;}).join('');}
+
+function fmCollect(){
+  const g=id=>($(id).value||'').trim();
+  const items=fm.items.map(it=>({content:(it.content||'').trim(),amount:Number(it.amount)||0,invoice_no:(it.invoice_no||'').trim(),invoice_date:it.invoice_date||'',due_date:it.due_date||'',note:(it.note||'').trim()})).filter(it=>it.content||it.amount);
+  const d={title:g('fTitle'),category:g('fCat'),lot_ref:g('fLot')||null,content:g('fContent'),currency:fm.currency,items,total:fmTotal(),requester:g('fRequester'),department:g('fDept')||null,due_date:g('fDue')||null,method:g('fMethod'),beneficiary:g('fBenef'),bank_name:g('fBank')||null,account_no:g('fAcc')||null};
+  if(d.method!=='Chuyển khoản'){d.bank_name=null;d.account_no=null;}
+  const fl=[...fm.followers].map(e=>({email:e,name:profileName(e)}));
+  d.followers=fl;d.follower_emails=fl.map(f=>f.email).join(',');
+  let err='';
+  if(!d.title)err='Nhập tiêu đề.';else if(!d.category)err='Chọn phân loại thanh toán.';else if(!d.content)err='Nhập nội dung thanh toán.';
+  else if(!items.length)err='Nhập ít nhất 1 dòng chi tiết.';else if(items.some(it=>!it.content||!(it.amount>0)))err='Mỗi dòng chi tiết cần có nội dung và số tiền > 0.';
+  else if(!d.requester)err='Nhập người đề nghị.';else if(!d.beneficiary)err='Nhập người thụ hưởng.';
+  else if(d.method==='Chuyển khoản'&&(!d.bank_name||!d.account_no))err='Chuyển khoản cần ngân hàng và số tài khoản.';
+  return{d,err};
+}
+function freshApprovers(sel){return chain.map((s,i)=>{const o=selOption(s,sel);return{step:i,stepKey:s.key,key:o.key,email:o.email,name:o.name,title:s.title,status:'waiting',at:null,note:''};});}
+async function nextCode(){const d=new Date();const ym=String(d.getFullYear()).slice(2)+String(d.getMonth()+1).padStart(2,'0');const prefix=`DNTT-${ym}-`;const last=await DB.lastCode(prefix);const n=last?parseInt(last.slice(prefix.length),10)+1:1;return prefix+String(n).padStart(3,'0');}
+
+async function saveForm(){
+  const{d,err}=fmCollect();
+  if(err){$('fErr').textContent=err;$('fErr').style.display='block';return;}
+  const miss=missingSel(fm.sel);
+  if(miss.length){$('fErr').textContent='Chưa có tài khoản của '+miss.join(', ')+' — chọn người duyệt khác hoặc cấu hình email.';$('fErr').style.display='block';return;}
+  const sel=Object.assign({},fm.sel);
+  $('fmSave').disabled=true;
+  try{
+    if(fm.mode==='new'){
+      showLoading('Đang gửi đề nghị…');
+      const files=fm.files.slice();
+      const approvers=freshApprovers(sel);
+      let rec=null;
+      for(let tries=0;tries<5;tries++){
+        const t=nowISO();
+        rec=Object.assign({id:'pay_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),code:await nextCode()},d,{
+          approvers:JSON.parse(JSON.stringify(approvers)),approver_emails:approvers.map(a=>a.email).join(','),
+          current_step:0,status:'pending',comments:[],history:[{at:t,by:currentUser.name,email:me(),action:'created',note:''}],
+          print_count:0,creator_name:currentUser.name,creator_email:me(),created_at:t,updated_at:t});
+        advanceFrom(rec,0);
+        try{await DB.insert(rec);break;}
+        catch(e){if(String(e.code)==='23505'||/duplicate/i.test(e.message)){rec=null;continue;}throw e;}
+      }
+      if(!rec)throw new Error('Không tạo được mã đề nghị, thử lại.');
+      closeForm();
+      if(files.length){try{rec=await uploadFiles(rec,files);}catch(e){toast('Đã gửi đề nghị nhưng lỗi tải file: '+e.message+' — thêm lại trong chi tiết.',6000);}}
+      hideLoading();
+      notifyFlow(rec);
+      tab='mine';await reload();await openDetail(rec.id);toast('Đã gửi đề nghị '+rec.code);
+    }else{
+      showLoading('Đang lưu…');
+      const wasRejected=cur&&cur.status==='rejected';
+      const prevTurn=(turnOf(cur)||{}).email;
+      const res=await mutate(fm.id,x=>{
+        if(!canEdit(x))throw new Error('Đề nghị đã có người duyệt — không sửa được nữa. Dùng mục Thảo luận để trao đổi.');
+        Object.assign(x,d);
+        // chưa ai duyệt thật (hoặc đang bị từ chối) → dựng lại chuỗi duyệt theo lựa chọn mới, bắt đầu lại từ bước 1
+        x.history=x.history||[];
+        hist(x,x.status==='rejected'?'resubmitted':'edited');
+        x.approvers=freshApprovers(sel);x.approver_emails=x.approvers.map(a=>a.email).join(',');
+        advanceFrom(x,0);
+        return Object.assign({},d,{approvers:x.approvers,approver_emails:x.approver_emails,current_step:x.current_step,status:x.status,history:x.history});
+      });
+      closeForm();cur=res;await afterChange(wasRejected?'Đã gửi lại đề nghị.':'Đã lưu thay đổi.');
+      if(wasRejected||(turnOf(res)||{}).email!==prevTurn)notifyFlow(res);
+    }
+  }catch(e){if($('fErr')){$('fErr').textContent='Lỗi: '+e.message;$('fErr').style.display='block';}else toast('Lỗi: '+e.message,5000);}
+  finally{hideLoading();if($('fmSave'))$('fmSave').disabled=false;}
+}
+
+/* ============================ IN PHIẾU ============================ */
+function buildPrint(r,n){
+  const items=r.items||[];
+  const signCols=[{r:'Người đề nghị',name:r.requester||r.creator_name,ok:true,at:r.created_at,label:'Đã lập điện tử'}]
+    .concat((r.approvers||[]).map(a=>({r:a.title,name:a.name,ok:a.status==='approved',at:a.at,label:a.status==='approved'?'Đã duyệt điện tử':'Chưa duyệt'})));
+  const info=(k,v)=>`<tr><td class="k">${k}</td><td>${v||'—'}</td></tr>`;
+  return `<div class="pv">
+   <div class="pv-head"><div class="co"><b>${esc(COMPANY.name)}</b><br>MST: ${esc(COMPANY.tax)}<br>${esc(COMPANY.addr)}</div>
+     <div class="cd">Số: <b>${esc(r.code)}</b><br>Ngày lập: ${fmtDate(r.created_at)}<br>Ngày duyệt xong: ${fmtDate(((r.approvers||[]).slice(-1)[0]||{}).at)}</div></div>
+   <h1>GIẤY ĐỀ NGHỊ THANH TOÁN</h1><div class="sub">Payment Request</div>
+   <table class="info">
+     ${info('Tiêu đề:',`<b>${esc(r.title)}</b>`)}
+     ${info('Người đề nghị / Bộ phận:',esc(r.requester||'')+(r.department?' — '+esc(r.department):''))}
+     ${info('Phân loại thanh toán:',esc(r.category))}
+     ${info('Nội dung thanh toán:',esc(r.content))}
+     ${r.lot_ref?info('Liên kết lô / hợp đồng:',esc(r.lot_ref)):''}
+     ${info('Hạn thanh toán:',fmtDate(r.due_date))}
+     ${info('Phương thức thanh toán:',esc(r.method))}
+     ${info('Người thụ hưởng:',`<b>${esc(r.beneficiary)}</b>`)}
+     ${r.method==='Chuyển khoản'?info('Số tài khoản / Ngân hàng:',`<b>${esc(r.account_no||'')}</b> — ${esc(r.bank_name||'')}`):''}
+   </table>
+   <h3>Chi tiết thanh toán</h3>
+   <table class="grid"><thead><tr><th style="width:26px">STT</th><th>Nội dung</th><th>Số CT / HĐ</th><th>Ngày HĐ</th><th>Ngày đến hạn</th><th class="num">Số tiền (${esc(r.currency)})</th></tr></thead><tbody>
+     ${items.map((it,i)=>`<tr><td style="text-align:center">${i+1}</td><td>${esc(it.content)}${it.note?`<br><i>${esc(it.note)}</i>`:''}</td><td>${esc(it.invoice_no||'')}</td><td>${fmtDate(it.invoice_date)}</td><td>${fmtDate(it.due_date)}</td><td class="num">${fmtMoney(it.amount,r.currency)}</td></tr>`).join('')}
+     <tr><td colspan="5" style="text-align:right"><b>TỔNG CỘNG</b></td><td class="num"><b>${fmtMoney(r.total,r.currency)}</b></td></tr></tbody></table>
+   <p style="margin:6px 0"><b>Bằng chữ:</b> <i>${esc(moneyWords(r.total,r.currency))}</i></p>
+   <p style="margin:4px 0"><b>Chứng từ kèm theo:</b> ${(r.attachments||[]).length?(r.attachments||[]).map(a=>esc(a.name)).join('; '):'—'}</p>
+   <h3>Xác nhận phê duyệt điện tử trên TTDCore</h3>
+   <table class="grid"><thead><tr><th style="width:26px">STT</th><th>Người duyệt</th><th>Chức danh</th><th>Kết quả</th><th>Thời gian</th><th>Ý kiến</th></tr></thead><tbody>
+     ${(r.approvers||[]).map((a,i)=>`<tr><td style="text-align:center">${i+1}</td><td>${esc(a.name)}</td><td>${esc(a.title)}</td><td>${a.status==='approved'?(a.auto?'Chấp thuận (người lập)':'Chấp thuận'):esc(stepLabel(a))}</td><td>${fmtDT(a.at)}</td><td>${esc(a.auto?'':a.note||'')}</td></tr>`).join('')}
+   </tbody></table>
+   <div class="signs" style="grid-template-columns:repeat(${signCols.length},1fr)">
+     ${signCols.map(s=>`<div class="s"><div class="r">${esc(s.r)}</div><div><span class="stamp ${s.ok?'':'no'}">${s.ok?'✔ ':''}${esc(s.label)}</span><div style="font-size:10.5px">${fmtDT(s.at)}</div></div><div><b>${esc(s.name)}</b></div></div>`).join('')}
+   </div>
+   <div class="foot"><span>In từ TTDCore lúc ${fmtDT(nowISO())} · bởi ${esc(currentUser.name)} · Bản in lần ${n}</span><span>${esc(SITE_URL)}#${esc(r.id)}</span></div>
+  </div>`;
+}
+function printCur(){
+  const r=cur;if(!r||r.status!=='approved')return toast('Chỉ in được khi đã duyệt đủ.');
+  const n=(r.print_count||0)+1;
+  $('printArea').innerHTML=buildPrint(r,n);
+  window.print();
+  mutate(r.id,x=>{x.print_count=(x.print_count||0)+1;hist(x,'printed','Lần '+x.print_count);return{print_count:x.print_count,printed_at:nowISO(),printed_by:currentUser.name,history:x.history};})
+    .then(res=>{cur=res;afterChange();}).catch(e=>console.warn(e));
+}
+
+/* ============================ DEMO ============================ */
+let demoRows=[];
+const DEMO_PROFILES=[
+  {email:'ngoc@ttdglobal.vn',name:'Ngọc',role:'sale'},
+  {email:'grace@ttdglobal.vn',name:'Grace',role:'sale'},
+  {email:'jacob@ttdglobal.vn',name:'Jacob',role:'logistics'},
+  {email:'yen@ttdglobal.vn',name:'Yến',role:'ketoan'},
+  {email:'vy@ttdglobal.vn',name:'Vy',role:'ketoan'},
+  {email:'duom@ttdglobal.vn',name:'Đượm',role:'ketoan'},
+  {email:'vu@ttdglobal.vn',name:'Vũ',role:'admin'},
+];
+function demoGas(p){return new Promise(res=>setTimeout(()=>{
+  if(p.action==='upload')res({ok:true,fileId:'demo_'+Math.random().toString(36).slice(2,8),name:p.fileName,size:Math.round(p.dataBase64.length*0.75),url:'#'});
+  else if(p.action==='notify'){toast('📧 (demo) Email tới '+p.to.join(', ')+(p.cc&&p.cc.length?' · cc '+p.cc.join(', '):''),3500);res({ok:true});}
+  else res({ok:true});
+},250));}
+function demoSeed(){
+  const D=(days,h)=>{const d=new Date(Date.now()-days*86400000);d.setHours(h||9,15,0,0);return d.toISOString();};
+  const mk=(o,sel,steps)=>{const ap=freshApprovers(sel);
+    const hist=[{at:o.created_at,by:o.creator_name,email:o.creator_email,action:'created',note:''}];
+    steps.forEach((s,i)=>{Object.assign(ap[i],s);if(s.status==='approved'||s.status==='rejected')hist.push({at:s.at,by:ap[i].name,email:ap[i].email,action:s.auto?'auto':s.status,note:s.note||''});});
+    const cs=ap.findIndex(a=>a.status==='pending');
+    const status=o.status||(ap.some(a=>a.status==='rejected')?'rejected':cs<0?'approved':'pending');
+    if(status==='approved')hist.push({at:steps[steps.length-1].at,by:'TTDCore',email:'',action:'completed',note:''});
+    return Object.assign({currency:'VND',followers:[],follower_emails:'',comments:[],print_count:0,attachments:[],method:'Chuyển khoản',updated_at:o.created_at},o,{approvers:ap,approver_emails:ap.map(a=>a.email).join(','),current_step:cs<0?ap.length:cs,status,history:hist});};
+  const att=(name,size,by,at)=>({fileId:'d'+Math.random().toString(36).slice(2,7),name,url:'#',size,by,email:'',at});
+  demoRows=[
+    mk({id:'pay_d1',code:'DNTT-2611-004',title:'TTD_LOG_Phí local charge + THC lô S.26007E.LSU',category:'Chi phí logistics / xuất khẩu',content:'Local charge, THC, phí seal lô S.26007E.LSU — tàu ETD 18/11',total:18650000,
+      items:[{content:'THC 2 cont 20DC',amount:7800000,invoice_no:'0004521',invoice_date:'2026-11-17',due_date:'2026-11-24',note:''},{content:'Local charge + seal + B/L fee',amount:10850000,invoice_no:'0004522',invoice_date:'2026-11-17',due_date:'2026-11-24',note:''}],
+      requester:'Jacob',department:'Logistics',due_date:'2026-11-24',beneficiary:'CÔNG TY TNHH GIAO NHẬN SAO VIỆT',bank_name:'Vietcombank - CN Tân Định',account_no:'0071001234567',lot_ref:'S.26007E.LSU',creator_name:'Jacob',creator_email:'jacob@ttdglobal.vn',created_at:D(2,10),
+      attachments:[att('HD_0004521_THC.pdf',312000,'Jacob',D(2,10)),att('HD_0004522_LocalCharge.pdf',298000,'Jacob',D(2,10))]},
+      {tp:'jacob',kt:'yen'},
+      [{status:'approved',auto:true,at:D(2,10)},{status:'approved',at:D(1,9),note:''},{status:'approved',at:D(0.5,14),note:'Khớp hóa đơn, OK'},{status:'pending'}]),
+    mk({id:'pay_d2',code:'DNTT-2611-003',title:'TTD_TRADE_Thanh toán NCC Hân Vinh đợt 2 – lô SE.26030.BDI-R',category:'Thanh toán NCC (mua cà phê)',content:'Thanh toán 70% còn lại tiền mua 38,4 tấn Robusta R2 (HĐ mua HV-2610-12)',total:3854200000,
+      items:[{content:'Robusta R2 S16 — 38.400 kg × 100.370 đ/kg (70%)',amount:3854200000,invoice_no:'HV-2610-12',invoice_date:'2026-11-12',due_date:'2026-11-22',note:'Đã trừ cọc 30%'}],
+      requester:'Ngọc',department:'Trade',due_date:'2026-11-22',beneficiary:'CÔNG TY TNHH HÂN VINH',bank_name:'BIDV - CN Đắk Lắk',account_no:'63010000888999',lot_ref:'SE.26030.BDI-R',creator_name:'Ngọc',creator_email:'ngoc@ttdglobal.vn',created_at:D(3,8),
+      attachments:[att('HD_mua_HV-2610-12.pdf',421000,'Ngọc',D(3,8)),att('Phieu_can_kho.jpg',688000,'Ngọc',D(3,8))],
+      comments:[{by:'Vy',email:'vy@ttdglobal.vn',text:'Ngọc bổ sung giúp chị biên bản giao nhận kho nhé.',at:D(2,15)},{by:'Ngọc',email:'ngoc@ttdglobal.vn',text:'Dạ em đã đính kèm phiếu cân kho ạ.',at:D(2,16)}]},
+      {tp:'grace',kt:'vy'},
+      [{status:'approved',at:D(1.8,9),note:'Đủ chứng từ'},{status:'pending'}]),
+    mk({id:'pay_d3',code:'DNTT-2611-002',title:'TTD_ADMIN_Thanh toán tiền điện + internet văn phòng T10/2026',category:'Thanh toán định kỳ',content:'Tiền điện, internet tháng 10/2026 — văn phòng 56 Nguyễn Đình Chiểu',total:4386500,
+      items:[{content:'Tiền điện T10/2026',amount:3196500,invoice_no:'PE-1025-8812',invoice_date:'2026-11-03',due_date:'2026-11-15',note:''},{content:'Internet FPT T10/2026',amount:1190000,invoice_no:'FPT-77120',invoice_date:'2026-11-02',due_date:'2026-11-15',note:''}],
+      requester:'Yến',department:'Kế toán',due_date:'2026-11-15',beneficiary:'EVN HCMC; FPT Telecom',method:'Chuyển khoản',bank_name:'Theo hóa đơn',account_no:'Theo hóa đơn',creator_name:'Yến',creator_email:'yen@ttdglobal.vn',created_at:D(9,9),
+      attachments:[att('HoaDon_Dien_T10.pdf',156000,'Yến',D(9,9)),att('HoaDon_FPT_T10.pdf',98000,'Yến',D(9,9))]},
+      {tp:'grace',kt:'yen'},
+      [{status:'approved',at:D(8.8,10),note:''},{status:'approved',auto:true,at:D(8.8,10)},{status:'approved',at:D(8,16),note:''},{status:'approved',at:D(7,10),note:'OK'}]),
+    mk({id:'pay_d4',code:'DNTT-2611-001',title:'TTD_TRADE_Tạm ứng công tác Gia Lai – kiểm tra kho NCC',category:'Tạm ứng',content:'Tạm ứng chi phí đi Gia Lai 3 ngày kiểm tra hàng tại kho NCC',total:6500000,
+      items:[{content:'Vé xe, khách sạn, công tác phí 3 ngày',amount:6500000,invoice_no:'',invoice_date:'',due_date:'',note:''}],
+      requester:'Ngọc',department:'Trade',due_date:'2026-11-08',method:'Tiền mặt',beneficiary:'Ngọc',bank_name:null,account_no:null,creator_name:'Ngọc',creator_email:'ngoc@ttdglobal.vn',created_at:D(12,9)},
+      {tp:'grace',kt:'yen'},
+      [{status:'approved',at:D(11,10),note:''},{status:'rejected',at:D(11,15),note:'Thiếu dự toán chi tiết từng khoản — lập lại giúp chị'}]),
+  ];
+}
+function startDemo(){
+  $('demobar').hidden=false;
+  allProfiles=DEMO_PROFILES.slice();
+  resolveChain();
+  DB={
+    async profiles(){return allProfiles;},
+    async list(){return demoRows.filter(canView).map(r=>JSON.parse(JSON.stringify(r))).sort((a,b)=>b.created_at<a.created_at?-1:1);},
+    async get(id){const r=demoRows.find(r=>r.id===id);if(!r)throw new Error('Không tìm thấy');return JSON.parse(JSON.stringify(r));},
+    async insert(rec){if(demoRows.some(r=>r.code===rec.code))throw Object.assign(new Error('duplicate'),{code:'23505'});demoRows.push(JSON.parse(JSON.stringify(rec)));},
+    async update(id,patch,expect){const r=demoRows.find(r=>r.id===id);if(!r||r.updated_at!==expect)return false;Object.assign(r,JSON.parse(JSON.stringify(patch)));return true;},
+    async lastCode(prefix){const c=demoRows.map(r=>r.code).filter(c=>c.startsWith(prefix)).sort().pop();return c||null;}
+  };
+  demoSeed();
+  const params=new URLSearchParams(location.search);
+  $('demoUser').innerHTML=DEMO_PROFILES.map(p=>`<option value="${p.email}">${p.name} (${p.email.split('@')[0]})</option>`).join('');
+  const u=params.get('as')||'vu@ttdglobal.vn';$('demoUser').value=u;
+  setDemoUser(u);enterApp();
+}
+function setDemoUser(email){const p=DEMO_PROFILES.find(p=>p.email===email)||DEMO_PROFILES[0];currentUser={id:p.email,email:p.email,name:p.name,role:p.role};}
+async function demoSwitch(email){setDemoUser(email);tab=null;cur=null;showEmptyDetail();$('detail').classList.remove('on');$('who').textContent=currentUser.name+(isAdmin()?' · 👑':'');resolveChain();await reload();toast('Đang xem với tư cách '+currentUser.name);}
+
+init();
+</script>
+</body>
+</html>
