@@ -319,14 +319,15 @@ const VY_EMAIL  = '';   // tương tự cho "Vy"
 const STEPS = [
   {key:'tp',  title:'Trưởng phòng', options:[
       {key:'grace', name:'Grace', email:'grace@ttdglobal.vn'},
-      {key:'jacob', name:'Jacob', email:'jacob@ttdglobal.vn'}]},
+      {key:'jacob', name:'Jacob', email:'jacob@ttdglobal.vn'},
+      {key:'duom',  name:'Đượm',  email:'duom@ttdglobal.vn'}]},
   {key:'kt',  title:'Kế toán', options:[
       {key:'yen', name:'Yến', email:YEN_EMAIL, match:'yen'},
       {key:'vy',  name:'Vy',  email:VY_EMAIL,  match:'vy'}]},
   {key:'ktt', title:'Kế toán', options:[{key:'duom', name:'Đượm', email:'duom@ttdglobal.vn'}]},
   {key:'gd',  title:'Giám đốc điều hành', options:[{key:'vu', name:'Vũ', email:'vu@ttdglobal.vn'}]},
 ];
-const TP_BY_DEPT = {'Logistics':'jacob'};   // bộ phận → trưởng phòng mặc định (còn lại: Grace)
+const TP_BY_DEPT = {'Logistics':'jacob','Kế toán':'duom'};   // bộ phận → trưởng phòng mặc định (còn lại: Grace)
 const PAY_STEPS = ['kt','ktt'];              // các bước kế toán: nhận email khi duyệt xong để chi tiền + in phiếu
 const AUTO_APPROVE_SELF = true;          // người tạo nằm trong chuỗi duyệt → bước của họ tự duyệt
 const COMPANY = {name:'TTD GLOBAL VIETNAM JSC', tax:'0318847447', addr:'56 Nguyễn Đình Chiểu, Quận 1, TP. Hồ Chí Minh'};
@@ -533,8 +534,9 @@ async function openDetail(id){
 function closeDetail(){$('detail').classList.remove('on');cur=null;history.replaceState(null,'',location.pathname+location.search);renderList();showEmptyDetail();}
 function showEmptyDetail(){$('dtEmpty').hidden=false;['dtHd','dtBody','dtFt'].forEach(i=>$(i).hidden=true);}
 function stepIcon(s){return {approved:'✓',pending:'⏳',waiting:'',rejected:'✕'}[s]||'';}
-function stepLabel(a){return {approved:a.auto?'Tự duyệt (người tạo)':'Đã duyệt',pending:'Đang chờ duyệt',waiting:'Chưa tới lượt',rejected:'Từ chối'}[a.status]||a.status;}
-const ACT={created:['＋','Tạo đề nghị'],approved:['✓','Duyệt'],auto:['✓','Tự duyệt (người tạo)'],rejected:['✕','Từ chối'],completed:['★','Hoàn tất — đã duyệt đủ'],edited:['✎','Chỉnh sửa'],resubmitted:['↻','Sửa & gửi lại'],cancelled:['⦸','Hủy đề nghị'],attached:['📎','Đính kèm'],removed:['🗑','Gỡ file'],printed:['🖨','In phiếu']};
+const autoText=a=>a.autoReason==='dup'?'Tự duyệt (đã duyệt ở bước trước)':'Tự duyệt (người tạo)';
+function stepLabel(a){return {approved:a.auto?autoText(a):'Đã duyệt',pending:'Đang chờ duyệt',waiting:'Chưa tới lượt',rejected:'Từ chối'}[a.status]||a.status;}
+const ACT={created:['＋','Tạo đề nghị'],approved:['✓','Duyệt'],auto:['✓','Tự duyệt'],rejected:['✕','Từ chối'],completed:['★','Hoàn tất — đã duyệt đủ'],edited:['✎','Chỉnh sửa'],resubmitted:['↻','Sửa & gửi lại'],cancelled:['⦸','Hủy đề nghị'],attached:['📎','Đính kèm'],removed:['🗑','Gỡ file'],printed:['🖨','In phiếu']};
 
 function renderDetail(){
   const r=cur;if(!r)return showEmptyDetail();
@@ -617,7 +619,9 @@ function advanceFrom(r,start){
   let i=start;const L=r.approvers.length;
   while(i<L){
     const a=r.approvers[i];
-    if(AUTO_APPROVE_SELF&&a.email===r.creator_email){a.status='approved';a.auto=true;a.at=nowISO();r.history.push({at:a.at,by:a.name,email:a.email,action:'auto',note:''});i++;continue;}
+    const self=AUTO_APPROVE_SELF&&a.email===r.creator_email;
+    const dup=r.approvers.slice(0,i).some(p=>p.email===a.email&&p.status==='approved');   // cùng người đã duyệt ở bước trước (vd Đượm vừa là Trưởng phòng vừa ở bước 3)
+    if(self||dup){a.status='approved';a.auto=true;a.autoReason=self?'self':'dup';a.at=nowISO();r.history.push({at:a.at,by:a.name,email:a.email,action:'auto',note:self?'người tạo đề nghị':'đã duyệt ở bước trước'});i++;continue;}
     a.status='pending';break;
   }
   if(i>=L){r.status='approved';r.current_step=L;r.history.push({at:nowISO(),by:'TTDCore',email:'',action:'completed',note:''});}
@@ -903,7 +907,7 @@ function buildPrint(r,n){
    <p style="margin:4px 0"><b>Chứng từ kèm theo:</b> ${(r.attachments||[]).length?(r.attachments||[]).map(a=>esc(a.name)).join('; '):'—'}</p>
    <h3>Xác nhận phê duyệt điện tử trên TTDCore</h3>
    <table class="grid"><thead><tr><th style="width:26px">STT</th><th>Người duyệt</th><th>Chức danh</th><th>Kết quả</th><th>Thời gian</th><th>Ý kiến</th></tr></thead><tbody>
-     ${(r.approvers||[]).map((a,i)=>`<tr><td style="text-align:center">${i+1}</td><td>${esc(a.name)}</td><td>${esc(a.title)}</td><td>${a.status==='approved'?(a.auto?'Chấp thuận (người lập)':'Chấp thuận'):esc(stepLabel(a))}</td><td>${fmtDT(a.at)}</td><td>${esc(a.auto?'':a.note||'')}</td></tr>`).join('')}
+     ${(r.approvers||[]).map((a,i)=>`<tr><td style="text-align:center">${i+1}</td><td>${esc(a.name)}</td><td>${esc(a.title)}</td><td>${a.status==='approved'?(a.auto?(a.autoReason==='dup'?'Chấp thuận (đã duyệt ở bước trước)':'Chấp thuận (người lập)'):'Chấp thuận'):esc(stepLabel(a))}</td><td>${fmtDT(a.at)}</td><td>${esc(a.auto?'':a.note||'')}</td></tr>`).join('')}
    </tbody></table>
    <div class="signs" style="grid-template-columns:repeat(${signCols.length},1fr)">
      ${signCols.map(s=>`<div class="s"><div class="r">${esc(s.r)}</div><div><span class="stamp ${s.ok?'':'no'}">${s.ok?'✔ ':''}${esc(s.label)}</span><div style="font-size:10.5px">${fmtDT(s.at)}</div></div><div><b>${esc(s.name)}</b></div></div>`).join('')}
