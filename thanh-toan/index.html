@@ -296,9 +296,11 @@ button.paybtn{background:#1d4ed8;border-color:#1d4ed8;color:#fff;font-weight:800
 .pv .grid th{background:#eee;font-size:11.5px}
 .pv .num{text-align:right;white-space:nowrap}
 .pv h3{font-size:13px;margin:12px 0 5px;text-transform:uppercase}
-.pv .signs{display:grid;gap:6px;margin-top:12px;text-align:center}
-.pv .signs .s{border:1px solid #000;padding:6px 4px;min-height:110px;display:flex;flex-direction:column;justify-content:space-between}
-.pv .signs .r{font-weight:bold;font-size:11.5px;text-transform:uppercase}
+.pv .signs{display:grid;gap:10px;margin-top:16px;text-align:center;break-inside:avoid;page-break-inside:avoid}
+.pv .signs .s{display:flex;flex-direction:column;align-items:center}
+.pv .signs .r{font-weight:bold;font-size:13px;text-transform:uppercase;white-space:nowrap}
+.pv .signs .sp{height:30mm}
+.pv .signs .nm{font-weight:bold;font-size:13px}
 .pv .stamp{border:2px solid #0f766e;color:#0f766e;border-radius:6px;padding:3px 4px;font-weight:bold;font-size:10.5px;margin:6px auto;display:inline-block}
 .pv .stamp.no{border-color:#999;color:#999}
 .pv .foot{margin-top:12px;border-top:1px solid #000;padding-top:4px;font-size:10.5px;color:#333;display:flex;justify-content:space-between;gap:10px}
@@ -416,6 +418,13 @@ const ROLE_DEPT = {logistics:'Logistics', sale:'Trade', sale_admin:'Trade', trad
 const CAT_BY_DEPT = {'Logistics':'Chi phí logistics / xuất khẩu', 'Thu mua':'Thanh toán NCC (mua cà phê)', 'Kế toán':'Thanh toán định kỳ'};
 const DEPT_CODE = {'Trade':'TRADE','Kế toán':'KT','Logistics':'LOG','Thu mua':'TM','Hành chính - Nhân sự':'HCNS','Ban Giám đốc':'BGD'};
 const PAYER_KEYS = ['yen'];   // được xác nhận "Đã thanh toán" (ngoài admin)
+// Các ô KÝ TƯƠI cuối phiếu in (thứ tự trái → phải). Muốn thêm ô cho Đượm: thêm {step:'ktt', label:'KẾ TOÁN TRƯỞNG'}
+const PRINT_SIGNS = [
+  {who:'requester', label:'NGƯỜI ĐỀ NGHỊ'},
+  {step:'tp',       label:'TRƯỞNG BỘ PHẬN'},
+  {step:'kt',       label:'P. KT-HC'},
+  {step:'gd',       label:'GIÁM ĐỐC'},
+];
 const T = 'payment_requests';
 const LIST_COLS = 'id,code,title,category,content,currency,total,status,current_step,approvers,followers,creator_name,creator_email,requester,requester_email,department,created_at,updated_at,due_date,print_count,attachments,lot_ref,beneficiary,payment_status,paid_at,paid_by';
 const XLSX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
@@ -1399,8 +1408,12 @@ async function importPayees(input){
 /* ============================ IN PHIẾU ============================ */
 function buildPrint(r,n,withAtt){
   const items=r.items||[];
-  const signCols=[{r:'Người đề nghị',name:r.requester||r.creator_name,ok:true,at:r.created_at,label:'Đã lập điện tử'}]
-    .concat((r.approvers||[]).map(a=>({r:a.title,name:a.name,ok:a.status==='approved',at:a.at,label:a.status==='approved'?'Đã duyệt điện tử':'Chưa duyệt'})));
+  // Ô ký tươi: tiêu đề theo phòng ban + họ tên đầy đủ (lấy từ HR)
+  const signCols=PRINT_SIGNS.map(c=>{
+    if(c.who==='requester'){const e=empOf(r.requester_email||r.creator_email);return{r:c.label,name:(e&&e.ten)||r.requester||r.creator_name};}
+    const a=(r.approvers||[]).find(x=>x.stepKey===c.step);
+    return a?{r:c.label,name:profileName(a.email)||a.name}:null;
+  }).filter(Boolean);
   const info=(k,v)=>`<tr><td class="k">${k}</td><td>${v||'—'}</td></tr>`;
   return `<div class="pv">
    <div class="pv-head"><div class="co"><b>${esc(COMPANY.name)}</b><br>MST: ${esc(COMPANY.tax)}<br>${esc(COMPANY.addr)}</div>
@@ -1426,10 +1439,10 @@ function buildPrint(r,n,withAtt){
    <p style="margin:4px 0"><b>Chứng từ kèm theo (${(r.attachments||[]).length} file):</b> ${(r.attachments||[]).length?(r.attachments||[]).map(a=>esc(a.name)).join('; '):'—'}${withAtt?`<span id="pvAttNote"> — <i>đính kèm ở các trang sau</i></span>`:''}</p>
    <h3>Xác nhận phê duyệt điện tử trên TTDCore</h3>
    <table class="grid"><thead><tr><th style="width:26px">STT</th><th>Người duyệt</th><th>Chức danh</th><th>Kết quả</th><th>Thời gian</th><th>Ý kiến</th></tr></thead><tbody>
-     ${(r.approvers||[]).map((a,i)=>`<tr><td style="text-align:center">${i+1}</td><td>${esc(a.name)}</td><td>${esc(a.title)}</td><td>${a.status==='approved'?(a.auto?(a.autoReason==='dup'?'Chấp thuận (đã duyệt ở bước trước)':'Chấp thuận (người lập)'):'Chấp thuận'):esc(stepLabel(a))}</td><td>${fmtDT(a.at)}</td><td>${esc(a.auto?'':a.note||'')}</td></tr>`).join('')}
+     ${(r.approvers||[]).map((a,i)=>`<tr><td style="text-align:center">${i+1}</td><td>${esc(profileName(a.email)||a.name)}</td><td>${esc(a.title)}</td><td>${a.status==='approved'?(a.auto?(a.autoReason==='dup'?'Chấp thuận (đã duyệt ở bước trước)':'Chấp thuận (người lập)'):'Chấp thuận'):esc(stepLabel(a))}</td><td>${fmtDT(a.at)}</td><td>${esc(a.auto?'':a.note||'')}</td></tr>`).join('')}
    </tbody></table>
    <div class="signs" style="grid-template-columns:repeat(${signCols.length},1fr)">
-     ${signCols.map(s=>`<div class="s"><div class="r">${esc(s.r)}</div><div><span class="stamp ${s.ok?'':'no'}">${s.ok?'✔ ':''}${esc(s.label)}</span><div style="font-size:10.5px">${fmtDT(s.at)}</div></div><div><b>${esc(s.name)}</b></div></div>`).join('')}
+     ${signCols.map(s=>`<div class="s"><div class="r">${esc(s.r)}</div><div class="sp"></div><div class="nm">${esc(s.name)}</div></div>`).join('')}
    </div>
    <div class="foot"><span>In từ TTDCore lúc ${fmtDT(nowISO())} · bởi ${esc(currentUser.name)} · Bản in lần ${n}</span><span>${esc(SITE_URL)}#${esc(r.id)}</span></div>
   </div>`;
@@ -1590,6 +1603,8 @@ function startDemo(){
     async employees(){return[   // mẫu bảng employees của module HR
       {ma:'NV001',ten:'Nguyễn Hữu Chí Vũ',vitri:'Giám đốc điều hành',email:'vu@ttdglobal.vn'},
       {ma:'NV014',ten:'Vũ Mạnh Tuấn',vitri:'Chứng từ XNK',email:'tuan@ttdglobal.vn'},
+      {ma:'NV006',ten:'Dương Hoàng Đăng Huy',vitri:'Trưởng phòng Logistics',email:'jacob@ttdglobal.vn'},
+      {ma:'NV008',ten:'Huỳnh Dương Phi Yến',vitri:'Kế toán',email:'yen@ttdglobal.vn'},
       {ma:'NV020',ten:'Nhân viên mới (chưa có email)',vitri:'Thu mua',email:''}];},
     async setDept(){},
     async payees(){return[
