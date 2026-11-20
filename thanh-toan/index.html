@@ -185,7 +185,21 @@ label.fl{font-size:13px;font-weight:700;color:#374151;display:block;margin-botto
 #login{max-width:420px;margin:16vh auto;background:#fff;border:1px solid var(--line);border-radius:16px;padding:30px;text-align:center}
 #toast{position:fixed;left:50%;bottom:calc(84px + var(--safe-b));transform:translateX(-50%);background:#111;color:#fff;padding:11px 16px;border-radius:12px;display:none;z-index:99;font-size:14px;max-width:92vw;text-align:center}
 #loading{position:fixed;inset:0;background:rgba(255,255,255,.72);display:none;align-items:center;justify-content:center;z-index:120;font-weight:700;color:var(--brand);text-align:center;padding:20px}
+/* ---------- XEM TRƯỚC BẢN IN ---------- */
 #printArea{display:none}
+#printArea.on{display:block;position:fixed;inset:0;z-index:90;background:#cbd2d9;overflow:auto;-webkit-overflow-scrolling:touch}
+.pv-toolbar{position:sticky;top:0;z-index:2;background:#111827;color:#fff;display:flex;gap:8px;align-items:center;padding:calc(10px + var(--safe-t)) 12px 10px;flex-wrap:wrap}
+.pv-toolbar .t{font-weight:800;flex:1;min-width:150px;font-size:15px}
+.pv-toolbar button{padding:9px 14px;font-size:14px}
+.pv-toolbar label{display:flex;gap:7px;align-items:center;font-size:14px;cursor:pointer}
+.pv-toolbar input{width:19px;height:19px;accent-color:#14b8a6}
+.pv-note{background:#fef3c7;color:#92400e;font-size:13.5px;padding:9px 14px}
+.pv-page{background:#fff;width:210mm;max-width:calc(100% - 16px);margin:12px auto;padding:12mm;box-shadow:0 2px 12px rgba(0,0,0,.18);overflow-x:auto}
+.pv-attpage{padding:7mm 8mm}
+.pv-att-h{font:11px Arial,Helvetica,sans-serif;color:#555;border-bottom:1px solid #ccc;padding-bottom:3px;margin-bottom:6px;text-align:left}
+.pv-attpage img{max-width:100%;height:auto;display:block;margin:0 auto}
+.pv-attpage .err{padding:40px 10px;color:#b91c1c;font:14px Arial,sans-serif;text-align:center}
+.pv-loading{text-align:center;padding:24px;color:#1f2937;font-weight:700;font-size:14px}
 
 /* ---------- DESKTOP ---------- */
 @media(min-width:620px){
@@ -217,10 +231,14 @@ label.fl{font-size:13px;font-weight:700;color:#374151;display:block;margin-botto
 
 /* ---------- PRINT ---------- */
 @media print{
-  @page{size:A4;margin:11mm 12mm}
-  body{background:#fff!important;height:auto!important;overflow:visible!important;display:block!important}
+  @page{size:A4;margin:10mm 12mm}
+  html,body{background:#fff!important;height:auto!important;overflow:visible!important;display:block!important}
   body>*:not(#printArea){display:none!important}
-  #printArea{display:block!important}
+  #printArea{display:block!important;position:static!important;background:#fff!important;overflow:visible!important}
+  .pv-toolbar,.pv-note,.pv-loading{display:none!important}
+  .pv-page{width:auto!important;max-width:none!important;margin:0!important;padding:0!important;box-shadow:none!important;overflow:visible!important}
+  .pv-attpage{break-before:page;page-break-before:always}
+  .pv-attpage img{max-height:268mm;width:auto;max-width:100%}
 }
 .pv{font-family:"Times New Roman",Times,serif;color:#000;font-size:12.5px;line-height:1.38}
 .pv-head{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid #000;padding-bottom:6px}
@@ -879,7 +897,7 @@ async function saveForm(){
 }
 
 /* ============================ IN PHIẾU ============================ */
-function buildPrint(r,n){
+function buildPrint(r,n,withAtt){
   const items=r.items||[];
   const signCols=[{r:'Người đề nghị',name:r.requester||r.creator_name,ok:true,at:r.created_at,label:'Đã lập điện tử'}]
     .concat((r.approvers||[]).map(a=>({r:a.title,name:a.name,ok:a.status==='approved',at:a.at,label:a.status==='approved'?'Đã duyệt điện tử':'Chưa duyệt'})));
@@ -904,7 +922,7 @@ function buildPrint(r,n){
      ${items.map((it,i)=>`<tr><td style="text-align:center">${i+1}</td><td>${esc(it.content)}${it.note?`<br><i>${esc(it.note)}</i>`:''}</td><td>${esc(it.invoice_no||'')}</td><td>${fmtDate(it.invoice_date)}</td><td>${fmtDate(it.due_date)}</td><td class="num">${fmtMoney(it.amount,r.currency)}</td></tr>`).join('')}
      <tr><td colspan="5" style="text-align:right"><b>TỔNG CỘNG</b></td><td class="num"><b>${fmtMoney(r.total,r.currency)}</b></td></tr></tbody></table>
    <p style="margin:6px 0"><b>Bằng chữ:</b> <i>${esc(moneyWords(r.total,r.currency))}</i></p>
-   <p style="margin:4px 0"><b>Chứng từ kèm theo:</b> ${(r.attachments||[]).length?(r.attachments||[]).map(a=>esc(a.name)).join('; '):'—'}</p>
+   <p style="margin:4px 0"><b>Chứng từ kèm theo (${(r.attachments||[]).length} file):</b> ${(r.attachments||[]).length?(r.attachments||[]).map(a=>esc(a.name)).join('; '):'—'}${withAtt?`<span id="pvAttNote"> — <i>đính kèm ở các trang sau</i></span>`:''}</p>
    <h3>Xác nhận phê duyệt điện tử trên TTDCore</h3>
    <table class="grid"><thead><tr><th style="width:26px">STT</th><th>Người duyệt</th><th>Chức danh</th><th>Kết quả</th><th>Thời gian</th><th>Ý kiến</th></tr></thead><tbody>
      ${(r.approvers||[]).map((a,i)=>`<tr><td style="text-align:center">${i+1}</td><td>${esc(a.name)}</td><td>${esc(a.title)}</td><td>${a.status==='approved'?(a.auto?(a.autoReason==='dup'?'Chấp thuận (đã duyệt ở bước trước)':'Chấp thuận (người lập)'):'Chấp thuận'):esc(stepLabel(a))}</td><td>${fmtDT(a.at)}</td><td>${esc(a.auto?'':a.note||'')}</td></tr>`).join('')}
@@ -915,12 +933,77 @@ function buildPrint(r,n){
    <div class="foot"><span>In từ TTDCore lúc ${fmtDT(nowISO())} · bởi ${esc(currentUser.name)} · Bản in lần ${n}</span><span>${esc(SITE_URL)}#${esc(r.id)}</span></div>
   </div>`;
 }
+/* ---------- In phiếu + chứng từ kèm theo ---------- */
+const PDFJS_URL='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+const PDFJS_WORKER='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const PRINTABLE=['pdf','jpg','jpeg','png','gif','webp','bmp'];
+let pv=null;
+const extOf=n=>(String(n).split('.').pop()||'').toLowerCase();
 function printCur(){
   const r=cur;if(!r||r.status!=='approved')return toast('Chỉ in được khi đã duyệt đủ.');
-  const n=(r.print_count||0)+1;
-  $('printArea').innerHTML=buildPrint(r,n);
+  const atts=r.attachments||[];
+  const ok=atts.filter(a=>PRINTABLE.includes(extOf(a.name))),skip=atts.filter(a=>!PRINTABLE.includes(extOf(a.name)));
+  pv={r,n:(r.print_count||0)+1,ok,pages:0,withAtt:ok.length>0,token:Date.now()};
+  $('printArea').innerHTML=`
+    <div class="pv-toolbar"><button onclick="closePrint()">✕ Đóng</button><div class="t">Xem trước bản in · ${esc(r.code)}</div>
+      ${ok.length?`<label><input type="checkbox" id="pvWithAtt" checked onchange="pvToggle(this.checked)"> Kèm chứng từ (${ok.length} file)</label>`:''}
+      <button class="primary" id="pvPrintBtn" onclick="doPrint()">🖨️ In</button></div>
+    ${skip.length?`<div class="pv-note">⚠️ ${skip.length} file không in kèm tự động được (${skip.map(s=>esc(s.name)).join(', ')}) — mở file và in riêng.</div>`:''}
+    <div class="pv-page">${buildPrint(r,pv.n,ok.length>0)}</div>
+    <div id="pvAtt"></div>`;
+  $('printArea').classList.add('on');$('printArea').scrollTop=0;
+  pvButton();
+  if(ok.length)pvLoadAtts();
+}
+function closePrint(){pv=null;$('printArea').classList.remove('on');$('printArea').innerHTML='';}
+function pvButton(){if(!pv)return;const b=$('pvPrintBtn');const loading=pv.withAtt&&!pv.loaded;b.disabled=loading;b.textContent=loading?'⏳ Đang tải chứng từ…':`🖨️ In (${1+(pv.withAtt?pv.pages:0)} trang)`;}
+function pvToggle(on){pv.withAtt=on;$('pvAtt').style.display=on?'':'none';const n=$('pvAttNote');if(n)n.style.display=on?'':'none';pvButton();}
+async function pvLoadAtts(){
+  const tok=pv.token,list=pv.ok,box=$('pvAtt'),parts=[];
+  const setLoad=t=>{box.innerHTML=`<div class="pv-loading">${esc(t)}</div>`;};
+  const head=(a,i,pi,pt)=>`<div class="pv-att-h">${esc(pv.r.code)} · Chứng từ kèm theo ${i+1}/${list.length}: ${esc(a.name)}${pt>1?` · trang ${pi+1}/${pt}`:''}</div>`;
+  for(let i=0;i<list.length;i++){
+    const a=list[i];
+    try{
+      setLoad(`Đang tải chứng từ ${i+1}/${list.length}: ${a.name}`);
+      const j=await gas({action:'fetch',fileId:a.fileId});
+      if(!pv||pv.token!==tok)return;
+      const mime=j.mimeType||'';
+      if(/pdf/i.test(mime)||(!/^image\//i.test(mime)&&extOf(a.name)==='pdf')){
+        const imgs=await pdfToImages(j.dataBase64,(p,t)=>setLoad(`Đang dựng ${a.name} — trang ${p}/${t}`));
+        if(!pv||pv.token!==tok)return;
+        imgs.forEach((src,pi)=>parts.push(`<div class="pv-page pv-attpage">${head(a,i,pi,imgs.length)}<img src="${src}" alt=""></div>`));
+      }else parts.push(`<div class="pv-page pv-attpage">${head(a,i,0,1)}<img src="data:${esc(mime||'image/jpeg')};base64,${j.dataBase64}" alt=""></div>`);
+    }catch(e){parts.push(`<div class="pv-page pv-attpage">${head(a,i,0,1)}<div class="err">Không tải được file "${esc(a.name)}": ${esc(e.message)}<br>Mở file trên Drive và in riêng.</div></div>`);}
+  }
+  box.innerHTML=parts.join('');
+  await Promise.all([...box.querySelectorAll('img')].map(im=>im.decode?im.decode().catch(()=>{}):Promise.resolve()));
+  if(!pv||pv.token!==tok)return;
+  pv.pages=box.querySelectorAll('.pv-attpage').length;pv.loaded=true;pvButton();
+}
+function loadPdfJs(){
+  if(window.pdfjsLib)return Promise.resolve(window.pdfjsLib);
+  return new Promise((res,rej)=>{const s=document.createElement('script');s.src=PDFJS_URL;s.onload=()=>{pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_WORKER;res(pdfjsLib);};s.onerror=()=>rej(new Error('Không tải được thư viện đọc PDF'));document.head.appendChild(s);});
+}
+async function pdfToImages(b64,onProg){
+  const lib=await loadPdfJs();
+  const bin=atob(b64),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+  const pdf=await lib.getDocument({data:bytes}).promise,out=[];
+  for(let p=1;p<=pdf.numPages;p++){
+    if(onProg)onProg(p,pdf.numPages);
+    const page=await pdf.getPage(p);const v1=page.getViewport({scale:1});
+    const vp=page.getViewport({scale:Math.min(2.5,1600/v1.width)});
+    const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);
+    const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);
+    await page.render({canvasContext:ctx,viewport:vp}).promise;
+    out.push(c.toDataURL('image/jpeg',0.88));page.cleanup();
+  }
+  pdf.destroy();return out;
+}
+function doPrint(){
+  if(!pv)return;const r=pv.r,withAtt=pv.withAtt&&pv.pages>0;
   window.print();
-  mutate(r.id,x=>{x.print_count=(x.print_count||0)+1;hist(x,'printed','Lần '+x.print_count);return{print_count:x.print_count,printed_at:nowISO(),printed_by:currentUser.name,history:x.history};})
+  mutate(r.id,x=>{x.print_count=(x.print_count||0)+1;hist(x,'printed','Lần '+x.print_count+(withAtt?' · kèm '+pv.pages+' trang chứng từ':''));return{print_count:x.print_count,printed_at:nowISO(),printed_by:currentUser.name,history:x.history};})
     .then(res=>{cur=res;afterChange();}).catch(e=>console.warn(e));
 }
 
@@ -937,6 +1020,15 @@ const DEMO_PROFILES=[
 ];
 function demoGas(p){return new Promise(res=>setTimeout(()=>{
   if(p.action==='upload')res({ok:true,fileId:'demo_'+Math.random().toString(36).slice(2,8),name:p.fileName,size:Math.round(p.dataBase64.length*0.75),url:'#'});
+  else if(p.action==='fetch'){   // demo: vẽ 1 trang chứng từ giả
+    const c=document.createElement('canvas');c.width=1240;c.height=1754;const x=c.getContext('2d');
+    x.fillStyle='#fff';x.fillRect(0,0,1240,1754);x.fillStyle='#111';x.font='bold 46px Arial';x.fillText('HÓA ĐƠN GIÁ TRỊ GIA TĂNG',300,170);
+    x.font='28px Arial';x.fillText('(Chứng từ mẫu — bản demo)',440,220);x.fillText('Mã file: '+p.fileId,110,320);
+    x.strokeStyle='#999';for(let i=0;i<14;i++){x.strokeRect(110,400+i*70,1020,70);}
+    x.fillStyle='#e5e7eb';for(let i=0;i<14;i++)x.fillRect(130,425+i*70,200+((i*137)%600),18);
+    x.fillStyle='#111';x.font='bold 30px Arial';x.fillText('Người bán hàng',160,1500);x.fillText('Người mua hàng',820,1500);
+    res({ok:true,mimeType:'image/png',dataBase64:c.toDataURL('image/png').split(',')[1]});
+  }
   else if(p.action==='notify'){toast('📧 (demo) Email tới '+p.to.join(', ')+(p.cc&&p.cc.length?' · cc '+p.cc.join(', '):''),3500);res({ok:true});}
   else res({ok:true});
 },250));}
